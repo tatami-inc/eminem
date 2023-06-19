@@ -102,6 +102,9 @@ private:
     void scan_banner() {
         std::string contents;
         bool valid = input.valid();
+        if (passed_banner) {
+            throw std::runtime_error("banner has already been scanned");
+        }
 
         while (valid) {
             if (input.get() != '%') {

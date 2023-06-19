@@ -183,6 +183,18 @@ TEST_P(ParserPreambleTest, Errors) {
         try {
             ChunkedBufferReader reader(input.data(), input.size(), chunksize);
             eminem::Parser parser(reader);
+            parser.scan_preamble();
+            parser.scan_preamble();
+        } catch (std::exception& e) {
+            EXPECT_THAT(e.what(), ::testing::HasSubstr("banner has already been scanned"));
+            throw;
+        }
+    });
+
+    EXPECT_ANY_THROW({
+        try {
+            ChunkedBufferReader reader(input.data(), input.size(), chunksize);
+            eminem::Parser parser(reader);
             parser.get_nlines();
         } catch (std::exception& e) {
             EXPECT_THAT(e.what(), ::testing::HasSubstr("size line has not yet been scanned"));
@@ -796,7 +808,7 @@ protected:
 
 TEST_F(ParserBodyErrorTest, CoordinateErrors) {
     test_error("%MatrixMarket matrix coordinate integer general\n5 2 1\n1\n", "expected 3 fields");
-    test_error("%MatrixMarket vector coordinate integer general\n5 2 1\n1\n", "expected 2 fields");
+    test_error("%MatrixMarket vector coordinate integer general\n5 2 1\n1\n", "expected two size fields");
     test_error("%MatrixMarket matrix coordinate integer general\n5 2 1\n1  2\n", "detected empty field");
     test_error("%MatrixMarket matrix coordinate integer general\n5 2 1\n1 2 \n", "empty field detected");
 
