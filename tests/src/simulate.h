@@ -2,41 +2,11 @@
 #define EMINEM_TEST_SIMULATE_H
 
 #include <vector>
-#include <type_traits>
 #include <random>
 #include <complex>
 #include <iomanip>
 
-template<class Stream_, typename Value_>
-void format_coordinates(Stream_& stream, size_t nr, size_t nc, const std::vector<int>& rows, const std::vector<int>& cols, const std::vector<Value_>& vals) {
-    stream << "%%MatrixMarket matrix coordinate ";
-    if constexpr(std::is_same<Value_, int>::value) {
-        stream << "integer";
-    } else if constexpr(std::is_same<Value_, double>::value) {
-        stream << "double";
-        stream << std::setprecision(10);
-    } else if constexpr(std::is_same<Value_, std::complex<double> >::value) {
-        stream << "complex";
-    } else {
-        stream << "pattern";
-    }
-    stream << " general\n";
-
-    stream << nr << " " << nc << " " << rows.size();
-
-    for (size_t i = 0; i < rows.size(); ++i) {
-        stream << "\n" << rows[i] + 1 << " " << cols[i] + 1;
-        if constexpr(std::is_same<Value_, int>::value || std::is_same<Value_, double>::value) {
-            stream << " " << vals[i];
-        } else if constexpr(std::is_same<Value_, std::complex<double> >::value) {
-            stream << " " << vals[i].real << " " << vals[i].imag;
-        }
-    }
-
-    return;
-}
-
-inline std::pair<std::vector<int>, std::vector<int> > simulate_coordinates(size_t nr, size_t nc, double density) {
+inline std::pair<std::vector<int>, std::vector<int> > simulate_coordinate(size_t nr, size_t nc, double density) {
     std::vector<int> rows, columns;
     std::mt19937_64 rng(std::round(static_cast<double>(nr * nc) / density));
     std::uniform_real_distribution dist;
@@ -53,7 +23,21 @@ inline std::pair<std::vector<int>, std::vector<int> > simulate_coordinates(size_
     return std::make_pair(std::move(rows), std::move(columns));
 }
 
-inline std::vector<int> simulate_integers(size_t n, int lower, int upper) {
+inline std::vector<int> simulate_coordinate(size_t n, double density) {
+    std::vector<int> entries;
+    std::mt19937_64 rng(std::round(static_cast<double>(n) / density));
+    std::uniform_real_distribution dist;
+
+    for (size_t i = 0; i < n; ++i) {
+        if (dist(rng) <= density) {
+            entries.push_back(i);
+        }
+    }
+
+    return entries;
+}
+
+inline std::vector<int> simulate_integer(size_t n, int lower, int upper) {
     int range = upper - lower;
     std::mt19937_64 rng(std::round(n * range));
 
@@ -76,5 +60,18 @@ inline std::vector<double> simulate_real(size_t n) {
 
     return values;
 }
+
+inline std::vector<std::complex<double> > simulate_complex(size_t n) {
+    std::mt19937_64 rng(n);
+    std::normal_distribution ndist;
+
+    std::vector<std::complex<double> > values;
+    for (size_t i = 0; i < n; ++i) {
+        values.emplace_back(ndist(rng), ndist(rng));
+    }
+
+    return values;
+}
+
 
 #endif

@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include <cstring>
+#include <complex>
 
 #include "byteme/PerByte.hpp"
 #include "utils.hpp"
@@ -160,13 +161,13 @@ private:
                     throw std::runtime_error("expected two size fields for coordinate vectors on line " + std::to_string(current_line + 1));
                 }
                 nlines = ncols;
-                ncols = 0;
             } else if (details.format == Format::ARRAY) {
                 if (onto != 0) {
                     throw std::runtime_error("expected one size field for array vectors on line " + std::to_string(current_line + 1));
                 }
                 nlines = nrows;
             }
+            ncols = 1;
         }
 
         passed_size = true;
@@ -272,27 +273,13 @@ public:
     }
 
 private:
-    void check_coordinates(size_t currow, size_t curcol, size_t current_data_line, int onto, bool non_empty) const {
+    void check_coordinate_common(size_t currow, size_t current_data_line, bool non_empty) const {
         if (!non_empty) {
             throw std::runtime_error("empty field detected on line " + std::to_string(current_line + 1));
         }
 
-        switch (details.field) {
-            case Field::REAL: case Field::DOUBLE: case Field::INTEGER:
-                if (onto != 2) {
-                    throw std::runtime_error("expected 3 fields on line " + std::to_string(current_line + 1));
-                }
-                break;
-            case Field::PATTERN:
-                if (onto != 2) {
-                    throw std::runtime_error("expected 2 fields on line " + std::to_string(current_line + 1));
-                }
-                break;
-            case Field::COMPLEX:
-                if (onto != 4) {
-                    throw std::runtime_error("expected 4 fields on line " + std::to_string(current_line + 1));
-                }
-                break;
+        if (current_data_line >= nlines) {
+            throw std::runtime_error("more lines present than specified in the header (" + std::to_string(nlines) + ")");
         }
 
         if (!currow) {
@@ -301,6 +288,25 @@ private:
         if (currow > nrows) {
             throw std::runtime_error("row index out of range on line " + std::to_string(current_line + 1));
         }
+    }
+
+    template<Field field_>
+    void check_coordinate_matrix(size_t currow, size_t curcol, size_t current_data_line, int onto, bool non_empty) const {
+        check_coordinate_common(currow, current_data_line, non_empty);
+
+        if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
+            if (onto != 2) {
+                throw std::runtime_error("expected 3 fields on line " + std::to_string(current_line + 1));
+            }
+        } else if constexpr(field_ == Field::PATTERN) {
+            if (onto != 1) {
+                throw std::runtime_error("expected 2 fields on line " + std::to_string(current_line + 1));
+            }
+        } else if constexpr(field_ == Field::COMPLEX) {
+            if (onto != 3) {
+                throw std::runtime_error("expected 4 fields on line " + std::to_string(current_line + 1));
+            }
+        }
 
         if (!curcol) {
             throw std::runtime_error("column index must be positive on line " + std::to_string(current_line + 1));
@@ -308,22 +314,28 @@ private:
         if (curcol > ncols) {
             throw std::runtime_error("column index out of range on line " + std::to_string(current_line + 1));
         }
+    }
 
-        if (current_data_line >= nlines) {
-            throw std::runtime_error("more lines present than specified in the header (" + std::to_string(nlines) + ")");
+    template<Field field_>
+    void check_coordinate_vector(size_t currow, size_t current_data_line, int onto, bool non_empty) const {
+        check_coordinate_common(currow, current_data_line, non_empty);
+
+        if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
+            if (onto != 1) {
+                throw std::runtime_error("expected 2 fields on line " + std::to_string(current_line + 1));
+            }
+        } else if constexpr(field_ == Field::PATTERN) {
+            if (onto != 0) {
+                throw std::runtime_error("expected 1 field on line " + std::to_string(current_line + 1));
+            }
+        } else if constexpr(field_ == Field::COMPLEX) {
+            if (onto != 2) {
+                throw std::runtime_error("expected 3 fields on line " + std::to_string(current_line + 1));
+            }
         }
     }
 
-    void reset_coordinates(size_t& currow, size_t& curcol, size_t& current_data_line, char& onto, bool& non_empty) const {
-        currow = 0;
-        curcol = 0;
-        ++current_data_line;
-        onto = 0;
-        non_empty = false;
-    }
-
-private:
-    template<class Store_, class Compose_, class Bump_, class Finish_>
+    template<Object object_, Field field_, class Store_, class Compose_, class Bump_, class Finish_>
     void scan_coordinate(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
         if (!passed_banner || !passed_size) {
             throw std::runtime_error("banner or size lines have not yet been parsed");
@@ -335,7 +347,6 @@ private:
         bool non_empty = false;
         bool valid = input.valid();
 
-        // 'position', 'remaining', etc. should be filled from previous scan_banner() call.
         while (valid) {
             if (input.get() == '%') {
                 // Try to get quickly to the next line.
@@ -358,16 +369,32 @@ private:
                     if (!non_empty) {
                         throw std::runtime_error("detected empty field on line " + std::to_string(current_line + 1));
                     }
-                    if (onto >= 2) {
-                        bump(current_line);
+                    if constexpr(object_ == Object::MATRIX) {
+                        if (onto >= 2) {
+                            bump(current_line);
+                        }
+                    } else {
+                        if (onto >= 1) {
+                            bump(current_line);
+                        }
                     }
                     ++onto;
                     non_empty = false;
 
                 } else if (current == '\n') {
-                    check_coordinates(currow, curcol, current_data_line, onto, non_empty);
-                    store(currow, curcol, finish(current_line));
-                    reset_coordinates(currow, curcol, current_data_line, onto, non_empty);
+                    if constexpr(object_ == Object::MATRIX) {
+                        check_coordinate_matrix<field_>(currow, curcol, current_data_line, onto, non_empty);
+                        store(currow, curcol, finish(current_line));
+                        curcol = 0;
+                    } else {
+                        check_coordinate_vector<field_>(currow, current_data_line, onto, non_empty);
+                        store(currow, 1, finish(current_line));
+                    }
+
+                    currow = 0;
+                    ++current_data_line;
+                    onto = 0;
+                    non_empty = false;
                     ++current_line;
                     valid = input.advance();
                     break;
@@ -376,18 +403,22 @@ private:
                     switch (onto) {
                         case 0:
                             if (current < '0' || current > '9') {
-                                throw std::runtime_error("row index should be a non-negative integer on line " + std::to_string(current_line));
+                                throw std::runtime_error("row index should be a non-negative integer on line " + std::to_string(current_line + 1));
                             }
                             currow *= 10;
                             currow += current - '0';
                             break;
 
                         case 1:
-                            if (current < '0' || current > '9') {
-                                throw std::runtime_error("column index should be a non-negative integer on line " + std::to_string(current_line));
+                            if constexpr(object_ == Object::MATRIX) {
+                                if (current < '0' || current > '9') {
+                                    throw std::runtime_error("column index should be a non-negative integer on line " + std::to_string(current_line + 1));
+                                }
+                                curcol *= 10;
+                                curcol += current - '0';
+                            } else {
+                                compose(current, current_line);
                             }
-                            curcol *= 10;
-                            curcol += current - '0';
                             break;
 
                         default:
@@ -405,15 +436,146 @@ private:
         // there's no extra entry to add. Otherwise, we try to add the 
         // last line that was _not_ terminated by a newline.
         if (onto != 0 || non_empty) { 
-            check_coordinates(currow, curcol, current_data_line, onto, non_empty);
-            store(currow, curcol, finish(current_line));
-            reset_coordinates(currow, curcol, current_data_line, onto, non_empty);
+            if constexpr(object_ == Object::MATRIX) {
+                check_coordinate_matrix<field_>(currow, curcol, current_data_line, onto, non_empty);
+                store(currow, curcol, finish(current_line));
+            } else {
+                check_coordinate_vector<field_>(currow, current_data_line, onto, non_empty);
+                store(currow, 1, finish(current_line));
+            }
+            ++current_data_line;
         }
 
         if (current_data_line != nlines) {
             throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(nlines) + ")");
         }
         return;
+    }
+
+private:
+    template<Field field_>
+    void check_array(size_t current_data_line, int onto, bool non_empty) const {
+        if (!non_empty) {
+            throw std::runtime_error("empty field detected on line " + std::to_string(current_line + 1));
+        }
+
+        if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
+            if (onto != 0) {
+                throw std::runtime_error("expected 1 field on line " + std::to_string(current_line + 1));
+            }
+        } else if constexpr(field_ == Field::COMPLEX) {
+            if (onto != 1) {
+                throw std::runtime_error("expected 2 fields on line " + std::to_string(current_line + 1));
+            }
+        }
+
+        if (current_data_line >= nlines) {
+            throw std::runtime_error("more lines present than expected for an array format (" + std::to_string(nlines) + ")");
+        }
+    }
+
+    template<Field field_, class Store_, class Compose_, class Bump_, class Finish_>
+    void scan_array(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
+        if (!passed_banner || !passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+
+        size_t current_data_line = 0;
+        size_t currow = 1, curcol = 1;
+        char onto = 0;
+        bool non_empty = false;
+        bool valid = input.valid();
+
+        while (valid) {
+            if (input.get() == '%') {
+                // Try to get quickly to the next line.
+                do {
+                    valid = input.advance();
+                } while (valid && input.get() != '\n');
+
+                if (!valid) {
+                    break;
+                } else {
+                    ++current_line;
+                    valid = input.advance();
+                    continue;
+                }
+            }
+
+            do {
+                char current = input.get();
+                if (current == ' ') {
+                    if (!non_empty) {
+                        throw std::runtime_error("detected empty field on line " + std::to_string(current_line + 1));
+                    }
+                    bump(current_line);
+                    ++onto;
+                    non_empty = false;
+
+                } else if (current == '\n') {
+                    check_array<field_>(current_data_line, onto, non_empty); 
+                    store(currow, curcol, finish(current_line));
+
+                    ++currow;
+                    if (currow > nrows) {
+                        ++curcol;
+                        currow = 1;
+                    }
+                    ++current_data_line;
+                    ++current_line;
+                    onto = 0;
+                    non_empty = false;
+
+                    valid = input.advance();
+                    break;
+
+                } else {
+                    compose(current, current_line);
+                    non_empty = true;
+                }
+
+                valid = input.advance();
+            } while (valid);
+        }
+
+        // If onto = 0 and non_empty = false, we ended on a newline, so 
+        // there's no extra entry to add. Otherwise, we try to add the 
+        // last line that was _not_ terminated by a newline.
+        if (onto != 0 || non_empty) { 
+            check_array<field_>(current_data_line, onto, non_empty); 
+            store(currow, curcol, finish(current_line));
+            ++current_data_line;
+        }
+
+        if (current_data_line != nlines) {
+            throw std::runtime_error("fewer lines present than expected for an array format (" + std::to_string(nlines) + ")");
+        }
+        return;
+    }
+
+private:
+    template<typename Type_>
+    static Type_ convert_to_real(const std::string& temporary, size_t line) {
+        Type_ output;
+        size_t n = 0;
+
+        try {
+            if constexpr(std::is_same<Type_, float>::value) {
+                output = std::stof(temporary, &n);
+            } else if constexpr(std::is_same<Type_, long double>::value) {
+                output = std::stold(temporary, &n);
+            } else {
+                output = std::stod(temporary, &n);
+            }
+        } catch (std::invalid_argument& e) {
+            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(line + 1));
+        }
+
+        if (n != temporary.size()) {
+            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(line + 1));
+        }
+
+        return output;
     }
 
 public:
@@ -423,73 +585,132 @@ public:
         bool negative = false;
         Type_ curval = 0;
 
-        scan_coordinate(
-            std::forward<Store_>(store), 
-            /* compose = */ [&](char x, size_t line) -> void {
-                if (init) {
-                    if (x == '-') {
-                        negative = true;
-                        return;
-                    }
-                    init = false;
+        auto compose = [&](char x, size_t line) -> void {
+            if (init) {
+                if (x == '-') {
+                    negative = true;
+                    return;
                 }
-                if (x < '0' || x > '9') {
-                    throw std::runtime_error("expected an integer value on line " + std::to_string(line + 1));
-                }
-                curval *= 10;
-                curval += (x - '0'); 
-            },
-            /* bump = */ [](size_t) -> void {}, 
-            /* finish = */ [&](size_t) -> Type_ {
-                if (negative) {
-                    curval *= -1;
-                }
-                init = true;
-                negative = false;
-
-                auto copy = curval;
-                curval = 0;
-                return copy;
+                init = false;
             }
-        );
+            if (x < '0' || x > '9') {
+                throw std::runtime_error("expected an integer value on line " + std::to_string(line + 1));
+            }
+            curval *= 10;
+            curval += (x - '0'); 
+        };
+
+        auto bump = [](size_t) -> void {};
+
+        auto finish = [&](size_t) -> Type_ {
+            if (negative) {
+                curval *= -1;
+            }
+            init = true;
+            negative = false;
+
+            auto copy = curval;
+            curval = 0;
+            return copy;
+        };
+
+        if (details.format == Format::COORDINATE) {
+            if (details.object == Object::MATRIX) {
+                scan_coordinate<Object::MATRIX, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            } else {
+                scan_coordinate<Object::VECTOR, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            }
+        } else {
+            scan_array<Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+        }
     }
 
     template<typename Type_ = double, class Store_>
     void scan_real(Store_&& store) {
         std::string temporary;
 
-        scan_coordinate(
-            std::forward<Store_>(store), 
-            /* compose = */ [&](char x, size_t line) -> void {
-                if (std::isspace(x)) {
-                    throw std::runtime_error("detected whitespace in value on line " + std::to_string(line + 1));
-                }
-                temporary += x;
-            },
-            /* bump = */ [](size_t) -> void {}, 
-            /* finish = */ [&](size_t line) -> double {
-                double output;
-                size_t n = 0;
-
-                try {
-                    if constexpr(std::is_same<Type_, float>::value) {
-                        output = std::stof(temporary, &n);
-                    } else if constexpr(std::is_same<Type_, long double>::value) {
-                        output = std::stold(temporary, &n);
-                    } else {
-                        output = std::stod(temporary, &n);
-                    }
-                } catch (std::invalid_argument& e) {
-                    throw std::runtime_error("failed to convert value to a double on line " + std::to_string(line + 1));
-                }
-
-                if (n != temporary.size()) {
-                    throw std::runtime_error("failed to convert value to a double on line " + std::to_string(line + 1));
-                }
-                temporary.clear();
-                return output;
+        auto compose = [&](char x, size_t line) -> void {
+            if (std::isspace(x)) {
+                throw std::runtime_error("detected whitespace in value on line " + std::to_string(line + 1));
             }
-        );
+            temporary += x;
+        };
+
+        auto bump = [](size_t) -> void {};
+
+        auto finish = [&](size_t line) -> double {
+            double output = convert_to_real<Type_>(temporary, line);
+            temporary.clear();
+            return output;
+        };
+
+        if (details.format == Format::COORDINATE) {
+            if (details.object == Object::MATRIX) {
+                scan_coordinate<Object::MATRIX, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            } else {
+                scan_coordinate<Object::VECTOR, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            }
+        } else {
+            scan_array<Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+        }
+    }
+
+    template<typename Type_ = double, class Store_>
+    void scan_double(Store_&& store) {
+        scan_real<Type_, Store_>(std::forward<Store_>(store));
+    }
+
+    template<typename Type_ = double, class Store_>
+    void scan_complex(Store_&& store) {
+        std::string temporary;
+        std::complex<Type_> holding;
+
+        auto compose = [&](char x, size_t line) -> void {
+            if (std::isspace(x)) {
+                throw std::runtime_error("detected whitespace in value on line " + std::to_string(line + 1));
+            }
+            temporary += x;
+        };
+
+        auto bump = [&](size_t line) -> void {
+            holding.real(convert_to_real<Type_>(temporary, line));
+            temporary.clear();
+        };
+
+        auto finish = [&](size_t line) -> std::complex<Type_> {
+            holding.imag(convert_to_real<Type_>(temporary, line));
+            temporary.clear();
+            return holding;
+        };
+
+        if (details.format == Format::COORDINATE) {
+            if (details.object == Object::MATRIX) {
+                scan_coordinate<Object::MATRIX, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            } else {
+                scan_coordinate<Object::VECTOR, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            }
+        } else {
+            scan_array<Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+        }
+    }
+
+    template<typename Type_ = bool, class Store_>
+    void scan_pattern(Store_&& store) {
+        auto compose = [](char, size_t) -> void {};
+        auto bump = [](size_t) -> void {};
+        auto finish = [](size_t) -> Type_ { 
+            return true; 
+        };
+
+        if (details.format == Format::COORDINATE) {
+            if (details.object == Object::MATRIX) {
+                scan_coordinate<Object::MATRIX, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            } else {
+                scan_coordinate<Object::VECTOR, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            }
+        } else {
+            throw std::runtime_error("'array' format for 'pattern' field is not supported");
+        }
     }
 };
 
