@@ -10,16 +10,25 @@
 #include "utils.hpp"
 
 /**
- * @file simple.hpp
+ * @file Parser.hpp
  *
- * @brief Parse a matrix from the Matrix Market coordinate format.
+ * @brief Parse a matrix from a Matrix Market file.
  */
 
 namespace eminem {
 
+/**
+ * @brief Parse a matrix from a Matrx Market file.
+ *
+ * @tparam parallel_ Whether to parallelize the byte reading and parsing.
+ * If `true`, a separate thread is used to read the bytes from the input source.
+ */
 template<bool parallel_ = false>
 class Parser {
 public:
+    /**
+     * @param r A source of bytes from the [**byteme**](https://github.com/LTLA/byteme) library.
+     */
     Parser(byteme::Reader& r) : input(r) {}
 
 private:
@@ -128,6 +137,12 @@ private:
     }
 
 public:
+    /**
+     * Retrieve the Matrix Market banner.
+     * This should be called after `scan_preamble()`.
+     *
+     * @return Details about the matrix in this file.
+     */
     const MatrixDetails& get_banner() const {
         if (!passed_banner) {
             throw std::runtime_error("banner has not yet been scanned");
@@ -244,6 +259,13 @@ private:
     }
 
 public:
+    /**
+     * Extract the number of rows in the matrix.
+     * This should be called after `scan_preamble()`.
+     * If the object type is `Object::VECTOR`, the number of rows is equal to the length of the vector.
+     *
+     * @return Number of rows.
+     */
     size_t get_nrows() const {
         if (!passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
@@ -251,6 +273,13 @@ public:
         return nrows;
     }
 
+    /**
+     * Extract the number of columns in the matrix.
+     * This should be called after `scan_preamble()`.
+     * If the object type is `Object::VECTOR`, the number of columns is set to 1.
+     *
+     * @return Number of columns.
+     */
     size_t get_ncols() const {
         if (!passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
@@ -258,6 +287,13 @@ public:
         return ncols;
     }
 
+    /**
+     * Extract the number of non-zero lines in the coordinate format.
+     * This should be called after `scan_preamble()`.
+     * If the object type is `Object::ARRAY`, the number of lines is set to the produce of the number of rows and columns.
+     *
+     * @return Number of non-zero lines. 
+     */
     size_t get_nlines() const {
         if (!passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
@@ -266,6 +302,10 @@ public:
     }
 
 public:
+    /**
+     * Scan the preamble from the Matrix Market file, including the banner and the size line.
+     * This should only be called once.
+     */
     void scan_preamble() {
         scan_banner();
         scan_size();
@@ -579,6 +619,16 @@ private:
     }
 
 public:
+    /**
+     * Scan the file for integer lines, assuming that the field in the banner is `Field::INTEGER`.
+     * 
+     * @tparam Type_ Type to represent the integer.
+     * @tparam Store_ Function to process each line.
+     *
+     * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
+     * which is passed the corresponding values at each line.
+     * For `Object::VECTOR`, `column` is fixed to 1.
+     */
     template<typename Type_ = int, class Store_>
     void scan_integer(Store_&& store) {
         bool init = true;
@@ -625,6 +675,16 @@ public:
         }
     }
 
+    /**
+     * Scan the file for real lines, assuming that the field in the banner is `Field::REAL`.
+     * 
+     * @tparam Type_ Type to represent the real value.
+     * @tparam Store_ Function to process each line.
+     *
+     * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
+     * which is passed the corresponding values at each line.
+     * For `Object::VECTOR`, `column` is fixed to 1.
+     */
     template<typename Type_ = double, class Store_>
     void scan_real(Store_&& store) {
         std::string temporary;
@@ -655,11 +715,32 @@ public:
         }
     }
 
+    /**
+     * Scan the file for double-precision lines, assuming that the field in the banner is `Field::DOUBLE`.
+     * This is just an alias for `scan_real()`.
+     * 
+     * @tparam Type_ Type to represent the double-precision value.
+     * @tparam Store_ Function to process each line.
+     *
+     * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
+     * which is passed the corresponding values at each line.
+     * For `Object::VECTOR`, `column` is fixed to 1.
+     */
     template<typename Type_ = double, class Store_>
     void scan_double(Store_&& store) {
         scan_real<Type_, Store_>(std::forward<Store_>(store));
     }
 
+    /**
+     * Scan the file for complex lines, assuming that the field in the banner is `Field::COMPLEX`.
+     * 
+     * @tparam Type_ Type to represent the real and imaginary parts of the complex value.
+     * @tparam Store_ Function to process each line.
+     *
+     * @param store Function with the signature `void(size_t row, size_t column, std::complex<Type_> value)`,
+     * which is passed the corresponding values at each line.
+     * For `Object::VECTOR`, `column` is fixed to 1.
+     */
     template<typename Type_ = double, class Store_>
     void scan_complex(Store_&& store) {
         std::string temporary;
@@ -694,6 +775,17 @@ public:
         }
     }
 
+    /**
+     * Scan the file for pattern lines, assuming that the field in the banner is `Field::PATTERN`.
+     * This function only works when the format field is set to `Format::COORDINATE`.
+     * 
+     * @tparam Type_ Type to represent the presence of a non-zero entry.
+     * @tparam Store_ Function to process each line.
+     *
+     * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
+     * which is passed the corresponding values at each line.
+     * `value` is always set to `true` and can be ignored; it is only listed here for consistency with the other methods.
+     */
     template<typename Type_ = bool, class Store_>
     void scan_pattern(Store_&& store) {
         auto compose = [](char, size_t) -> void {};
