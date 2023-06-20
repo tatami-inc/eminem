@@ -631,7 +631,7 @@ public:
      *
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
-     * For `Object::VECTOR`, `column` is fixed to 1.
+     * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      */
     template<typename Type_ = int, class Store_>
     void scan_integer(Store_&& store) {
@@ -687,7 +687,7 @@ public:
      *
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
-     * For `Object::VECTOR`, `column` is fixed to 1.
+     * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      */
     template<typename Type_ = double, class Store_>
     void scan_real(Store_&& store) {
@@ -728,7 +728,7 @@ public:
      *
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
-     * For `Object::VECTOR`, `column` is fixed to 1.
+     * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      */
     template<typename Type_ = double, class Store_>
     void scan_double(Store_&& store) {
@@ -743,7 +743,7 @@ public:
      *
      * @param store Function with the signature `void(size_t row, size_t column, std::complex<Type_> value)`,
      * which is passed the corresponding values at each line.
-     * For `Object::VECTOR`, `column` is fixed to 1.
+     * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      */
     template<typename Type_ = double, class Store_>
     void scan_complex(Store_&& store) {
@@ -788,7 +788,8 @@ public:
      *
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
-     * `value` is always set to `true` and can be ignored; it is only listed here for consistency with the other methods.
+     * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
+     * `value` will always be `true` and can be ignored; it is only required here for consistency with the other methods.
      */
     template<typename Type_ = bool, class Store_>
     void scan_pattern(Store_&& store) {
