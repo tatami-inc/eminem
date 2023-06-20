@@ -1,5 +1,9 @@
 # Parse Matrix Market files in C++
 
+![Unit tests](https://github.com/tatami-inc/eminem/actions/workflows/run-tests.yaml/badge.svg)
+![Documentation](https://github.com/tatami-inc/eminem/actions/workflows/doxygenate.yaml/badge.svg)
+[![codecov](https://codecov.io/gh/tatami-inc/eminem/branch/master/graph/badge.svg?token=7I3UBJLHSO)](https://codecov.io/gh/tatami-inc/eminem)
+
 ## Overview
 
 The **eminem** library implements parsers for Matrix Market (`*.mm`/`*.mtx`) files.
