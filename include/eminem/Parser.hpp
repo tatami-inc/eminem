@@ -142,8 +142,8 @@ private:
 
 public:
     /**
-     * Retrieve the Matrix Market banner.
-     * This should be called after `scan_preamble()`.
+     * Retrieve the Matrix Market banner, containing information about the data format and type.
+     * This should only be called after `scan_preamble()`.
      *
      * @return Details about the matrix in this file.
      */
@@ -264,8 +264,8 @@ private:
 
 public:
     /**
-     * Extract the number of rows in the matrix.
-     * This should be called after `scan_preamble()`.
+     * Get the number of rows in the matrix.
+     * This should only be called after `scan_preamble()`.
      * If the object type is `Object::VECTOR`, the number of rows is equal to the length of the vector.
      *
      * @return Number of rows.
@@ -278,8 +278,8 @@ public:
     }
 
     /**
-     * Extract the number of columns in the matrix.
-     * This should be called after `scan_preamble()`.
+     * Get the number of columns in the matrix.
+     * This should only be called after `scan_preamble()`.
      * If the object type is `Object::VECTOR`, the number of columns is set to 1.
      *
      * @return Number of columns.
@@ -292,9 +292,9 @@ public:
     }
 
     /**
-     * Extract the number of non-zero lines in the coordinate format.
-     * This should be called after `scan_preamble()`.
-     * If the object type is `Object::ARRAY`, the number of lines is set to the produce of the number of rows and columns.
+     * Get the number of non-zero lines in the coordinate format.
+     * This should only be called after `scan_preamble()`.
+     * If the object type is `Object::ARRAY`, the number of lines is defined as the product of the number of rows and columns.
      *
      * @return Number of non-zero lines. 
      */

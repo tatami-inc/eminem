@@ -9,25 +9,28 @@ Users can supply their own functions to process each line on the fly, based on t
 
 ## Quick start
 
-Create the desired `Parser` subclass - or define your own, based on a [**byteme**](https://github.com/LTLA/byteme) `Reader` class.
+We first create the desired `Parser` subclass:
 
 ```cpp
 eminem::TextFileParser parser("some_path.mm");
 ```
 
-We then scan through the preamble, which contains the banner and the size lines.
-This is necessary to decide which scanning function to use.
+We scan through the preamble, which contains the banner and the size lines.
+The type of the data field in the banner will determine which scanning function to use.
 The size lines can also help with pre-allocation of memory to store the scanning output, if necessary.
 
 ```cpp
 parser.scan_preamble();
 auto deets = parser.get_banner();
+auto NR = parser.get_nrows();
+auto NC = parser.get_ncols();
+auto NL = parser.get_nlines();
 ```
 
-Then we can scan through the actual data lines, providing a lambda or functor to process each row/column/value triplet as it is parsed.
+Finally, we scan through the actual data lines, providing a lambda or functor to process each row/column/value triplet as it is parsed.
 Note that the row/column indices are 1-based when they are passed to the lambda.
 
-```
+```cpp
 if (deets.field == eminem::Field::INTEGER) {
     parser.scan_integer([&](size_t r, size_t c, int v) -> void {
         // Do something per line.
@@ -67,6 +70,13 @@ target_link_libraries(myexe eminem)
 
 # For libaries
 target_link_libraries(mylib INTERFACE eminem)
+```
+
+To enable support for Gzip-compressed files, additional linking is required to the Zlib libraries:
+
+```cmake
+find_package(ZLIB)
+target_link_libraries(myexe ZLIB::ZLIB)
 ```
 
 If you're not using CMake, the simple approach is to just copy the files - either directly or with Git submodules - and include their path during compilation with, e.g., GCC's `-I`.

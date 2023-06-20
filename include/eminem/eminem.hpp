@@ -11,6 +11,9 @@
 /**
  * @file eminem.hpp
  * @brief Umbrella header for the **eminem** library.
+ * 
+ * Developers should define `EMINEM_NO_ZLIB` when Zlib is not available.
+ * This will avoid including the parsers for Gzip-compressed files.
  */
 
 /**
