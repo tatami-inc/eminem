@@ -358,7 +358,7 @@ template&lt;typename Type_  = int, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. For <code>Object::VECTOR</code>, <code>column</code> is fixed to 1. </td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. </td></tr>
   </table>
   </dd>
 </dl>
@@ -402,7 +402,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. For <code>Object::VECTOR</code>, <code>column</code> is fixed to 1. </td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. </td></tr>
   </table>
   </dd>
 </dl>
@@ -446,7 +446,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. For <code>Object::VECTOR</code>, <code>column</code> is fixed to 1. </td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. </td></tr>
   </table>
   </dd>
 </dl>
@@ -490,7 +490,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, std::complex&lt;Type_&gt; value)</code>, which is passed the corresponding values at each line. For <code>Object::VECTOR</code>, <code>column</code> is fixed to 1. </td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, std::complex&lt;Type_&gt; value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. </td></tr>
   </table>
   </dd>
 </dl>
@@ -534,7 +534,7 @@ template&lt;typename Type_  = bool, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. <code>value</code> is always set to <code>true</code> and can be ignored; it is only listed here for consistency with the other methods. </td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. <code>value</code> will always be <code>true</code> and can be ignored; it is only required here for consistency with the other methods. </td></tr>
   </table>
   </dd>
 </dl>

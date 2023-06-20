@@ -324,7 +324,7 @@
   </compound>
   <compound kind="page">
     <name>index</name>
-    <title>Simple Matrix Market reader</title>
+    <title>Parse Matrix Market files in C++</title>
     <filename>index.html</filename>
     <docanchor file="index.html">md__github_workspace_README</docanchor>
   </compound>

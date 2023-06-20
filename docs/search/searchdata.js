@@ -7,7 +7,7 @@ var indexSectionsWithContent =
   4: "gpstz",
   5: "fos",
   6: "fos",
-  7: "s"
+  7: "p"
 };
 
 var indexSectionNames =

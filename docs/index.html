@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.9.5"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>eminem: Simple Matrix Market reader</title>
+<title>eminem: Parse Matrix Market files in C++</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -71,10 +71,49 @@ $(function() {
 </div>
 
 <div><div class="header">
-  <div class="headertitle"><div class="title">Simple Matrix Market reader </div></div>
+  <div class="headertitle"><div class="title">Parse Matrix Market files in C++ </div></div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p ><a class="anchor" id="md__github_workspace_README"></a> This repository implements a simple reader for Matrix Market files. </p>
+<div class="textblock"><p ><a class="anchor" id="md__github_workspace_README"></a> </p><h1>Overview</h1>
+<p >The <b>eminem</b> library implements parsers for Matrix Market (<code>*.mm</code>/<code>*.mtx</code>) files. We support matrix or vector objects, coordinate or array formats, and all the different fields (integer, real, complex and pattern). We support reading from text files, Gzip-compressed files, as well as in-memory buffers. Users can supply their own functions to process each line on the fly, based on the information in the banner and size lines.</p>
+<h1>Quick start</h1>
+<p >Create the desired <code>Parser</code> subclass - or define your own, based on a <a href="https://github.com/LTLA/byteme"><b>byteme</b></a> <code>Reader</code> class.</p>
+<div class="fragment"><div class="line"><a class="code hl_struct" href="structeminem_1_1TextFileParser.html">eminem::TextFileParser</a> parser(<span class="stringliteral">&quot;some_path.mm&quot;</span>);</div>
+<div class="ttc" id="astructeminem_1_1TextFileParser_html"><div class="ttname"><a href="structeminem_1_1TextFileParser.html">eminem::TextFileParser</a></div><div class="ttdoc">Parse a Matrix Market text file.</div><div class="ttdef"><b>Definition:</b> from_text.hpp:22</div></div>
+</div><!-- fragment --><p >We then scan through the preamble, which contains the banner and the size lines. This is necessary to decide which scanning function to use. The size lines can also help with pre-allocation of memory to store the scanning output, if necessary.</p>
+<div class="fragment"><div class="line">parser.scan_preamble();</div>
+<div class="line"><span class="keyword">auto</span> deets = parser.get_banner();</div>
+</div><!-- fragment --><p >Then we can scan through the actual data lines, providing a lambda or functor to process each row/column/value triplet as it is parsed. Note that the row/column indices are 1-based when they are passed to the lambda.</p>
+<div class="fragment"><div class="line">if (deets.field == eminem::Field::INTEGER) {</div>
+<div class="line">    parser.scan_integer([&amp;](size_t r, size_t c, int v) -&gt; void {</div>
+<div class="line">        // Do something per line.</div>
+<div class="line">    });</div>
+<div class="line">} else if (deets.field == eminem::Field::REAL) {</div>
+<div class="line">    parser.scan_real([&amp;](size_t r, size_t c, double v) -&gt; void {</div>
+<div class="line">        // Do something else.</div>
+<div class="line">    });</div>
+<div class="line">} else {</div>
+<div class="line">    // and so on...</div>
+<div class="line">}</div>
+</div><!-- fragment --><p >Check out the <a href="tatami-inc.github.io/eminem/">reference documentation</a> for more details.</p>
+<h1>Building projects</h1>
+<p >If you're using CMake, you just need to add something like this to your <code>CMakeLists.txt</code>:</p>
+<div class="fragment"><div class="line">include(FetchContent)</div>
+<div class="line"> </div>
+<div class="line">FetchContent_Declare(</div>
+<div class="line">  tatami</div>
+<div class="line">  GIT_REPOSITORY https://github.com/tatami-inc/eminem</div>
+<div class="line">  GIT_TAG master # or any version of interest</div>
+<div class="line">)</div>
+<div class="line"> </div>
+<div class="line">FetchContent_MakeAvailable(tatami)</div>
+</div><!-- fragment --><p >Then you can link to <b>tatami</b> to make the headers available during compilation:</p>
+<div class="fragment"><div class="line"># For executables:</div>
+<div class="line">target_link_libraries(myexe eminem)</div>
+<div class="line"> </div>
+<div class="line"># For libaries</div>
+<div class="line">target_link_libraries(mylib INTERFACE eminem)</div>
+</div><!-- fragment --><p >If you're not using CMake, the simple approach is to just copy the files - either directly or with Git submodules - and include their path during compilation with, e.g., GCC's <code>-I</code>. If you want to read Matrix Market files, you'll also need to add the <a href="https://github.com/LTLA/byteme"><b>byteme</b></a> header-only library to the compiler's search path. </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 <!-- start footer part -->
