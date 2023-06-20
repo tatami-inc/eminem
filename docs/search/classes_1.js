@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['parser_0',['Parser',['../classeminem_1_1Parser.html',1,'eminem']]]
+  ['matrixdetails_0',['MatrixDetails',['../structeminem_1_1MatrixDetails.html',1,'eminem']]]
 ];

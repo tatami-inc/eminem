@@ -1,0 +1,9 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$classeminem_1_1Parser.html" title="Parse a matrix from a Matrix Market file." alt="" coords="5,165,169,205"/>
+<area shape="rect" id="node2" href="$structeminem_1_1GzipFileParser.html" title="Parse a Gzip&#45;compressed Matrix Market file." alt="" coords="228,5,387,45"/>
+<area shape="rect" id="node3" href="$structeminem_1_1SomeBufferParser.html" title="Parse a (possibly Zlib&#45;compressed) Matrix Market buffer." alt="" coords="217,69,397,109"/>
+<area shape="rect" id="node4" href="$structeminem_1_1SomeFileParser.html" title="Parse a (possibly Gzip&#45;compressed) Matrix Market file." alt="" coords="224,133,391,173"/>
+<area shape="rect" id="node5" href="$structeminem_1_1TextBufferParser.html" title="Parse a Matrix Market text buffer." alt="" coords="222,197,393,237"/>
+<area shape="rect" id="node6" href="$structeminem_1_1TextFileParser.html" title="Parse a Matrix Market text file." alt="" coords="228,261,387,301"/>
+<area shape="rect" id="node7" href="$structeminem_1_1ZlibBufferParser.html" title="Parse a Zlib&#45;compressed Matrix Market buffer." alt="" coords="224,325,391,365"/>
+</map>

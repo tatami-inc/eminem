@@ -7,6 +7,14 @@
     <namespace>eminem</namespace>
   </compound>
   <compound kind="file">
+    <name>from_text.hpp</name>
+    <path>/github/workspace/include/eminem/</path>
+    <filename>from__text_8hpp.html</filename>
+    <class kind="struct">eminem::TextFileParser</class>
+    <class kind="struct">eminem::TextBufferParser</class>
+    <namespace>eminem</namespace>
+  </compound>
+  <compound kind="file">
     <name>Parser.hpp</name>
     <path>/github/workspace/include/eminem/</path>
     <filename>Parser_8hpp.html</filename>
@@ -62,6 +70,19 @@
     </member>
   </compound>
   <compound kind="struct">
+    <name>eminem::GzipFileParser</name>
+    <filename>structeminem_1_1GzipFileParser.html</filename>
+    <templarg>bool parallel_</templarg>
+    <base>eminem::Parser</base>
+    <member kind="function">
+      <type></type>
+      <name>GzipFileParser</name>
+      <anchorfile>structeminem_1_1GzipFileParser.html</anchorfile>
+      <anchor>a0f08b1f954fb18da51ff7bd07e792921</anchor>
+      <arglist>(const char *path, size_t buffer_size=65536)</arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
     <name>eminem::MatrixDetails</name>
     <filename>structeminem_1_1MatrixDetails.html</filename>
     <member kind="variable">
@@ -97,89 +118,168 @@
     <name>eminem::Parser</name>
     <filename>classeminem_1_1Parser.html</filename>
     <templarg>bool parallel_</templarg>
+    <templarg>class Pointer_</templarg>
     <member kind="function">
       <type></type>
       <name>Parser</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>aa7ec9979303690e07fb426d141b18cd3</anchor>
-      <arglist>(byteme::Reader &amp;r)</arglist>
+      <anchor>aac50ba8e6cf38ef0bf917da3c3c1b38b</anchor>
+      <arglist>(Pointer_ r)</arglist>
     </member>
     <member kind="function">
       <type>const MatrixDetails &amp;</type>
       <name>get_banner</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>ad08fffd43c2ec0e457a990d229179f39</anchor>
+      <anchor>ae328fb6bf0a7c14d94613be7fdb29b68</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
       <type>size_t</type>
       <name>get_nrows</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>af229fc293af0a5ecc666bfd1fa291d58</anchor>
+      <anchor>af542456a3d6f975771d83d0ca3b10743</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
       <type>size_t</type>
       <name>get_ncols</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a06af0c623a88672c2de19c706d50ce7b</anchor>
+      <anchor>a96b8735665f05ad5d62ef63d9d03015f</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
       <type>size_t</type>
       <name>get_nlines</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a7429a2f280e5387df208260fa5149e7c</anchor>
+      <anchor>af7b5baa96fb3a6daef738e7e838b4354</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>scan_preamble</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>ae3bda1dea3bfe1d974662c4bbc612eb5</anchor>
+      <anchor>a7f3b83f6181970fcc27cd4f62701892a</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>scan_integer</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a0c4f34306f89951fd50bac30dad805d7</anchor>
+      <anchor>ad036e768d5fdccd22c150f771cbd3c2e</anchor>
       <arglist>(Store_ &amp;&amp;store)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>scan_real</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>aa7bc49b85f09b580ac26c18409c7173e</anchor>
+      <anchor>a6a5d7f974202892a8b11a459fd1e428d</anchor>
       <arglist>(Store_ &amp;&amp;store)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>scan_double</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>ad1755b5584420b1c4cbc1be354590fe9</anchor>
+      <anchor>a3913fc53b3ef366049b8762c0914a59b</anchor>
       <arglist>(Store_ &amp;&amp;store)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>scan_complex</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>ac0160741f5132c3e5d3b3982e08e7a00</anchor>
+      <anchor>ae64d68cce15c02e74adb0da7377ef8be</anchor>
       <arglist>(Store_ &amp;&amp;store)</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>scan_pattern</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>ad9f26d7647241d98034efed26a0e6ccc</anchor>
+      <anchor>ab104da5bba6ac7abf0ca077e388d6438</anchor>
       <arglist>(Store_ &amp;&amp;store)</arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
+    <name>eminem::SomeBufferParser</name>
+    <filename>structeminem_1_1SomeBufferParser.html</filename>
+    <templarg>bool parallel_</templarg>
+    <base>eminem::Parser</base>
+    <member kind="function">
+      <type></type>
+      <name>SomeBufferParser</name>
+      <anchorfile>structeminem_1_1SomeBufferParser.html</anchorfile>
+      <anchor>ae29ef7ae4e9d8a61ceb3864a0e554827</anchor>
+      <arglist>(const unsigned char *buffer, size_t len, size_t buffer_size=65536)</arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
+    <name>eminem::SomeFileParser</name>
+    <filename>structeminem_1_1SomeFileParser.html</filename>
+    <templarg>bool parallel_</templarg>
+    <base>eminem::Parser</base>
+    <member kind="function">
+      <type></type>
+      <name>SomeFileParser</name>
+      <anchorfile>structeminem_1_1SomeFileParser.html</anchorfile>
+      <anchor>a88b2dab114576afabfb3da7b2064bbb1</anchor>
+      <arglist>(const char *path, size_t buffer_size=65536)</arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
+    <name>eminem::TextBufferParser</name>
+    <filename>structeminem_1_1TextBufferParser.html</filename>
+    <templarg>bool parallel_</templarg>
+    <base>eminem::Parser</base>
+    <member kind="function">
+      <type></type>
+      <name>TextBufferParser</name>
+      <anchorfile>structeminem_1_1TextBufferParser.html</anchorfile>
+      <anchor>a4b6ee958967c782770d11cc016fff8f6</anchor>
+      <arglist>(const unsigned char *buffer, size_t len)</arglist>
+    </member>
+    <member kind="function">
+      <type></type>
+      <name>TextBufferParser</name>
+      <anchorfile>structeminem_1_1TextBufferParser.html</anchorfile>
+      <anchor>a4ed6a3a45f609796eab4c977bbaf62fd</anchor>
+      <arglist>(const char *buffer, size_t len)</arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
+    <name>eminem::TextFileParser</name>
+    <filename>structeminem_1_1TextFileParser.html</filename>
+    <templarg>bool parallel_</templarg>
+    <base>eminem::Parser</base>
+    <member kind="function">
+      <type></type>
+      <name>TextFileParser</name>
+      <anchorfile>structeminem_1_1TextFileParser.html</anchorfile>
+      <anchor>a6b63c87bfd5035a635a806d5510b7e1c</anchor>
+      <arglist>(const char *path, size_t chunk_size=65536)</arglist>
+    </member>
+  </compound>
+  <compound kind="struct">
+    <name>eminem::ZlibBufferParser</name>
+    <filename>structeminem_1_1ZlibBufferParser.html</filename>
+    <templarg>bool parallel_</templarg>
+    <base>eminem::Parser</base>
+    <member kind="function">
+      <type></type>
+      <name>ZlibBufferParser</name>
+      <anchorfile>structeminem_1_1ZlibBufferParser.html</anchorfile>
+      <anchor>ad6e5ddabbe74915a17ed21f91b5d2ad3</anchor>
+      <arglist>(const unsigned char *buffer, size_t len, int mode=3, size_t buffer_size=65536)</arglist>
     </member>
   </compound>
   <compound kind="namespace">
     <name>eminem</name>
     <filename>namespaceeminem.html</filename>
+    <class kind="struct">eminem::GzipFileParser</class>
     <class kind="struct">eminem::MatrixDetails</class>
     <class kind="class">eminem::Parser</class>
+    <class kind="struct">eminem::SomeBufferParser</class>
+    <class kind="struct">eminem::SomeFileParser</class>
+    <class kind="struct">eminem::TextBufferParser</class>
+    <class kind="struct">eminem::TextFileParser</class>
+    <class kind="struct">eminem::ZlibBufferParser</class>
     <member kind="enumeration">
       <type></type>
       <name>Object</name>

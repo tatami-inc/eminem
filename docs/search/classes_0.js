@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['matrixdetails_0',['MatrixDetails',['../structeminem_1_1MatrixDetails.html',1,'eminem']]]
+  ['gzipfileparser_0',['GzipFileParser',['../structeminem_1_1GzipFileParser.html',1,'eminem']]]
 ];
