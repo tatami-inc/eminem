@@ -2,3 +2,6 @@ build/
 *.swp
 docs/html
 docs/latex
+*.gz
+*.mm
+*.mtx
