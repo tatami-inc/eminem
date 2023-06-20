@@ -201,7 +201,7 @@ template&lt;bool parallel_ = false, class Pointer_  = byteme::Reader*&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p >Retrieve the Matrix Market banner. This should be called after <code><a class="el" href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">scan_preamble()</a></code>.</p>
+<p >Retrieve the Matrix Market banner, containing information about the data format and type. This should only be called after <code><a class="el" href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">scan_preamble()</a></code>.</p>
 <dl class="section return"><dt>Returns</dt><dd>Details about the matrix in this file. </dd></dl>
 
 </div>
@@ -230,7 +230,7 @@ template&lt;bool parallel_ = false, class Pointer_  = byteme::Reader*&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p >Extract the number of rows in the matrix. This should be called after <code><a class="el" href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">scan_preamble()</a></code>. If the object type is <code>Object::VECTOR</code>, the number of rows is equal to the length of the vector.</p>
+<p >Get the number of rows in the matrix. This should only be called after <code><a class="el" href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">scan_preamble()</a></code>. If the object type is <code>Object::VECTOR</code>, the number of rows is equal to the length of the vector.</p>
 <dl class="section return"><dt>Returns</dt><dd>Number of rows. </dd></dl>
 
 </div>
@@ -259,7 +259,7 @@ template&lt;bool parallel_ = false, class Pointer_  = byteme::Reader*&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p >Extract the number of columns in the matrix. This should be called after <code><a class="el" href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">scan_preamble()</a></code>. If the object type is <code>Object::VECTOR</code>, the number of columns is set to 1.</p>
+<p >Get the number of columns in the matrix. This should only be called after <code><a class="el" href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">scan_preamble()</a></code>. If the object type is <code>Object::VECTOR</code>, the number of columns is set to 1.</p>
 <dl class="section return"><dt>Returns</dt><dd>Number of columns. </dd></dl>
 
 </div>
@@ -288,7 +288,7 @@ template&lt;bool parallel_ = false, class Pointer_  = byteme::Reader*&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p >Extract the number of non-zero lines in the coordinate format. This should be called after <code><a class="el" href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">scan_preamble()</a></code>. If the object type is <code>Object::ARRAY</code>, the number of lines is set to the produce of the number of rows and columns.</p>
+<p >Get the number of non-zero lines in the coordinate format. This should only be called after <code><a class="el" href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">scan_preamble()</a></code>. If the object type is <code>Object::ARRAY</code>, the number of lines is defined as the product of the number of rows and columns.</p>
 <dl class="section return"><dt>Returns</dt><dd>Number of non-zero lines. </dd></dl>
 
 </div>
