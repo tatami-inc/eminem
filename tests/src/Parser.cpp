@@ -49,7 +49,7 @@ protected:
         EXPECT_ANY_THROW({
             try {
                 ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-                eminem::Parser parser(reader);
+                eminem::Parser parser(&reader);
                 parser.scan_preamble();
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr(msg));
@@ -65,7 +65,7 @@ TEST_P(ParserPreambleTest, Success) {
     {
         std::string input = "%MatrixMarket matrix coordinate real symmetric\n5 2 1";
         ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(reader);
+        eminem::Parser parser(&reader);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -82,7 +82,7 @@ TEST_P(ParserPreambleTest, Success) {
     {
         std::string input = "%MatrixMarket matrix array integer general\n235 122\n";
         ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(reader);
+        eminem::Parser parser(&reader);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -99,7 +99,7 @@ TEST_P(ParserPreambleTest, Success) {
     {
         std::string input = "%%MatrixMarket vector array double skew-symmetric\n52";
         ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(reader);
+        eminem::Parser parser(&reader);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -116,7 +116,7 @@ TEST_P(ParserPreambleTest, Success) {
     {
         std::string input = "%%MatrixMarket matrix coordinate complex hermitian\n99 100 352\n";
         ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(reader);
+        eminem::Parser parser(&reader);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -133,7 +133,7 @@ TEST_P(ParserPreambleTest, Success) {
     {
         std::string input = "%%MatrixMarket vector coordinate pattern general\n% FOOBAR% WHEE\n100 5\n";
         ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(reader);
+        eminem::Parser parser(&reader);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -171,7 +171,7 @@ TEST_P(ParserPreambleTest, Errors) {
     EXPECT_ANY_THROW({
         try {
             ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-            eminem::Parser parser(reader);
+            eminem::Parser parser(&reader);
             parser.get_banner();
         } catch (std::exception& e) {
             EXPECT_THAT(e.what(), ::testing::HasSubstr("banner has not yet been scanned"));
@@ -182,7 +182,7 @@ TEST_P(ParserPreambleTest, Errors) {
     EXPECT_ANY_THROW({
         try {
             ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-            eminem::Parser parser(reader);
+            eminem::Parser parser(&reader);
             parser.scan_preamble();
             parser.scan_preamble();
         } catch (std::exception& e) {
@@ -194,7 +194,7 @@ TEST_P(ParserPreambleTest, Errors) {
     EXPECT_ANY_THROW({
         try {
             ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-            eminem::Parser parser(reader);
+            eminem::Parser parser(&reader);
             parser.get_nlines();
         } catch (std::exception& e) {
             EXPECT_THAT(e.what(), ::testing::HasSubstr("size line has not yet been scanned"));
@@ -227,7 +227,7 @@ TEST_P(ParserIntegerBodyTest, CoordinateMatrix) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -258,7 +258,7 @@ TEST_P(ParserIntegerBodyTest, CoordinateVector) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -288,7 +288,7 @@ TEST_P(ParserIntegerBodyTest, ArrayMatrix) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -327,7 +327,7 @@ TEST_P(ParserIntegerBodyTest, ArrayVector) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -379,7 +379,7 @@ TEST_P(ParserRealBodyTest, CoordinateMatrix) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -401,7 +401,7 @@ TEST_P(ParserRealBodyTest, CoordinateMatrix) {
     // Getting some coverage on scan_double in coordinate mode.
     {
         ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(reader);
+        eminem::Parser parser(&reader);
         parser.scan_preamble();
 
         std::vector<double> out_vals2;
@@ -425,7 +425,7 @@ TEST_P(ParserRealBodyTest, CoordinateVector) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -456,7 +456,7 @@ TEST_P(ParserRealBodyTest, ArrayMatrix) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -486,7 +486,7 @@ TEST_P(ParserRealBodyTest, ArrayMatrix) {
     // Getting some coverage on scan_double in array mode.
     {
         ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(reader);
+        eminem::Parser parser(&reader);
         parser.scan_preamble();
 
         std::vector<double> out_vals2;
@@ -508,7 +508,7 @@ TEST_P(ParserRealBodyTest, ArrayVector) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -562,7 +562,7 @@ TEST_P(ParserComplexBodyTest, CoordinateMatrix) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -595,7 +595,7 @@ TEST_P(ParserComplexBodyTest, CoordinateVector) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -626,7 +626,7 @@ TEST_P(ParserComplexBodyTest, ArrayMatrix) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -665,7 +665,7 @@ TEST_P(ParserComplexBodyTest, ArrayVector) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -718,7 +718,7 @@ TEST_P(ParserPatternBodyTest, CoordinateMatrix) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -750,7 +750,7 @@ TEST_P(ParserPatternBodyTest, CoordinateVector) {
     std::string input = stored.str();
 
     ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(reader);
+    eminem::Parser parser(&reader);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -785,7 +785,7 @@ protected:
         EXPECT_ANY_THROW({
             try {
                 ChunkedBufferReader reader(input.data(), input.size(), 20);
-                eminem::Parser parser(reader);
+                eminem::Parser parser(&reader);
                 parser.scan_preamble();
 
                 auto field = parser.get_banner().field;

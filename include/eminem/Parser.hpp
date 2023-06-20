@@ -18,21 +18,22 @@
 namespace eminem {
 
 /**
- * @brief Parse a matrix from a Matrx Market file.
+ * @brief Parse a matrix from a Matrix Market file.
  *
  * @tparam parallel_ Whether to parallelize the byte reading and parsing.
  * If `true`, a separate thread is used to read the bytes from the input source.
+ * @tparam Pointer_ A (possibly smart) pointer to a `byteme::Reader` instance.
  */
-template<bool parallel_ = false>
+template<bool parallel_ = false, class Pointer_ = byteme::Reader*>
 class Parser {
 public:
     /**
-     * @param r A source of bytes from the [**byteme**](https://github.com/LTLA/byteme) library.
+     * @param r Pointer to an unused `Reader` instance from the [**byteme**](https://github.com/LTLA/byteme) library.
      */
-    Parser(byteme::Reader& r) : input(r) {}
+    Parser(Pointer_ r) : input(std::move(r)) {}
 
 private:
-    typename std::conditional<parallel_, byteme::PerByteParallel<>, byteme::PerByte<> >::type input;
+    typename std::conditional<parallel_, byteme::PerByteParallel<char, Pointer_>, byteme::PerByte<char, Pointer_> >::type input;
     size_t current_line = 0;
 
 private:

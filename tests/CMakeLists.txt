@@ -10,12 +10,18 @@ FetchContent_MakeAvailable(googletest)
 
 enable_testing()
 
-add_executable(libtest src/Parser.cpp)
+add_executable(libtest 
+    src/Parser.cpp
+    src/from_text.cpp
+    src/from_gzip.cpp)
 
 target_link_libraries(libtest 
     gtest_main
     gmock_main
     eminem)
+
+find_package(ZLIB)
+target_link_libraries(libtest ZLIB::ZLIB)
 
 include(CheckIncludeFiles)
 check_include_files(filesystem HAVE_CXX_FS)

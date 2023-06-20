@@ -2,6 +2,11 @@
 #define EMINEM_EMINEM_HPP
 
 #include "Parser.hpp"
+#include "from_text.hpp"
+
+#ifndef EMINEM_NO_ZLIB
+#include "from_gzip.hpp"
+#endif
 
 /**
  * @file eminem.hpp
