@@ -2,8 +2,8 @@
 
 #include "eminem/from_text.hpp"
 #include "eminem/from_gzip.hpp"
+#include "byteme/temp_file_path.hpp"
 
-#include "temp_file_path.h"
 #include "simulate.h"
 #include "format.h"
 
@@ -18,7 +18,7 @@ TEST(FromGzip, File) {
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_integer(coords.first.size(), -999, 999);
 
-    auto path = temp_file_path("tatami-tests-ext-MatrixMarket.mtx.gz");
+    auto path = byteme::temp_file_path("file", ".mtx.gz");
     {
         std::stringstream stored;
         format_coordinate(stored, NR, NC, coords.first, coords.second, values);
@@ -85,7 +85,7 @@ TEST(FromGzip, Buffer) {
         stored << "\n"; // add an extra newline.
         auto contents = stored.str();
 
-        auto path = temp_file_path("tatami-tests-ext-MatrixMarket.mtx.gz");
+        auto path = byteme::temp_file_path("buffer", ".mtx.gz");
         gzFile ohandle = gzopen(path.c_str(), "w");
         gzwrite(ohandle, contents.data(), contents.size());
         gzclose(ohandle);
