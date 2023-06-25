@@ -670,8 +670,7 @@ public:
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
-     * This may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue;
-     * alternatively it may return `void`.
+     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
      *
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
@@ -730,8 +729,7 @@ public:
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
-     * This may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue;
-     * alternatively it may return `void`.
+     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
      *
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
@@ -775,6 +773,9 @@ public:
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
+     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
+     *
+     * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = double, class Store_>
     bool scan_double(Store_&& store) {
@@ -790,8 +791,7 @@ public:
      * @param store Function with the signature `void(size_t row, size_t column, std::complex<Type_> value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
-     * This may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue;
-     * alternatively it may return `void`.
+     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
      *
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
@@ -840,8 +840,7 @@ public:
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      * `value` will always be `true` and can be ignored; it is only required here for consistency with the other methods.
-     * This may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue;
-     * alternatively it may return `void`.
+     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
      *
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */

@@ -16,6 +16,8 @@ Users can supply their own functions to process each line on the fly, based on t
 We first create the desired `Parser` subclass:
 
 ```cpp
+#include "eminem/eminem.hpp"
+
 eminem::TextFileParser parser("some_path.mm");
 ```
 
@@ -84,4 +86,4 @@ target_link_libraries(myexe ZLIB::ZLIB)
 ```
 
 If you're not using CMake, the simple approach is to just copy the files - either directly or with Git submodules - and include their path during compilation with, e.g., GCC's `-I`.
-If you want to read Matrix Market files, you'll also need to add the [**byteme**](https://github.com/LTLA/byteme) header-only library to the compiler's search path.
+You'll also need to add the [**byteme**](https://github.com/LTLA/byteme) header-only library to the compiler's search path.
