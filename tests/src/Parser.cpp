@@ -204,12 +204,13 @@ TEST_P(ParserIntegerBodyTest, CoordinateMatrix) {
     EXPECT_EQ(parser.get_nlines(), values.size());
 
     std::vector<int> out_rows, out_cols, out_vals;
-    parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
 
+    EXPECT_TRUE(success);
     EXPECT_EQ(out_rows, coords.first);
     EXPECT_EQ(out_cols, coords.second);
     EXPECT_EQ(out_vals, values);
@@ -234,12 +235,13 @@ TEST_P(ParserIntegerBodyTest, CoordinateVector) {
     EXPECT_EQ(parser.get_nlines(), values.size());
 
     std::vector<int> out_rows, out_cols, out_vals;
-    parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
 
+    EXPECT_TRUE(success);
     EXPECT_EQ(out_rows, coords);
     EXPECT_EQ(out_cols, std::vector<int>(coords.size()));
     EXPECT_EQ(out_vals, values);
@@ -265,7 +267,7 @@ TEST_P(ParserIntegerBodyTest, ArrayMatrix) {
     EXPECT_EQ(parser.get_nlines(), NR * NC);
 
     std::vector<int> out_rows, out_cols, out_vals;
-    parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -279,6 +281,7 @@ TEST_P(ParserIntegerBodyTest, ArrayMatrix) {
         }
     }
 
+    EXPECT_TRUE(success);
     EXPECT_EQ(out_rows, expected_rows);
     EXPECT_EQ(out_cols, expected_cols);
     EXPECT_EQ(out_vals, values);
@@ -304,11 +307,13 @@ TEST_P(ParserIntegerBodyTest, ArrayVector) {
     EXPECT_EQ(parser.get_nlines(), N);
 
     std::vector<int> out_rows, out_cols, out_vals;
-    parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
+
+    EXPECT_TRUE(success);
 
     std::vector<int> expected_rows(N);
     std::iota(expected_rows.begin(), expected_rows.end(), 0);
@@ -357,12 +362,13 @@ TEST_P(ParserRealBodyTest, CoordinateMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<double> out_vals;
-    parser.scan_real([&](size_t r, size_t c, double v) -> void {
+    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
 
+    EXPECT_TRUE(success);
     EXPECT_EQ(out_rows, coords.first);
     EXPECT_EQ(out_cols, coords.second);
     test_equal_vectors(out_vals, values);
@@ -403,12 +409,13 @@ TEST_P(ParserRealBodyTest, CoordinateVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<double> out_vals;
-    parser.scan_real([&](size_t r, size_t c, double v) -> void {
+    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
 
+    EXPECT_TRUE(success);
     EXPECT_EQ(out_rows, coords);
     EXPECT_EQ(out_cols, std::vector<int>(coords.size()));
     test_equal_vectors(out_vals, values);
@@ -434,11 +441,13 @@ TEST_P(ParserRealBodyTest, ArrayMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<double> out_vals;
-    parser.scan_real([&](size_t r, size_t c, double v) -> void {
+    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
+
+    EXPECT_TRUE(success);
 
     std::vector<int> expected_rows, expected_cols;
     for (size_t c = 0; c < NC; ++c) {
@@ -486,11 +495,13 @@ TEST_P(ParserRealBodyTest, ArrayVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<double> out_vals;
-    parser.scan_real([&](size_t r, size_t c, double v) -> void {
+    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
+
+    EXPECT_TRUE(success);
 
     std::vector<int> expected_rows(N);
     std::iota(expected_rows.begin(), expected_rows.end(), 0);
@@ -540,12 +551,13 @@ TEST_P(ParserComplexBodyTest, CoordinateMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<std::complex<double> > out_vals;
-    parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
+    bool success = parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
 
+    EXPECT_TRUE(success);
     EXPECT_EQ(out_rows, coords.first);
     EXPECT_EQ(out_cols, coords.second);
     test_equal_vectors(out_vals, values);
@@ -573,12 +585,13 @@ TEST_P(ParserComplexBodyTest, CoordinateVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<std::complex<double> > out_vals;
-    parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
+    bool success = parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
 
+    EXPECT_TRUE(success);
     EXPECT_EQ(out_rows, coords);
     EXPECT_EQ(out_cols, std::vector<int>(coords.size()));
     test_equal_vectors(out_vals, values);
@@ -604,11 +617,13 @@ TEST_P(ParserComplexBodyTest, ArrayMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<std::complex<double> > out_vals;
-    parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
+    bool success = parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
+
+    EXPECT_TRUE(success);
 
     std::vector<int> expected_rows, expected_cols;
     for (size_t c = 0; c < NC; ++c) {
@@ -643,11 +658,13 @@ TEST_P(ParserComplexBodyTest, ArrayVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<std::complex<double> > out_vals;
-    parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
+    bool success = parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
+
+    EXPECT_TRUE(success);
 
     std::vector<int> expected_rows(N);
     std::iota(expected_rows.begin(), expected_rows.end(), 0);
@@ -696,11 +713,13 @@ TEST_P(ParserPatternBodyTest, CoordinateMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<char> out_vals;
-    parser.scan_pattern([&](size_t r, size_t c, bool v) -> void {
+    bool success = parser.scan_pattern([&](size_t r, size_t c, bool v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
+
+    EXPECT_TRUE(success);
 
     EXPECT_EQ(out_rows, coords.first);
     EXPECT_EQ(out_cols, coords.second);
@@ -728,11 +747,13 @@ TEST_P(ParserPatternBodyTest, CoordinateVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<char> out_vals;
-    parser.scan_pattern([&](size_t r, size_t c, bool v) -> void {
+    bool success = parser.scan_pattern([&](size_t r, size_t c, bool v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
+
+    EXPECT_TRUE(success);
 
     EXPECT_EQ(out_rows, coords);
     EXPECT_EQ(out_cols, std::vector<int>(coords.size()));
@@ -748,12 +769,139 @@ INSTANTIATE_TEST_CASE_P(
 /*****************************************
  *****************************************/
 
+class ParserBodyEarlyTerminationTest : public ::testing::Test {};
+
+TEST_F(ParserBodyEarlyTerminationTest, CoordinateMatrix) {
+    size_t NR = 82, NC = 32;
+    auto coords = simulate_coordinate(NR, NC, 0.1);
+    auto values = simulate_integer(coords.first.size(), -999, 999);
+
+    std::stringstream stored;
+    format_coordinate(stored, NR, NC, coords.first, coords.second, values); // Don't add an extra new line this time!
+    std::string input = stored.str();
+
+    // Early termination inside the loop.
+    {
+        byteme::RawBufferReader reader(input.data(), input.size());
+        eminem::Parser parser(&reader);
+        parser.scan_preamble();
+
+        std::vector<int> out_rows, out_cols, out_vals;
+        bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> bool {
+            if (r > 20) {
+                return false;
+            } else {
+                out_rows.push_back(r - 1);
+                out_cols.push_back(c - 1);
+                out_vals.push_back(v);
+                return true;
+            } 
+        });
+
+        EXPECT_FALSE(success);
+
+        std::vector<int> expected_rows, expected_cols, expected_vals;
+        for (size_t i = 0, end = values.size(); i < end; ++i) {
+            if (coords.first[i] > 19) { // -1, because we're dealing with 0-based indices here.
+                break;
+            }
+            expected_rows.push_back(coords.first[i]);
+            expected_cols.push_back(coords.second[i]);
+            expected_vals.push_back(values[i]);
+        }
+
+        EXPECT_EQ(out_rows, expected_rows);
+        EXPECT_EQ(out_cols, expected_cols);
+        EXPECT_EQ(out_vals, expected_vals);
+    }
+
+    // Early termination outside the loop.
+    {
+        byteme::RawBufferReader reader(input.data(), input.size());
+        eminem::Parser parser(&reader);
+        parser.scan_preamble();
+
+        std::vector<int> out_rows, out_cols, out_vals;
+        bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> bool {
+            out_rows.push_back(r - 1);
+            out_cols.push_back(c - 1);
+            out_vals.push_back(v);
+            return (out_vals.size() < values.size());
+        });
+
+        EXPECT_FALSE(success);
+        EXPECT_EQ(out_rows, coords.first);
+        EXPECT_EQ(out_cols, coords.second);
+        EXPECT_EQ(out_vals, values);
+    }
+}
+
+TEST_F(ParserBodyEarlyTerminationTest, ArrayVector) {
+    size_t N = 632;
+    auto values = simulate_integer(N, -20, 20);
+
+    std::stringstream stored;
+    format_array(stored, N, values);
+    std::string input = stored.str();
+
+    // Early termination inside the loop.
+    {
+        byteme::RawBufferReader reader(input.data(), input.size());
+        eminem::Parser parser(&reader);
+        parser.scan_preamble();
+
+        std::vector<int> out_rows, out_cols;
+        std::vector<int> out_vals;
+        bool success = parser.scan_integer([&](size_t r, size_t c, double v) -> bool {
+            out_rows.push_back(r - 1);
+            out_cols.push_back(c - 1);
+            out_vals.push_back(v);
+            return (r < 100);
+        });
+
+        EXPECT_FALSE(success);
+
+        std::vector<int> expected_rows(100); // no -1, as we terminate after adding.
+        std::iota(expected_rows.begin(), expected_rows.end(), 0);
+        EXPECT_EQ(out_rows, expected_rows);
+        EXPECT_EQ(out_cols, std::vector<int>(100));
+        EXPECT_EQ(out_vals, std::vector<int>(values.begin(), values.begin() + 100));
+    }
+
+    // Early termination outside the loop.
+    {
+        byteme::RawBufferReader reader(input.data(), input.size());
+        eminem::Parser parser(&reader);
+        parser.scan_preamble();
+
+        std::vector<int> out_rows, out_cols;
+        std::vector<int> out_vals;
+        bool success = parser.scan_integer([&](size_t r, size_t c, double v) -> bool {
+            out_rows.push_back(r - 1);
+            out_cols.push_back(c - 1);
+            out_vals.push_back(v);
+            return (r < N);
+        });
+
+        EXPECT_FALSE(success);
+
+        std::vector<int> expected_rows(N); // no -1, as we terminate after adding.
+        std::iota(expected_rows.begin(), expected_rows.end(), 0);
+        EXPECT_EQ(out_rows, expected_rows);
+        EXPECT_EQ(out_cols, std::vector<int>(N));
+        EXPECT_EQ(out_vals, values);
+    }
+}
+
+/*****************************************
+ *****************************************/
+
 class ParserBodyErrorTest : public ::testing::Test {
 protected:
     void test_error(const std::string& input, std::string msg) {
         EXPECT_ANY_THROW({
             try {
-                byteme::ChunkedBufferReader reader(input.data(), input.size(), 20);
+                byteme::RawBufferReader reader(input.data(), input.size());
                 eminem::Parser parser(&reader);
                 parser.scan_preamble();
 

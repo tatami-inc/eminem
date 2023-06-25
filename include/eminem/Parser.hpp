@@ -5,6 +5,7 @@
 #include <string>
 #include <cstring>
 #include <complex>
+#include <type_traits>
 
 #include "byteme/PerByte.hpp"
 #include "utils.hpp"
@@ -380,7 +381,7 @@ private:
     }
 
     template<Object object_, Field field_, class Store_, class Compose_, class Bump_, class Finish_>
-    void scan_coordinate(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
+    bool scan_coordinate(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
         if (!passed_banner || !passed_size) {
             throw std::runtime_error("banner or size lines have not yet been parsed");
         }
@@ -390,6 +391,13 @@ private:
         char onto = 0;
         bool non_empty = false;
         bool valid = input.valid();
+
+        if constexpr(object_ == Object::VECTOR) {
+            curcol = 1;
+        }
+
+        typedef typename std::invoke_result<Finish_, size_t>::type finish_value;
+        constexpr bool can_quit = std::is_same<typename std::invoke_result<Store_, size_t, size_t, finish_value>::type, bool>::value;
 
         while (valid) {
             if (input.get() == '%') {
@@ -428,14 +436,22 @@ private:
                 } else if (current == '\n') {
                     if constexpr(object_ == Object::MATRIX) {
                         check_coordinate_matrix<field_>(currow, curcol, current_data_line, onto, non_empty);
-                        store(currow, curcol, finish(current_line));
-                        curcol = 0;
                     } else {
                         check_coordinate_vector<field_>(currow, current_data_line, onto, non_empty);
-                        store(currow, 1, finish(current_line));
+                    }
+
+                    if constexpr(can_quit) {
+                        if (!store(currow, curcol, finish(current_line))) {
+                            return false; 
+                        }
+                    } else {
+                        store(currow, curcol, finish(current_line));
                     }
 
                     currow = 0;
+                    if constexpr(object_ == Object::MATRIX) {
+                        curcol = 0;
+                    }
                     ++current_data_line;
                     onto = 0;
                     non_empty = false;
@@ -482,18 +498,25 @@ private:
         if (onto != 0 || non_empty) { 
             if constexpr(object_ == Object::MATRIX) {
                 check_coordinate_matrix<field_>(currow, curcol, current_data_line, onto, non_empty);
-                store(currow, curcol, finish(current_line));
             } else {
                 check_coordinate_vector<field_>(currow, current_data_line, onto, non_empty);
-                store(currow, 1, finish(current_line));
             }
+
+            if constexpr(can_quit) {
+                if (!store(currow, curcol, finish(current_line))) {
+                    return false;
+                }
+            } else {
+                store(currow, curcol, finish(current_line));
+            }
+
             ++current_data_line;
         }
 
         if (current_data_line != nlines) {
             throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(nlines) + ")");
         }
-        return;
+        return true;
     }
 
 private:
@@ -519,7 +542,7 @@ private:
     }
 
     template<Field field_, class Store_, class Compose_, class Bump_, class Finish_>
-    void scan_array(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
+    bool scan_array(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
         if (!passed_banner || !passed_size) {
             throw std::runtime_error("banner or size lines have not yet been parsed");
         }
@@ -529,6 +552,9 @@ private:
         char onto = 0;
         bool non_empty = false;
         bool valid = input.valid();
+
+        typedef typename std::invoke_result<Finish_, size_t>::type finish_value;
+        constexpr bool can_quit = std::is_same<typename std::invoke_result<Store_, size_t, size_t, finish_value>::type, bool>::value;
 
         while (valid) {
             if (input.get() == '%') {
@@ -558,7 +584,13 @@ private:
 
                 } else if (current == '\n') {
                     check_array<field_>(current_data_line, onto, non_empty); 
-                    store(currow, curcol, finish(current_line));
+                    if constexpr(can_quit) {
+                        if (!store(currow, curcol, finish(current_line))) {
+                            return false; 
+                        }
+                    } else {
+                        store(currow, curcol, finish(current_line));
+                    }
 
                     ++currow;
                     if (currow > nrows) {
@@ -587,14 +619,20 @@ private:
         // last line that was _not_ terminated by a newline.
         if (onto != 0 || non_empty) { 
             check_array<field_>(current_data_line, onto, non_empty); 
-            store(currow, curcol, finish(current_line));
+            if constexpr(can_quit) {
+                if (!store(currow, curcol, finish(current_line))) {
+                    return false; 
+                }
+            } else {
+                store(currow, curcol, finish(current_line));
+            }
             ++current_data_line;
         }
 
         if (current_data_line != nlines) {
             throw std::runtime_error("fewer lines present than expected for an array format (" + std::to_string(nlines) + ")");
         }
-        return;
+        return true;
     }
 
 private:
@@ -632,9 +670,13 @@ public:
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
+     * This may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue;
+     * alternatively it may return `void`.
+     *
+     * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = int, class Store_>
-    void scan_integer(Store_&& store) {
+    bool scan_integer(Store_&& store) {
         bool init = true;
         bool negative = false;
         Type_ curval = 0;
@@ -670,12 +712,12 @@ public:
 
         if (details.format == Format::COORDINATE) {
             if (details.object == Object::MATRIX) {
-                scan_coordinate<Object::MATRIX, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_coordinate<Object::MATRIX, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             } else {
-                scan_coordinate<Object::VECTOR, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_coordinate<Object::VECTOR, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             }
         } else {
-            scan_array<Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            return scan_array<Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
         }
     }
 
@@ -688,9 +730,13 @@ public:
      * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
+     * This may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue;
+     * alternatively it may return `void`.
+     *
+     * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = double, class Store_>
-    void scan_real(Store_&& store) {
+    bool scan_real(Store_&& store) {
         std::string temporary;
 
         auto compose = [&](char x, size_t line) -> void {
@@ -710,12 +756,12 @@ public:
 
         if (details.format == Format::COORDINATE) {
             if (details.object == Object::MATRIX) {
-                scan_coordinate<Object::MATRIX, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_coordinate<Object::MATRIX, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             } else {
-                scan_coordinate<Object::VECTOR, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_coordinate<Object::VECTOR, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             }
         } else {
-            scan_array<Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            return scan_array<Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
         }
     }
 
@@ -731,7 +777,7 @@ public:
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      */
     template<typename Type_ = double, class Store_>
-    void scan_double(Store_&& store) {
+    bool scan_double(Store_&& store) {
         scan_real<Type_, Store_>(std::forward<Store_>(store));
     }
 
@@ -744,9 +790,13 @@ public:
      * @param store Function with the signature `void(size_t row, size_t column, std::complex<Type_> value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
+     * This may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue;
+     * alternatively it may return `void`.
+     *
+     * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = double, class Store_>
-    void scan_complex(Store_&& store) {
+    bool scan_complex(Store_&& store) {
         std::string temporary;
         std::complex<Type_> holding;
 
@@ -770,12 +820,12 @@ public:
 
         if (details.format == Format::COORDINATE) {
             if (details.object == Object::MATRIX) {
-                scan_coordinate<Object::MATRIX, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_coordinate<Object::MATRIX, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             } else {
-                scan_coordinate<Object::VECTOR, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_coordinate<Object::VECTOR, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             }
         } else {
-            scan_array<Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            return scan_array<Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
         }
     }
 
@@ -790,23 +840,27 @@ public:
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      * `value` will always be `true` and can be ignored; it is only required here for consistency with the other methods.
+     * This may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue;
+     * alternatively it may return `void`.
+     *
+     * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = bool, class Store_>
-    void scan_pattern(Store_&& store) {
+    bool scan_pattern(Store_&& store) {
         auto compose = [](char, size_t) -> void {};
         auto bump = [](size_t) -> void {};
         auto finish = [](size_t) -> Type_ { 
             return true; 
         };
 
-        if (details.format == Format::COORDINATE) {
-            if (details.object == Object::MATRIX) {
-                scan_coordinate<Object::MATRIX, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
-            } else {
-                scan_coordinate<Object::VECTOR, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
-            }
-        } else {
+        if (details.format != Format::COORDINATE) {
             throw std::runtime_error("'array' format for 'pattern' field is not supported");
+        }
+
+        if (details.object == Object::MATRIX) {
+            return scan_coordinate<Object::MATRIX, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+        } else {
+            return scan_coordinate<Object::VECTOR, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
         }
     }
 };
