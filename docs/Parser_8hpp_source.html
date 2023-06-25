@@ -694,87 +694,87 @@ $(function() {
 <div class="line"><a id="l00661" name="l00661"></a><span class="lineno">  661</span>    }</div>
 <div class="line"><a id="l00662" name="l00662"></a><span class="lineno">  662</span> </div>
 <div class="line"><a id="l00663" name="l00663"></a><span class="lineno">  663</span><span class="keyword">public</span>:</div>
-<div class="line"><a id="l00678" name="l00678"></a><span class="lineno">  678</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">int</span>, <span class="keyword">class</span> Store_&gt;</div>
-<div class="line"><a id="l00679" name="l00679"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a09a4fc024e115cec86bedc8af400914c">  679</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a09a4fc024e115cec86bedc8af400914c">scan_integer</a>(Store_&amp;&amp; store) {</div>
-<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>        <span class="keywordtype">bool</span> init = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span>        <span class="keywordtype">bool</span> negative = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span>        Type_ curval = 0;</div>
-<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span> </div>
-<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span>        <span class="keyword">auto</span> compose = [&amp;](<span class="keywordtype">char</span> x, <span class="keywordtype">size_t</span> line) -&gt; <span class="keywordtype">void</span> {</div>
-<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span>            <span class="keywordflow">if</span> (init) {</div>
-<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>                <span class="keywordflow">if</span> (x == <span class="charliteral">&#39;-&#39;</span>) {</div>
-<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>                    negative = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>                    <span class="keywordflow">return</span>;</div>
-<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>                }</div>
-<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>                init = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>            }</div>
-<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>            <span class="keywordflow">if</span> (x &lt; &#39;0&#39; || x &gt; <span class="charliteral">&#39;9&#39;</span>) {</div>
-<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>                <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;expected an integer value on line &quot;</span> + std::to_string(line + 1));</div>
-<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>            }</div>
-<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>            curval *= 10;</div>
-<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>            curval += (x - <span class="charliteral">&#39;0&#39;</span>); </div>
-<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span>        };</div>
-<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span> </div>
-<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span>        <span class="keyword">auto</span> bump = [](size_t) -&gt; <span class="keywordtype">void</span> {};</div>
-<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span> </div>
-<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>        <span class="keyword">auto</span> finish = [&amp;](size_t) -&gt; Type_ {</div>
-<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>            <span class="keywordflow">if</span> (negative) {</div>
-<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>                curval *= -1;</div>
-<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>            }</div>
-<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>            init = <span class="keyword">true</span>;</div>
-<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span>            negative = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span> </div>
-<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>            <span class="keyword">auto</span> copy = curval;</div>
-<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>            curval = 0;</div>
-<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>            <span class="keywordflow">return</span> copy;</div>
-<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span>        };</div>
-<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span> </div>
-<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>        <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553">format</a> == Format::COORDINATE) {</div>
-<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>            <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#adbae3a51eba68d76b79306c070e0445d">object</a> == Object::MATRIX) {</div>
-<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span>                <span class="keywordflow">return</span> scan_coordinate&lt;Object::MATRIX, Field::INTEGER&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
-<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>            } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span>                <span class="keywordflow">return</span> scan_coordinate&lt;Object::VECTOR, Field::INTEGER&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
-<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>            }</div>
-<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>            <span class="keywordflow">return</span> scan_array&lt;Field::INTEGER&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
-<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>        }</div>
-<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span>    }</div>
-<div class="line"><a id="l00723" name="l00723"></a><span class="lineno">  723</span> </div>
-<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">double</span>, <span class="keyword">class</span> Store_&gt;</div>
-<div class="line"><a id="l00739" name="l00739"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a9b1a79df5d518569e49d2ef364416414">  739</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a9b1a79df5d518569e49d2ef364416414">scan_real</a>(Store_&amp;&amp; store) {</div>
-<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>        std::string temporary;</div>
-<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span> </div>
-<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>        <span class="keyword">auto</span> compose = [&amp;](<span class="keywordtype">char</span> x, <span class="keywordtype">size_t</span> line) -&gt; <span class="keywordtype">void</span> {</div>
-<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>            <span class="keywordflow">if</span> (std::isspace(x)) {</div>
-<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>                <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;detected whitespace in value on line &quot;</span> + std::to_string(line + 1));</div>
-<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>            }</div>
-<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span>            temporary += x;</div>
-<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>        };</div>
+<div class="line"><a id="l00677" name="l00677"></a><span class="lineno">  677</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">int</span>, <span class="keyword">class</span> Store_&gt;</div>
+<div class="line"><a id="l00678" name="l00678"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a09a4fc024e115cec86bedc8af400914c">  678</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a09a4fc024e115cec86bedc8af400914c">scan_integer</a>(Store_&amp;&amp; store) {</div>
+<div class="line"><a id="l00679" name="l00679"></a><span class="lineno">  679</span>        <span class="keywordtype">bool</span> init = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00680" name="l00680"></a><span class="lineno">  680</span>        <span class="keywordtype">bool</span> negative = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00681" name="l00681"></a><span class="lineno">  681</span>        Type_ curval = 0;</div>
+<div class="line"><a id="l00682" name="l00682"></a><span class="lineno">  682</span> </div>
+<div class="line"><a id="l00683" name="l00683"></a><span class="lineno">  683</span>        <span class="keyword">auto</span> compose = [&amp;](<span class="keywordtype">char</span> x, <span class="keywordtype">size_t</span> line) -&gt; <span class="keywordtype">void</span> {</div>
+<div class="line"><a id="l00684" name="l00684"></a><span class="lineno">  684</span>            <span class="keywordflow">if</span> (init) {</div>
+<div class="line"><a id="l00685" name="l00685"></a><span class="lineno">  685</span>                <span class="keywordflow">if</span> (x == <span class="charliteral">&#39;-&#39;</span>) {</div>
+<div class="line"><a id="l00686" name="l00686"></a><span class="lineno">  686</span>                    negative = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00687" name="l00687"></a><span class="lineno">  687</span>                    <span class="keywordflow">return</span>;</div>
+<div class="line"><a id="l00688" name="l00688"></a><span class="lineno">  688</span>                }</div>
+<div class="line"><a id="l00689" name="l00689"></a><span class="lineno">  689</span>                init = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00690" name="l00690"></a><span class="lineno">  690</span>            }</div>
+<div class="line"><a id="l00691" name="l00691"></a><span class="lineno">  691</span>            <span class="keywordflow">if</span> (x &lt; &#39;0&#39; || x &gt; <span class="charliteral">&#39;9&#39;</span>) {</div>
+<div class="line"><a id="l00692" name="l00692"></a><span class="lineno">  692</span>                <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;expected an integer value on line &quot;</span> + std::to_string(line + 1));</div>
+<div class="line"><a id="l00693" name="l00693"></a><span class="lineno">  693</span>            }</div>
+<div class="line"><a id="l00694" name="l00694"></a><span class="lineno">  694</span>            curval *= 10;</div>
+<div class="line"><a id="l00695" name="l00695"></a><span class="lineno">  695</span>            curval += (x - <span class="charliteral">&#39;0&#39;</span>); </div>
+<div class="line"><a id="l00696" name="l00696"></a><span class="lineno">  696</span>        };</div>
+<div class="line"><a id="l00697" name="l00697"></a><span class="lineno">  697</span> </div>
+<div class="line"><a id="l00698" name="l00698"></a><span class="lineno">  698</span>        <span class="keyword">auto</span> bump = [](size_t) -&gt; <span class="keywordtype">void</span> {};</div>
+<div class="line"><a id="l00699" name="l00699"></a><span class="lineno">  699</span> </div>
+<div class="line"><a id="l00700" name="l00700"></a><span class="lineno">  700</span>        <span class="keyword">auto</span> finish = [&amp;](size_t) -&gt; Type_ {</div>
+<div class="line"><a id="l00701" name="l00701"></a><span class="lineno">  701</span>            <span class="keywordflow">if</span> (negative) {</div>
+<div class="line"><a id="l00702" name="l00702"></a><span class="lineno">  702</span>                curval *= -1;</div>
+<div class="line"><a id="l00703" name="l00703"></a><span class="lineno">  703</span>            }</div>
+<div class="line"><a id="l00704" name="l00704"></a><span class="lineno">  704</span>            init = <span class="keyword">true</span>;</div>
+<div class="line"><a id="l00705" name="l00705"></a><span class="lineno">  705</span>            negative = <span class="keyword">false</span>;</div>
+<div class="line"><a id="l00706" name="l00706"></a><span class="lineno">  706</span> </div>
+<div class="line"><a id="l00707" name="l00707"></a><span class="lineno">  707</span>            <span class="keyword">auto</span> copy = curval;</div>
+<div class="line"><a id="l00708" name="l00708"></a><span class="lineno">  708</span>            curval = 0;</div>
+<div class="line"><a id="l00709" name="l00709"></a><span class="lineno">  709</span>            <span class="keywordflow">return</span> copy;</div>
+<div class="line"><a id="l00710" name="l00710"></a><span class="lineno">  710</span>        };</div>
+<div class="line"><a id="l00711" name="l00711"></a><span class="lineno">  711</span> </div>
+<div class="line"><a id="l00712" name="l00712"></a><span class="lineno">  712</span>        <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553">format</a> == Format::COORDINATE) {</div>
+<div class="line"><a id="l00713" name="l00713"></a><span class="lineno">  713</span>            <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#adbae3a51eba68d76b79306c070e0445d">object</a> == Object::MATRIX) {</div>
+<div class="line"><a id="l00714" name="l00714"></a><span class="lineno">  714</span>                <span class="keywordflow">return</span> scan_coordinate&lt;Object::MATRIX, Field::INTEGER&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
+<div class="line"><a id="l00715" name="l00715"></a><span class="lineno">  715</span>            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00716" name="l00716"></a><span class="lineno">  716</span>                <span class="keywordflow">return</span> scan_coordinate&lt;Object::VECTOR, Field::INTEGER&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
+<div class="line"><a id="l00717" name="l00717"></a><span class="lineno">  717</span>            }</div>
+<div class="line"><a id="l00718" name="l00718"></a><span class="lineno">  718</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00719" name="l00719"></a><span class="lineno">  719</span>            <span class="keywordflow">return</span> scan_array&lt;Field::INTEGER&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
+<div class="line"><a id="l00720" name="l00720"></a><span class="lineno">  720</span>        }</div>
+<div class="line"><a id="l00721" name="l00721"></a><span class="lineno">  721</span>    }</div>
+<div class="line"><a id="l00722" name="l00722"></a><span class="lineno">  722</span> </div>
+<div class="line"><a id="l00736" name="l00736"></a><span class="lineno">  736</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">double</span>, <span class="keyword">class</span> Store_&gt;</div>
+<div class="line"><a id="l00737" name="l00737"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a9b1a79df5d518569e49d2ef364416414">  737</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a9b1a79df5d518569e49d2ef364416414">scan_real</a>(Store_&amp;&amp; store) {</div>
+<div class="line"><a id="l00738" name="l00738"></a><span class="lineno">  738</span>        std::string temporary;</div>
+<div class="line"><a id="l00739" name="l00739"></a><span class="lineno">  739</span> </div>
+<div class="line"><a id="l00740" name="l00740"></a><span class="lineno">  740</span>        <span class="keyword">auto</span> compose = [&amp;](<span class="keywordtype">char</span> x, <span class="keywordtype">size_t</span> line) -&gt; <span class="keywordtype">void</span> {</div>
+<div class="line"><a id="l00741" name="l00741"></a><span class="lineno">  741</span>            <span class="keywordflow">if</span> (std::isspace(x)) {</div>
+<div class="line"><a id="l00742" name="l00742"></a><span class="lineno">  742</span>                <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;detected whitespace in value on line &quot;</span> + std::to_string(line + 1));</div>
+<div class="line"><a id="l00743" name="l00743"></a><span class="lineno">  743</span>            }</div>
+<div class="line"><a id="l00744" name="l00744"></a><span class="lineno">  744</span>            temporary += x;</div>
+<div class="line"><a id="l00745" name="l00745"></a><span class="lineno">  745</span>        };</div>
+<div class="line"><a id="l00746" name="l00746"></a><span class="lineno">  746</span> </div>
+<div class="line"><a id="l00747" name="l00747"></a><span class="lineno">  747</span>        <span class="keyword">auto</span> bump = [](size_t) -&gt; <span class="keywordtype">void</span> {};</div>
 <div class="line"><a id="l00748" name="l00748"></a><span class="lineno">  748</span> </div>
-<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>        <span class="keyword">auto</span> bump = [](size_t) -&gt; <span class="keywordtype">void</span> {};</div>
-<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span> </div>
-<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>        <span class="keyword">auto</span> finish = [&amp;](<span class="keywordtype">size_t</span> line) -&gt; <span class="keywordtype">double</span> {</div>
-<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>            <span class="keywordtype">double</span> output = convert_to_real&lt;Type_&gt;(temporary, line);</div>
-<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>            temporary.clear();</div>
-<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span>            <span class="keywordflow">return</span> output;</div>
-<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>        };</div>
-<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span> </div>
-<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>        <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553">format</a> == Format::COORDINATE) {</div>
-<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>            <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#adbae3a51eba68d76b79306c070e0445d">object</a> == Object::MATRIX) {</div>
-<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>                <span class="keywordflow">return</span> scan_coordinate&lt;Object::MATRIX, Field::REAL&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
-<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>            } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span>                <span class="keywordflow">return</span> scan_coordinate&lt;Object::VECTOR, Field::REAL&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
-<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>            }</div>
-<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span>            <span class="keywordflow">return</span> scan_array&lt;Field::REAL&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
-<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span>        }</div>
-<div class="line"><a id="l00766" name="l00766"></a><span class="lineno">  766</span>    }</div>
-<div class="line"><a id="l00767" name="l00767"></a><span class="lineno">  767</span> </div>
-<div class="line"><a id="l00779" name="l00779"></a><span class="lineno">  779</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">double</span>, <span class="keyword">class</span> Store_&gt;</div>
-<div class="line"><a id="l00780" name="l00780"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a56fc759e2286411d823c30fe3f9cd7e3">  780</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a56fc759e2286411d823c30fe3f9cd7e3">scan_double</a>(Store_&amp;&amp; store) {</div>
-<div class="line"><a id="l00781" name="l00781"></a><span class="lineno">  781</span>        scan_real&lt;Type_, Store_&gt;(std::forward&lt;Store_&gt;(store));</div>
-<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>    }</div>
-<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span> </div>
+<div class="line"><a id="l00749" name="l00749"></a><span class="lineno">  749</span>        <span class="keyword">auto</span> finish = [&amp;](<span class="keywordtype">size_t</span> line) -&gt; <span class="keywordtype">double</span> {</div>
+<div class="line"><a id="l00750" name="l00750"></a><span class="lineno">  750</span>            <span class="keywordtype">double</span> output = convert_to_real&lt;Type_&gt;(temporary, line);</div>
+<div class="line"><a id="l00751" name="l00751"></a><span class="lineno">  751</span>            temporary.clear();</div>
+<div class="line"><a id="l00752" name="l00752"></a><span class="lineno">  752</span>            <span class="keywordflow">return</span> output;</div>
+<div class="line"><a id="l00753" name="l00753"></a><span class="lineno">  753</span>        };</div>
+<div class="line"><a id="l00754" name="l00754"></a><span class="lineno">  754</span> </div>
+<div class="line"><a id="l00755" name="l00755"></a><span class="lineno">  755</span>        <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553">format</a> == Format::COORDINATE) {</div>
+<div class="line"><a id="l00756" name="l00756"></a><span class="lineno">  756</span>            <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#adbae3a51eba68d76b79306c070e0445d">object</a> == Object::MATRIX) {</div>
+<div class="line"><a id="l00757" name="l00757"></a><span class="lineno">  757</span>                <span class="keywordflow">return</span> scan_coordinate&lt;Object::MATRIX, Field::REAL&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
+<div class="line"><a id="l00758" name="l00758"></a><span class="lineno">  758</span>            } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00759" name="l00759"></a><span class="lineno">  759</span>                <span class="keywordflow">return</span> scan_coordinate&lt;Object::VECTOR, Field::REAL&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
+<div class="line"><a id="l00760" name="l00760"></a><span class="lineno">  760</span>            }</div>
+<div class="line"><a id="l00761" name="l00761"></a><span class="lineno">  761</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00762" name="l00762"></a><span class="lineno">  762</span>            <span class="keywordflow">return</span> scan_array&lt;Field::REAL&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
+<div class="line"><a id="l00763" name="l00763"></a><span class="lineno">  763</span>        }</div>
+<div class="line"><a id="l00764" name="l00764"></a><span class="lineno">  764</span>    }</div>
+<div class="line"><a id="l00765" name="l00765"></a><span class="lineno">  765</span> </div>
+<div class="line"><a id="l00780" name="l00780"></a><span class="lineno">  780</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">double</span>, <span class="keyword">class</span> Store_&gt;</div>
+<div class="line"><a id="l00781" name="l00781"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a56fc759e2286411d823c30fe3f9cd7e3">  781</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a56fc759e2286411d823c30fe3f9cd7e3">scan_double</a>(Store_&amp;&amp; store) {</div>
+<div class="line"><a id="l00782" name="l00782"></a><span class="lineno">  782</span>        scan_real&lt;Type_, Store_&gt;(std::forward&lt;Store_&gt;(store));</div>
+<div class="line"><a id="l00783" name="l00783"></a><span class="lineno">  783</span>    }</div>
+<div class="line"><a id="l00784" name="l00784"></a><span class="lineno">  784</span> </div>
 <div class="line"><a id="l00798" name="l00798"></a><span class="lineno">  798</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">double</span>, <span class="keyword">class</span> Store_&gt;</div>
 <div class="line"><a id="l00799" name="l00799"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a267e51f35b56bed1c16d84e6d040272d">  799</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a267e51f35b56bed1c16d84e6d040272d">scan_complex</a>(Store_&amp;&amp; store) {</div>
 <div class="line"><a id="l00800" name="l00800"></a><span class="lineno">  800</span>        std::string temporary;</div>
@@ -809,37 +809,37 @@ $(function() {
 <div class="line"><a id="l00829" name="l00829"></a><span class="lineno">  829</span>        }</div>
 <div class="line"><a id="l00830" name="l00830"></a><span class="lineno">  830</span>    }</div>
 <div class="line"><a id="l00831" name="l00831"></a><span class="lineno">  831</span> </div>
-<div class="line"><a id="l00848" name="l00848"></a><span class="lineno">  848</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">bool</span>, <span class="keyword">class</span> Store_&gt;</div>
-<div class="line"><a id="l00849" name="l00849"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a686e70e6d1bd705fc1548b9253f4923e">  849</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a686e70e6d1bd705fc1548b9253f4923e">scan_pattern</a>(Store_&amp;&amp; store) {</div>
-<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span>        <span class="keyword">auto</span> compose = [](char, size_t) -&gt; <span class="keywordtype">void</span> {};</div>
-<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span>        <span class="keyword">auto</span> bump = [](size_t) -&gt; <span class="keywordtype">void</span> {};</div>
-<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span>        <span class="keyword">auto</span> finish = [](size_t) -&gt; Type_ { </div>
-<div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span>            <span class="keywordflow">return</span> <span class="keyword">true</span>; </div>
-<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span>        };</div>
-<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span> </div>
-<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span>        <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553">format</a> != Format::COORDINATE) {</div>
-<div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;&#39;array&#39; format for &#39;pattern&#39; field is not supported&quot;</span>);</div>
-<div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span>        }</div>
-<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span> </div>
-<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span>        <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#adbae3a51eba68d76b79306c070e0445d">object</a> == Object::MATRIX) {</div>
-<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span>            <span class="keywordflow">return</span> scan_coordinate&lt;Object::MATRIX, Field::PATTERN&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
-<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span>        } <span class="keywordflow">else</span> {</div>
-<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>            <span class="keywordflow">return</span> scan_coordinate&lt;Object::VECTOR, Field::PATTERN&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
-<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span>        }</div>
-<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>    }</div>
-<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span>};</div>
-<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span> </div>
-<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span>}</div>
-<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span> </div>
-<div class="line"><a id="l00870" name="l00870"></a><span class="lineno">  870</span><span class="preprocessor">#endif</span></div>
+<div class="line"><a id="l00847" name="l00847"></a><span class="lineno">  847</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_ = <span class="keywordtype">bool</span>, <span class="keyword">class</span> Store_&gt;</div>
+<div class="line"><a id="l00848" name="l00848"></a><span class="lineno"><a class="line" href="classeminem_1_1Parser.html#a686e70e6d1bd705fc1548b9253f4923e">  848</a></span>    <span class="keywordtype">bool</span> <a class="code hl_function" href="classeminem_1_1Parser.html#a686e70e6d1bd705fc1548b9253f4923e">scan_pattern</a>(Store_&amp;&amp; store) {</div>
+<div class="line"><a id="l00849" name="l00849"></a><span class="lineno">  849</span>        <span class="keyword">auto</span> compose = [](char, size_t) -&gt; <span class="keywordtype">void</span> {};</div>
+<div class="line"><a id="l00850" name="l00850"></a><span class="lineno">  850</span>        <span class="keyword">auto</span> bump = [](size_t) -&gt; <span class="keywordtype">void</span> {};</div>
+<div class="line"><a id="l00851" name="l00851"></a><span class="lineno">  851</span>        <span class="keyword">auto</span> finish = [](size_t) -&gt; Type_ { </div>
+<div class="line"><a id="l00852" name="l00852"></a><span class="lineno">  852</span>            <span class="keywordflow">return</span> <span class="keyword">true</span>; </div>
+<div class="line"><a id="l00853" name="l00853"></a><span class="lineno">  853</span>        };</div>
+<div class="line"><a id="l00854" name="l00854"></a><span class="lineno">  854</span> </div>
+<div class="line"><a id="l00855" name="l00855"></a><span class="lineno">  855</span>        <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553">format</a> != Format::COORDINATE) {</div>
+<div class="line"><a id="l00856" name="l00856"></a><span class="lineno">  856</span>            <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;&#39;array&#39; format for &#39;pattern&#39; field is not supported&quot;</span>);</div>
+<div class="line"><a id="l00857" name="l00857"></a><span class="lineno">  857</span>        }</div>
+<div class="line"><a id="l00858" name="l00858"></a><span class="lineno">  858</span> </div>
+<div class="line"><a id="l00859" name="l00859"></a><span class="lineno">  859</span>        <span class="keywordflow">if</span> (details.<a class="code hl_variable" href="structeminem_1_1MatrixDetails.html#adbae3a51eba68d76b79306c070e0445d">object</a> == Object::MATRIX) {</div>
+<div class="line"><a id="l00860" name="l00860"></a><span class="lineno">  860</span>            <span class="keywordflow">return</span> scan_coordinate&lt;Object::MATRIX, Field::PATTERN&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
+<div class="line"><a id="l00861" name="l00861"></a><span class="lineno">  861</span>        } <span class="keywordflow">else</span> {</div>
+<div class="line"><a id="l00862" name="l00862"></a><span class="lineno">  862</span>            <span class="keywordflow">return</span> scan_coordinate&lt;Object::VECTOR, Field::PATTERN&gt;(std::forward&lt;Store_&gt;(store), std::move(compose), std::move(bump), std::move(finish));</div>
+<div class="line"><a id="l00863" name="l00863"></a><span class="lineno">  863</span>        }</div>
+<div class="line"><a id="l00864" name="l00864"></a><span class="lineno">  864</span>    }</div>
+<div class="line"><a id="l00865" name="l00865"></a><span class="lineno">  865</span>};</div>
+<div class="line"><a id="l00866" name="l00866"></a><span class="lineno">  866</span> </div>
+<div class="line"><a id="l00867" name="l00867"></a><span class="lineno">  867</span>}</div>
+<div class="line"><a id="l00868" name="l00868"></a><span class="lineno">  868</span> </div>
+<div class="line"><a id="l00869" name="l00869"></a><span class="lineno">  869</span><span class="preprocessor">#endif</span></div>
 <div class="ttc" id="aclasseminem_1_1Parser_html"><div class="ttname"><a href="classeminem_1_1Parser.html">eminem::Parser</a></div><div class="ttdoc">Parse a matrix from a Matrix Market file.</div><div class="ttdef"><b>Definition:</b> Parser.hpp:29</div></div>
-<div class="ttc" id="aclasseminem_1_1Parser_html_a09a4fc024e115cec86bedc8af400914c"><div class="ttname"><a href="classeminem_1_1Parser.html#a09a4fc024e115cec86bedc8af400914c">eminem::Parser::scan_integer</a></div><div class="ttdeci">bool scan_integer(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:679</div></div>
+<div class="ttc" id="aclasseminem_1_1Parser_html_a09a4fc024e115cec86bedc8af400914c"><div class="ttname"><a href="classeminem_1_1Parser.html#a09a4fc024e115cec86bedc8af400914c">eminem::Parser::scan_integer</a></div><div class="ttdeci">bool scan_integer(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:678</div></div>
 <div class="ttc" id="aclasseminem_1_1Parser_html_a267e51f35b56bed1c16d84e6d040272d"><div class="ttname"><a href="classeminem_1_1Parser.html#a267e51f35b56bed1c16d84e6d040272d">eminem::Parser::scan_complex</a></div><div class="ttdeci">bool scan_complex(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:799</div></div>
-<div class="ttc" id="aclasseminem_1_1Parser_html_a56fc759e2286411d823c30fe3f9cd7e3"><div class="ttname"><a href="classeminem_1_1Parser.html#a56fc759e2286411d823c30fe3f9cd7e3">eminem::Parser::scan_double</a></div><div class="ttdeci">bool scan_double(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:780</div></div>
-<div class="ttc" id="aclasseminem_1_1Parser_html_a686e70e6d1bd705fc1548b9253f4923e"><div class="ttname"><a href="classeminem_1_1Parser.html#a686e70e6d1bd705fc1548b9253f4923e">eminem::Parser::scan_pattern</a></div><div class="ttdeci">bool scan_pattern(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:849</div></div>
+<div class="ttc" id="aclasseminem_1_1Parser_html_a56fc759e2286411d823c30fe3f9cd7e3"><div class="ttname"><a href="classeminem_1_1Parser.html#a56fc759e2286411d823c30fe3f9cd7e3">eminem::Parser::scan_double</a></div><div class="ttdeci">bool scan_double(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:781</div></div>
+<div class="ttc" id="aclasseminem_1_1Parser_html_a686e70e6d1bd705fc1548b9253f4923e"><div class="ttname"><a href="classeminem_1_1Parser.html#a686e70e6d1bd705fc1548b9253f4923e">eminem::Parser::scan_pattern</a></div><div class="ttdeci">bool scan_pattern(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:848</div></div>
 <div class="ttc" id="aclasseminem_1_1Parser_html_a7f3b83f6181970fcc27cd4f62701892a"><div class="ttname"><a href="classeminem_1_1Parser.html#a7f3b83f6181970fcc27cd4f62701892a">eminem::Parser::scan_preamble</a></div><div class="ttdeci">void scan_preamble()</div><div class="ttdef"><b>Definition:</b> Parser.hpp:314</div></div>
 <div class="ttc" id="aclasseminem_1_1Parser_html_a96b8735665f05ad5d62ef63d9d03015f"><div class="ttname"><a href="classeminem_1_1Parser.html#a96b8735665f05ad5d62ef63d9d03015f">eminem::Parser::get_ncols</a></div><div class="ttdeci">size_t get_ncols() const</div><div class="ttdef"><b>Definition:</b> Parser.hpp:288</div></div>
-<div class="ttc" id="aclasseminem_1_1Parser_html_a9b1a79df5d518569e49d2ef364416414"><div class="ttname"><a href="classeminem_1_1Parser.html#a9b1a79df5d518569e49d2ef364416414">eminem::Parser::scan_real</a></div><div class="ttdeci">bool scan_real(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:739</div></div>
+<div class="ttc" id="aclasseminem_1_1Parser_html_a9b1a79df5d518569e49d2ef364416414"><div class="ttname"><a href="classeminem_1_1Parser.html#a9b1a79df5d518569e49d2ef364416414">eminem::Parser::scan_real</a></div><div class="ttdeci">bool scan_real(Store_ &amp;&amp;store)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:737</div></div>
 <div class="ttc" id="aclasseminem_1_1Parser_html_aac50ba8e6cf38ef0bf917da3c3c1b38b"><div class="ttname"><a href="classeminem_1_1Parser.html#aac50ba8e6cf38ef0bf917da3c3c1b38b">eminem::Parser::Parser</a></div><div class="ttdeci">Parser(Pointer_ r)</div><div class="ttdef"><b>Definition:</b> Parser.hpp:34</div></div>
 <div class="ttc" id="aclasseminem_1_1Parser_html_ae328fb6bf0a7c14d94613be7fdb29b68"><div class="ttname"><a href="classeminem_1_1Parser.html#ae328fb6bf0a7c14d94613be7fdb29b68">eminem::Parser::get_banner</a></div><div class="ttdeci">const MatrixDetails &amp; get_banner() const</div><div class="ttdef"><b>Definition:</b> Parser.hpp:151</div></div>
 <div class="ttc" id="aclasseminem_1_1Parser_html_af542456a3d6f975771d83d0ca3b10743"><div class="ttname"><a href="classeminem_1_1Parser.html#af542456a3d6f975771d83d0ca3b10743">eminem::Parser::get_nrows</a></div><div class="ttdeci">size_t get_nrows() const</div><div class="ttdef"><b>Definition:</b> Parser.hpp:274</div></div>

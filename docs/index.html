@@ -79,7 +79,10 @@ $(function() {
 <p >The <b>eminem</b> library implements parsers for Matrix Market (<code>*.mm</code>/<code>*.mtx</code>) files. We support matrix or vector objects, coordinate or array formats, and all the different fields (integer, real, complex and pattern). We support reading from text files, Gzip-compressed files, as well as in-memory buffers. Users can supply their own functions to process each line on the fly, based on the information in the banner and size lines.</p>
 <h1>Quick start</h1>
 <p >We first create the desired <code>Parser</code> subclass:</p>
-<div class="fragment"><div class="line"><a class="code hl_struct" href="structeminem_1_1TextFileParser.html">eminem::TextFileParser</a> parser(<span class="stringliteral">&quot;some_path.mm&quot;</span>);</div>
+<div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="eminem_8hpp.html">eminem/eminem.hpp</a>&quot;</span></div>
+<div class="line"> </div>
+<div class="line"><a class="code hl_struct" href="structeminem_1_1TextFileParser.html">eminem::TextFileParser</a> parser(<span class="stringliteral">&quot;some_path.mm&quot;</span>);</div>
+<div class="ttc" id="aeminem_8hpp_html"><div class="ttname"><a href="eminem_8hpp.html">eminem.hpp</a></div><div class="ttdoc">Umbrella header for the eminem library.</div></div>
 <div class="ttc" id="astructeminem_1_1TextFileParser_html"><div class="ttname"><a href="structeminem_1_1TextFileParser.html">eminem::TextFileParser</a></div><div class="ttdoc">Parse a Matrix Market text file.</div><div class="ttdef"><b>Definition:</b> from_text.hpp:22</div></div>
 </div><!-- fragment --><p >We scan through the preamble, which contains the banner and the size lines. The type of the data field in the banner will determine which scanning function to use. The size lines can also help with pre-allocation of memory to store the scanning output, if necessary.</p>
 <div class="fragment"><div class="line">parser.scan_preamble();</div>
@@ -117,10 +120,10 @@ $(function() {
 <div class="line"> </div>
 <div class="line"># For libaries</div>
 <div class="line">target_link_libraries(mylib INTERFACE eminem)</div>
-</div><!-- fragment --><p >To enable support for Gzip-compressed files, additional linking is required to the Zlib libraries:</p>
+</div><!-- fragment --><p >To support Gzip-compressed files, we also need to link to Zlib. Otherwise, if the Zlib headers are not available, Gzip support is automatically dropped.</p>
 <div class="fragment"><div class="line">find_package(ZLIB)</div>
 <div class="line">target_link_libraries(myexe ZLIB::ZLIB)</div>
-</div><!-- fragment --><p >If you're not using CMake, the simple approach is to just copy the files - either directly or with Git submodules - and include their path during compilation with, e.g., GCC's <code>-I</code>. If you want to read Matrix Market files, you'll also need to add the <a href="https://github.com/LTLA/byteme"><b>byteme</b></a> header-only library to the compiler's search path. </p>
+</div><!-- fragment --><p >If you're not using CMake, the simple approach is to just copy the files - either directly or with Git submodules - and include their path during compilation with, e.g., GCC's <code>-I</code>. You'll also need to add the <a href="https://github.com/LTLA/byteme"><b>byteme</b></a> header-only library to the compiler's search path. </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 <!-- start footer part -->

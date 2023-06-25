@@ -358,7 +358,7 @@ template&lt;typename Type_  = int, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. This may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue; alternatively it may return <code>void</code>.</td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>
@@ -403,7 +403,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. This may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue; alternatively it may return <code>void</code>.</td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>
@@ -448,10 +448,11 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. </td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>
+<dl class="section return"><dt>Returns</dt><dd>Whether the scanning terminated early, based on <code>store</code> returning <code>false</code>. </dd></dl>
 
 </div>
 </div>
@@ -492,7 +493,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, std::complex&lt;Type_&gt; value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. This may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue; alternatively it may return <code>void</code>.</td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, std::complex&lt;Type_&gt; value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>
@@ -537,7 +538,7 @@ template&lt;typename Type_  = bool, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. <code>value</code> will always be <code>true</code> and can be ignored; it is only required here for consistency with the other methods. This may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue; alternatively it may return <code>void</code>.</td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(size_t row, size_t column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. <code>value</code> will always be <code>true</code> and can be ignored; it is only required here for consistency with the other methods. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>
