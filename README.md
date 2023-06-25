@@ -78,7 +78,8 @@ target_link_libraries(myexe eminem)
 target_link_libraries(mylib INTERFACE eminem)
 ```
 
-To enable support for Gzip-compressed files, additional linking is required to the Zlib libraries:
+To support Gzip-compressed files, we also need to link to Zlib.
+Otherwise, if the Zlib headers are not available, Gzip support is automatically dropped.
 
 ```cmake
 find_package(ZLIB)

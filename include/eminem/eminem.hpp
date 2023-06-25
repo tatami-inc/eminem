@@ -4,16 +4,16 @@
 #include "Parser.hpp"
 #include "from_text.hpp"
 
-#ifndef EMINEM_NO_ZLIB
+#if __has_include("zlib.h")
 #include "from_gzip.hpp"
 #endif
 
 /**
  * @file eminem.hpp
  * @brief Umbrella header for the **eminem** library.
- * 
- * Developers should define `EMINEM_NO_ZLIB` when Zlib is not available.
- * This will avoid including the parsers for Gzip-compressed files.
+ *
+ * If ZLib is not available, all of the Zlib-related headers are omitted.
+ * This will skip classes such as the `GzipFileParser` and `SomeBufferParser`.
  */
 
 /**
