@@ -8,6 +8,8 @@ FetchContent_Declare(
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(googletest)
 
+set(CMAKE_CXX_STANDARD 17)
+
 enable_testing()
 
 add_executable(libtest 
@@ -28,6 +30,8 @@ check_include_files(filesystem HAVE_CXX_FS)
 if (NOT HAVE_CXX_FS)
     target_link_libraries(libtest stdc++fs)
 endif()
+
+target_compile_options(libtest PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 set(CODE_COVERAGE OFF CACHE BOOL "Enable coverage testing")
 if(CODE_COVERAGE AND CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")

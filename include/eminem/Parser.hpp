@@ -43,7 +43,6 @@ private:
 
     void parse_banner(const std::string& contents) {
         size_t pos = 13; // skip the "MatrixMarket " string.
-        size_t len = contents.size();
 
         auto obj_str = contents.c_str() + pos;
         if (std::strncmp(obj_str, "matrix ", 7) == 0) {
@@ -779,7 +778,7 @@ public:
      */
     template<typename Type_ = double, class Store_>
     bool scan_double(Store_&& store) {
-        scan_real<Type_, Store_>(std::forward<Store_>(store));
+        return scan_real<Type_, Store_>(std::forward<Store_>(store));
     }
 
     /**

@@ -172,7 +172,7 @@ TEST_P(ParserPreambleTest, Errors) {
     });
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Parser,
     ParserPreambleTest,
     ::testing::Values(5, 10, 20, 100)
@@ -322,7 +322,7 @@ TEST_P(ParserIntegerBodyTest, ArrayVector) {
     EXPECT_EQ(out_vals, values);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Parser,
     ParserIntegerBodyTest,
     ::testing::Values(5, 20, 100, 1000)
@@ -510,7 +510,7 @@ TEST_P(ParserRealBodyTest, ArrayVector) {
     test_equal_vectors(out_vals, values);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Parser,
     ParserRealBodyTest,
     ::testing::Values(5, 20, 100, 1000)
@@ -673,7 +673,7 @@ TEST_P(ParserComplexBodyTest, ArrayVector) {
     test_equal_vectors(out_vals, values);
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Parser,
     ParserComplexBodyTest,
     ::testing::Values(5, 20, 100, 1000)
@@ -760,7 +760,7 @@ TEST_P(ParserPatternBodyTest, CoordinateVector) {
     EXPECT_EQ(out_vals, std::vector<char>(coords.size(), 1));
 }
 
-INSTANTIATE_TEST_CASE_P(
+INSTANTIATE_TEST_SUITE_P(
     Parser,
     ParserPatternBodyTest,
     ::testing::Values(5, 20, 100, 1000)
