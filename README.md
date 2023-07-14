@@ -50,7 +50,7 @@ if (deets.field == eminem::Field::INTEGER) {
 }
 ```
 
-Check out the [reference documentation](tatami-inc.github.io/eminem/) for more details.
+Check out the [reference documentation](https://tatami-inc.github.io/eminem/) for more details.
 
 ## Building projects
 
