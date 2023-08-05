@@ -104,6 +104,7 @@ $(function() {
 <div class="line">}</div>
 </div><!-- fragment --><p >Check out the <a href="https://tatami-inc.github.io/eminem/">reference documentation</a> for more details.</p>
 <h1>Building projects</h1>
+<h2>CMake with <code>FetchContent</code></h2>
 <p >If you're using CMake, you just need to add something like this to your <code>CMakeLists.txt</code>:</p>
 <div class="fragment"><div class="line">include(FetchContent)</div>
 <div class="line"> </div>
@@ -120,10 +121,17 @@ $(function() {
 <div class="line"> </div>
 <div class="line"># For libaries</div>
 <div class="line">target_link_libraries(mylib INTERFACE eminem)</div>
-</div><!-- fragment --><p >To support Gzip-compressed files, we also need to link to Zlib. Otherwise, if the Zlib headers are not available, Gzip support is automatically dropped.</p>
-<div class="fragment"><div class="line">find_package(ZLIB)</div>
-<div class="line">target_link_libraries(myexe ZLIB::ZLIB)</div>
-</div><!-- fragment --><p >If you're not using CMake, the simple approach is to just copy the files - either directly or with Git submodules - and include their path during compilation with, e.g., GCC's <code>-I</code>. You'll also need to add the <a href="https://github.com/LTLA/byteme"><b>byteme</b></a> header-only library to the compiler's search path. </p>
+</div><!-- fragment --><h2>CMake using <code>find_package()</code></h2>
+<p >You can install the library by cloning a suitable version of this repository and running the following commands:</p>
+<div class="fragment"><div class="line">mkdir build &amp;&amp; cd build</div>
+<div class="line">cmake .. -DEMINEM_TESTS=OFF</div>
+<div class="line">cmake --build . --target install</div>
+</div><!-- fragment --><p >Then you can use <code>find_package()</code> as usual:</p>
+<div class="fragment"><div class="line">find_package(tatami_eminem CONFIG REQUIRED)</div>
+<div class="line">target_link_libraries(mylib INTERFACE tatami::eminem)</div>
+</div><!-- fragment --><h2>Manual</h2>
+<p >If you're not using CMake, the simple approach is to just copy the files the <code>include/</code> subdirectory - either directly or with Git submodules - and include their path during compilation with, e.g., GCC's <code>-I</code>.</p>
+<p >You'll also need to add the <a href="https://github.com/LTLA/byteme"><b>byteme</b></a> header-only library to the compiler's search path. Normally, when using CMake, this is automatically linked to Zlib; this will now need to be done manually. </p>
 </div></div><!-- PageDoc -->
 </div><!-- contents -->
 <!-- start footer part -->
