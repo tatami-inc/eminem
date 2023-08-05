@@ -54,6 +54,8 @@ Check out the [reference documentation](https://tatami-inc.github.io/eminem/) fo
 
 ## Building projects
 
+### CMake with `FetchContent`
+
 If you're using CMake, you just need to add something like this to your `CMakeLists.txt`:
 
 ```cmake
@@ -78,13 +80,27 @@ target_link_libraries(myexe eminem)
 target_link_libraries(mylib INTERFACE eminem)
 ```
 
-To support Gzip-compressed files, we also need to link to Zlib.
-Otherwise, if the Zlib headers are not available, Gzip support is automatically dropped.
+### CMake using `find_package()`
 
-```cmake
-find_package(ZLIB)
-target_link_libraries(myexe ZLIB::ZLIB)
+You can install the library by cloning a suitable version of this repository and running the following commands:
+
+```sh
+mkdir build && cd build
+cmake .. -DEMINEM_TESTS=OFF
+cmake --build . --target install
 ```
 
-If you're not using CMake, the simple approach is to just copy the files - either directly or with Git submodules - and include their path during compilation with, e.g., GCC's `-I`.
+Then you can use `find_package()` as usual:
+
+```cmake
+find_package(tatami_eminem CONFIG REQUIRED)
+target_link_libraries(mylib INTERFACE tatami::eminem)
+```
+
+### Manual
+
+If you're not using CMake, the simple approach is to just copy the files the `include/` subdirectory -
+either directly or with Git submodules - and include their path during compilation with, e.g., GCC's `-I`.
+
 You'll also need to add the [**byteme**](https://github.com/LTLA/byteme) header-only library to the compiler's search path.
+Normally, when using CMake, this is automatically linked to Zlib; this will now need to be done manually.

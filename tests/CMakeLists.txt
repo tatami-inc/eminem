@@ -26,9 +26,6 @@ target_link_libraries(libtest
     gmock_main
     eminem)
 
-find_package(ZLIB)
-target_link_libraries(libtest ZLIB::ZLIB)
-
 include(CheckIncludeFiles)
 check_include_files(filesystem HAVE_CXX_FS)
 if (NOT HAVE_CXX_FS)
