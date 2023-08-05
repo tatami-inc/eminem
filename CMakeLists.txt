@@ -25,7 +25,7 @@ include(GNUInstallDirs)
 target_include_directories(eminem
     INTERFACE 
     "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
-    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/eminem>"
+    "$<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}/tatami_eminem>"
 )
 
 # Building the test-related machinery, if we are compiling this library directly.
@@ -47,7 +47,7 @@ endif()
 include(CMakePackageConfigHelpers)
 
 install(DIRECTORY include/
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/eminem)
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tatami_eminem)
 
 install(TARGETS eminem 
     EXPORT eminemTargets)
