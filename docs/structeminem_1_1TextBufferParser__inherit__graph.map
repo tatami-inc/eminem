@@ -1,4 +1,5 @@
 <map id="eminem::TextBufferParser&lt; parallel_ &gt;" name="eminem::TextBufferParser&lt; parallel_ &gt;">
-<area shape="rect" id="node1" title="Parse a Matrix Market text buffer." alt="" coords="5,93,176,133"/>
-<area shape="rect" id="node2" href="$classeminem_1_1Parser.html" title="Parse a matrix from a Matrix Market file." alt="" coords="9,5,173,45"/>
+<area shape="rect" id="Node000001" title="Parse a Matrix Market text buffer." alt="" coords="5,94,176,135"/>
+<area shape="rect" id="Node000002" href="$classeminem_1_1Parser.html" title="Parse a matrix from a Matrix Market file." alt="" coords="9,5,172,46"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="93,62,93,94,88,94,88,62"/>
 </map>

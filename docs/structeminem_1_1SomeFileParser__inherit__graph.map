@@ -1,4 +1,5 @@
 <map id="eminem::SomeFileParser&lt; parallel_ &gt;" name="eminem::SomeFileParser&lt; parallel_ &gt;">
-<area shape="rect" id="node1" title="Parse a (possibly Gzip&#45;compressed) Matrix Market file." alt="" coords="5,93,172,133"/>
-<area shape="rect" id="node2" href="$classeminem_1_1Parser.html" title="Parse a matrix from a Matrix Market file." alt="" coords="7,5,171,45"/>
+<area shape="rect" id="Node000001" title="Parse a (possibly Gzip&#45;compressed) Matrix Market file." alt="" coords="5,94,172,135"/>
+<area shape="rect" id="Node000002" href="$classeminem_1_1Parser.html" title="Parse a matrix from a Matrix Market file." alt="" coords="7,5,170,46"/>
+<area shape="poly" id="edge1_Node000001_Node000002" title=" " alt="" coords="91,62,91,94,86,94,86,62"/>
 </map>

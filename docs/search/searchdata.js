@@ -1,13 +1,13 @@
 var indexSectionsWithContent =
 {
-  0: "efgmopstuz",
+  0: "cefgimopstuz",
   1: "gmpstz",
   2: "e",
   3: "efpu",
   4: "gpstz",
   5: "fos",
   6: "fos",
-  7: "p"
+  7: "cfimp"
 };
 
 var indexSectionNames =

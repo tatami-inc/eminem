@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['zlibbufferparser_0',['ZlibBufferParser',['../structeminem_1_1ZlibBufferParser.html',1,'eminem::ZlibBufferParser&lt; parallel_ &gt;'],['../structeminem_1_1ZlibBufferParser.html#ad6e5ddabbe74915a17ed21f91b5d2ad3',1,'eminem::ZlibBufferParser::ZlibBufferParser()']]]
+  ['textbufferparser_0',['textbufferparser',['../structeminem_1_1TextBufferParser.html',1,'eminem::TextBufferParser&lt; parallel_ &gt;'],['../structeminem_1_1TextBufferParser.html#a4b6ee958967c782770d11cc016fff8f6',1,'eminem::TextBufferParser::TextBufferParser(const unsigned char *buffer, size_t len)'],['../structeminem_1_1TextBufferParser.html#a4ed6a3a45f609796eab4c977bbaf62fd',1,'eminem::TextBufferParser::TextBufferParser(const char *buffer, size_t len)']]],
+  ['textfileparser_1',['textfileparser',['../structeminem_1_1TextFileParser.html',1,'eminem::TextFileParser&lt; parallel_ &gt;'],['../structeminem_1_1TextFileParser.html#a6b63c87bfd5035a635a806d5510b7e1c',1,'eminem::TextFileParser::TextFileParser()']]]
 ];

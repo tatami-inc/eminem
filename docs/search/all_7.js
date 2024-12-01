@@ -1,5 +1,12 @@
 var searchData=
 [
-  ['textbufferparser_0',['TextBufferParser',['../structeminem_1_1TextBufferParser.html',1,'eminem::TextBufferParser&lt; parallel_ &gt;'],['../structeminem_1_1TextBufferParser.html#a4b6ee958967c782770d11cc016fff8f6',1,'eminem::TextBufferParser::TextBufferParser(const unsigned char *buffer, size_t len)'],['../structeminem_1_1TextBufferParser.html#a4ed6a3a45f609796eab4c977bbaf62fd',1,'eminem::TextBufferParser::TextBufferParser(const char *buffer, size_t len)']]],
-  ['textfileparser_1',['TextFileParser',['../structeminem_1_1TextFileParser.html',1,'eminem::TextFileParser&lt; parallel_ &gt;'],['../structeminem_1_1TextFileParser.html#a6b63c87bfd5035a635a806d5510b7e1c',1,'eminem::TextFileParser::TextFileParser()']]]
+  ['parse_20matrix_20market_20files_20in_20c_0',['Parse Matrix Market files in C++',['../index.html',1,'']]],
+  ['parser_1',['parser',['../classeminem_1_1Parser.html',1,'eminem::Parser&lt; parallel_, Pointer_ &gt;'],['../classeminem_1_1Parser.html#aac50ba8e6cf38ef0bf917da3c3c1b38b',1,'eminem::Parser::Parser()']]],
+  ['parser_2ehpp_2',['Parser.hpp',['../Parser_8hpp.html',1,'']]],
+  ['parser_3c_20false_2c_20std_3a_3aunique_5fptr_3c_20byteme_3a_3agzipfilereader_20_3e_20_3e_3',['Parser&lt; false, std::unique_ptr&lt; byteme::GzipFileReader &gt; &gt;',['../classeminem_1_1Parser.html',1,'eminem']]],
+  ['parser_3c_20false_2c_20std_3a_3aunique_5fptr_3c_20byteme_3a_3arawbufferreader_20_3e_20_3e_4',['Parser&lt; false, std::unique_ptr&lt; byteme::RawBufferReader &gt; &gt;',['../classeminem_1_1Parser.html',1,'eminem']]],
+  ['parser_3c_20false_2c_20std_3a_3aunique_5fptr_3c_20byteme_3a_3arawfilereader_20_3e_20_3e_5',['Parser&lt; false, std::unique_ptr&lt; byteme::RawFileReader &gt; &gt;',['../classeminem_1_1Parser.html',1,'eminem']]],
+  ['parser_3c_20false_2c_20std_3a_3aunique_5fptr_3c_20byteme_3a_3asomebufferreader_20_3e_20_3e_6',['Parser&lt; false, std::unique_ptr&lt; byteme::SomeBufferReader &gt; &gt;',['../classeminem_1_1Parser.html',1,'eminem']]],
+  ['parser_3c_20false_2c_20std_3a_3aunique_5fptr_3c_20byteme_3a_3asomefilereader_20_3e_20_3e_7',['Parser&lt; false, std::unique_ptr&lt; byteme::SomeFileReader &gt; &gt;',['../classeminem_1_1Parser.html',1,'eminem']]],
+  ['parser_3c_20false_2c_20std_3a_3aunique_5fptr_3c_20byteme_3a_3azlibbufferreader_20_3e_20_3e_8',['Parser&lt; false, std::unique_ptr&lt; byteme::ZlibBufferReader &gt; &gt;',['../classeminem_1_1Parser.html',1,'eminem']]]
 ];
