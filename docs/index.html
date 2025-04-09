@@ -94,12 +94,13 @@ $(function(){ initResizable(false); });
 <h1>Overview</h1>
 <p>The <b>eminem</b> library implements parsers for Matrix Market (<code>*.mm</code>/<code>*.mtx</code>) files. We support matrix or vector objects, coordinate or array formats, and all the different fields (integer, real, complex and pattern). We support reading from text files, Gzip-compressed files, as well as in-memory buffers. Users can supply their own functions to process each line on the fly, based on the information in the banner and size lines.</p>
 <h1>Quick start</h1>
-<p>We first create the desired <code>Parser</code> subclass:</p>
+<p>We first create a <code>Parser</code> instance, in this case from a text file. We also support parsing of Gzip-compressed files, buffers, or any input source of bytes compatible with the <a href="https://github.com/LTLA/byteme"><b>byteme</b></a> interfaces.</p>
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="eminem_8hpp.html">eminem/eminem.hpp</a>&quot;</span></div>
 <div class="line"> </div>
-<div class="line"><a class="code hl_class" href="classeminem_1_1TextFileParser.html">eminem::TextFileParser</a> parser(<span class="stringliteral">&quot;some_path.mm&quot;</span>);</div>
-<div class="ttc" id="aclasseminem_1_1TextFileParser_html"><div class="ttname"><a href="classeminem_1_1TextFileParser.html">eminem::TextFileParser</a></div><div class="ttdoc">Parse a Matrix Market text file.</div><div class="ttdef"><b>Definition</b> from_text.hpp:19</div></div>
+<div class="line"><span class="comment">// Using default options, hence the &#39;{}&#39;</span></div>
+<div class="line"><span class="keyword">auto</span> parser = <a class="code hl_function" href="namespaceeminem.html#a68fcb4f6d63322b9107542ded5f7753f">eminem::parse_text_file</a>(<span class="stringliteral">&quot;some_path.mm&quot;</span>, {});</div>
 <div class="ttc" id="aeminem_8hpp_html"><div class="ttname"><a href="eminem_8hpp.html">eminem.hpp</a></div><div class="ttdoc">Umbrella header for the eminem library.</div></div>
+<div class="ttc" id="anamespaceeminem_html_a68fcb4f6d63322b9107542ded5f7753f"><div class="ttname"><a href="namespaceeminem.html#a68fcb4f6d63322b9107542ded5f7753f">eminem::parse_text_file</a></div><div class="ttdeci">Parser&lt; byteme::PerByteInterface&lt; char &gt; &gt; parse_text_file(const char *path, const ParseTextFileOptions &amp;options)</div><div class="ttdef"><b>Definition</b> from_text.hpp:37</div></div>
 </div><!-- fragment --><p>We scan through the preamble, which contains the banner and the size lines. The type of the data field in the banner will determine which scanning function to use. The size lines can also help with pre-allocation of memory to store the scanning output, if necessary.</p>
 <div class="fragment"><div class="line">parser.scan_preamble();</div>
 <div class="line"><span class="keyword">auto</span> deets = parser.get_banner();</div>

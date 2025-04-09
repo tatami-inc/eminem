@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['textbufferparser_0',['TextBufferParser',['../classeminem_1_1TextBufferParser.html',1,'eminem']]],
-  ['textfileparser_1',['TextFileParser',['../classeminem_1_1TextFileParser.html',1,'eminem']]]
+  ['writer_0',['Writer',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1Writer.html',1,'byteme']]]
 ];
