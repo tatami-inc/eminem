@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['gzipfileparser_0',['GzipFileParser',['../structeminem_1_1GzipFileParser.html',1,'eminem']]]
+  ['chunkedbufferreader_0',['ChunkedBufferReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1ChunkedBufferReader.html',1,'byteme']]]
 ];

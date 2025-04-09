@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['symmetry_0',['symmetry',['../structeminem_1_1MatrixDetails.html#a55f737773c4168999e7f9ae118db7cce',1,'eminem::MatrixDetails']]]
+  ['compression_5flevel_0',['compression_level',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileWriterOptions.html#a9072c378aefb629c314f80ff8b77a964',1,'byteme::GzipFileWriterOptions::compression_level'],['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1ZlibBufferWriterOptions.html#a31ad029c8bd29c6edfe6e1228ee2aab7',1,'byteme::ZlibBufferWriterOptions::compression_level']]]
 ];

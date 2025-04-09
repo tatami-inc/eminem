@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['field_0',['field',['../structeminem_1_1MatrixDetails.html#ae18841f01812b0fdfdaf874ae066d719',1,'eminem::MatrixDetails']]],
-  ['format_1',['format',['../structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553',1,'eminem::MatrixDetails']]]
+  ['available_0',['available',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html#a31640353ee2336a966d2267a0f982c8c',1,'byteme::PerByteInterface']]]
 ];

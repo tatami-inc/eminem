@@ -1,3 +1,15 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="Node000000" href="$classeminem_1_1Parser.html" title=" " alt="" coords="5,5,167,61"/>
+<area shape="rect" id="Node000000" href="$classeminem_1_1Parser.html" title=" " alt="" coords="5,122,188,162"/>
+<area shape="rect" id="Node000001" href="$classeminem_1_1GzipFileParser.html" title="Parse a Gzip&#45;compressed Matrix Market file." alt="" coords="246,5,404,31"/>
+<area shape="poly" id="edge1_Node000000_Node000001" title=" " alt="" coords="131,109,178,73,235,40,262,29,264,34,237,45,181,77,134,113"/>
+<area shape="rect" id="Node000002" href="$classeminem_1_1SomeBufferParser.html" title="Parse a (possibly Zlib&#45;compressed) Matrix Market buffer." alt="" coords="236,55,415,80"/>
+<area shape="poly" id="edge2_Node000000_Node000002" title=" " alt="" coords="164,114,235,89,271,78,272,84,236,94,166,119"/>
+<area shape="rect" id="Node000003" href="$classeminem_1_1SomeFileParser.html" title="Parse a (possibly Gzip&#45;compressed) Matrix Market file." alt="" coords="242,104,408,130"/>
+<area shape="poly" id="edge3_Node000000_Node000003" title=" " alt="" coords="203,128,241,123,242,129,203,133"/>
+<area shape="rect" id="Node000004" href="$classeminem_1_1TextBufferParser.html" title="Parse a Matrix Market text buffer." alt="" coords="240,153,410,179"/>
+<area shape="poly" id="edge4_Node000000_Node000004" title=" " alt="" coords="203,151,240,155,240,160,203,156"/>
+<area shape="rect" id="Node000005" href="$classeminem_1_1TextFileParser.html" title="Parse a Matrix Market text file." alt="" coords="247,203,404,228"/>
+<area shape="poly" id="edge5_Node000000_Node000005" title=" " alt="" coords="168,166,236,189,273,200,271,205,235,194,166,171"/>
+<area shape="rect" id="Node000006" href="$classeminem_1_1ZlibBufferParser.html" title="Parse a Zlib&#45;compressed Matrix Market buffer." alt="" coords="242,252,408,278"/>
+<area shape="poly" id="edge6_Node000000_Node000006" title=" " alt="" coords="134,170,181,206,237,238,264,249,262,254,235,243,179,210,131,175"/>
 </map>

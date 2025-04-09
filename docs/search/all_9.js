@@ -1,5 +1,8 @@
 var searchData=
 [
-  ['textbufferparser_0',['textbufferparser',['../structeminem_1_1TextBufferParser.html',1,'eminem::TextBufferParser&lt; parallel_ &gt;'],['../structeminem_1_1TextBufferParser.html#a4b6ee958967c782770d11cc016fff8f6',1,'eminem::TextBufferParser::TextBufferParser(const unsigned char *buffer, size_t len)'],['../structeminem_1_1TextBufferParser.html#a4ed6a3a45f609796eab4c977bbaf62fd',1,'eminem::TextBufferParser::TextBufferParser(const char *buffer, size_t len)']]],
-  ['textfileparser_1',['textfileparser',['../structeminem_1_1TextFileParser.html',1,'eminem::TextFileParser&lt; parallel_ &gt;'],['../structeminem_1_1TextFileParser.html#a6b63c87bfd5035a635a806d5510b7e1c',1,'eminem::TextFileParser::TextFileParser()']]]
+  ['object_0',['Object',['../namespaceeminem.html#afc96f545c5ba3837ed9ab101638f7bdb',1,'eminem']]],
+  ['object_1',['object',['../structeminem_1_1MatrixDetails.html#adbae3a51eba68d76b79306c070e0445d',1,'eminem::MatrixDetails']]],
+  ['options_2',['Options',['../structeminem_1_1GzipFileParser_1_1Options.html',1,'eminem::GzipFileParser::Options'],['../structeminem_1_1SomeBufferParser_1_1Options.html',1,'eminem::SomeBufferParser::Options'],['../structeminem_1_1SomeFileParser_1_1Options.html',1,'eminem::SomeFileParser::Options'],['../structeminem_1_1TextBufferParser_1_1Options.html',1,'eminem::TextBufferParser::Options'],['../structeminem_1_1TextFileParser_1_1Options.html',1,'eminem::TextFileParser::Options'],['../structeminem_1_1ZlibBufferParser_1_1Options.html',1,'eminem::ZlibBufferParser::Options']]],
+  ['ostreamwriter_3',['OstreamWriter',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1OstreamWriter.html',1,'byteme::OstreamWriter&lt; class Stream_ &gt;'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1OstreamWriter.html#a8e20e2f55551362e3c534f6c5476af8e',1,'byteme::OstreamWriter::OstreamWriter()']]],
+  ['ostreamwriter_2ehpp_4',['OstreamWriter.hpp',['https://ltla.github.io/byteme/byteme.tag/OstreamWriter_8hpp.html',1,'']]]
 ];
