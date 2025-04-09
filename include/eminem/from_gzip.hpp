@@ -2,6 +2,7 @@
 #define EMINEM_FROM_GZIP_HPP
 
 #include "Parser.hpp"
+#include "byteme/PerByte.hpp"
 #include "byteme/GzipFileReader.hpp"
 #include "byteme/ZlibBufferReader.hpp"
 #include "byteme/SomeFileReader.hpp"
@@ -16,31 +17,27 @@
 namespace eminem {
 
 /**
- * @brief Parse a Gzip-compressed Matrix Market file.
+ * @brief Options for `parse_gzip_file()`.
  */
-class GzipFileParser final : public Parser<byteme::PerByteInterface<char> > { 
-public:
+struct ParseGzipFileOptions {
     /**
-     * @brief Options for the constructor.
+     * Buffer size to use for reading and decompression.
      */
-    struct Options {
-        /**
-         * Buffer size to use for reading and decompression.
-         */
-        size_t buffer_size = 65536;
+    size_t buffer_size = 65536;
 
-        /**
-         * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
-         */
-        bool parallel = false;
-    };
-
-public:
     /**
-     * @param path Pointer to a string containing a path to a Gzip-compressed Matrix Market file.
-     * @param options Further options.
+     * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
      */
-    GzipFileParser(const char* path, const Options& options) : Parser<byteme::PerByteInterface<char> >(
+    bool parallel = false;
+};
+
+/**
+ * Parse a Gzip-compressed Matrix Market file.
+ * @param path Pointer to a string containing a path to a Gzip-compressed Matrix Market file.
+ * @param options Further options.
+ */
+inline Parser<byteme::PerByteInterface<char> > parse_gzip_file(const char* path, const ParseGzipFileOptions& options) {
+    return Parser<byteme::PerByteInterface<char> >(
         [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
             byteme::GzipFileReaderOptions gopt;
             gopt.buffer_size = options.buffer_size;
@@ -51,42 +48,38 @@ public:
                 return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
             }
         }()
-    ) {}
+    );
+}
+
+/**
+ * @brief Options for `parse_zlib_buffer()`.
+ */
+struct ParseZlibBufferOptions {
+    /**
+     * Buffer size to use for reading.
+     */
+    size_t buffer_size = 65536;
+
+    /**
+     * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+     */
+    bool parallel = false;
+
+    /**
+     * Compression of the stream, i.e., DEFLATE, zlib or gzip.
+     * This is set to 3 to perform auto-detection, see the `byteme::ZlibBufferReader` constructor.
+     */
+    int mode = 3;
 };
 
 /**
- * @brief Parse a Zlib-compressed Matrix Market buffer.
+ * Parse a Zlib-compressed Matrix Market buffer.
+ * @param buffer Pointer to an array containing the contents of a Zlib-compressed Matrix Market file.
+ * @param len Length of the array referenced by `buffer`.
+ * @param options Further options.
  */
-class ZlibBufferParser final : public Parser<byteme::PerByteInterface<char> > {
-public:
-    /**
-     * @brief Options for the constructor.
-     */
-    struct Options {
-        /**
-         * Buffer size to use for reading.
-         */
-        size_t buffer_size = 65536;
-
-        /**
-         * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
-         */
-        bool parallel = false;
-
-        /**
-         * Compression of the stream, i.e., DEFLATE, zlib or gzip.
-         * This is set to 3 to perform auto-detection, see the `byteme::ZlibBufferReader` constructor.
-         */
-        int mode = 3;
-    };
-
-public:
-    /**
-     * @param buffer Pointer to an array containing the contents of a Zlib-compressed Matrix Market file.
-     * @param len Length of the array referenced by `buffer`.
-     * @param options Further options.
-     */
-    ZlibBufferParser(const unsigned char* buffer, size_t len, const Options& options) : Parser<byteme::PerByteInterface<char> >(
+inline Parser<byteme::PerByteInterface<char> > parse_zlib_buffer(const unsigned char* buffer, size_t len, const ParseZlibBufferOptions& options) {
+    return Parser<byteme::PerByteInterface<char> >(
         [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
             byteme::ZlibBufferReaderOptions zopt;
             zopt.buffer_size = options.buffer_size;
@@ -98,35 +91,31 @@ public:
                 return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
             }
         }()
-    ) {}
+    );
+}
+
+/**
+ * @brief Options for `parse_some_file()`.
+ */
+struct ParseSomeFileOptions {
+    /**
+     * Buffer size to use for reading and decompression.
+     */
+    size_t buffer_size = 65536;
+
+    /**
+     * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+     */
+    bool parallel = false;
 };
 
 /**
- * @brief Parse a (possibly Gzip-compressed) Matrix Market file.
+ * Parse a possibly Gzip-compressed or uncompressed Matrix Market file.
+ * @param path Pointer to a string containing a path to a possibly-compressed Matrix Market file.
+ * @param options Further options.
  */
-class SomeFileParser final : public Parser<byteme::PerByteInterface<char> > {
-public:
-    /**
-     * @brief Options for the constructor.
-     */
-    struct Options {
-        /**
-         * Buffer size to use for reading and decompression.
-         */
-        size_t buffer_size = 65536;
-
-        /**
-         * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
-         */
-        bool parallel = false;
-    };
-
-public:
-    /**
-     * @param path Pointer to a string containing a path to a possibly-compressed Matrix Market file.
-     * @param options Further options.
-     */
-    SomeFileParser(const char* path, const Options& options) : Parser<byteme::PerByteInterface<char> >(
+inline Parser<byteme::PerByteInterface<char> > parse_some_file(const char* path, const ParseSomeFileOptions& options) {
+    return Parser<byteme::PerByteInterface<char> >(
         [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
             byteme::SomeFileReaderOptions sopt;
             sopt.buffer_size = options.buffer_size;
@@ -137,36 +126,32 @@ public:
                 return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
             }
         }()
-    ) {}
+    );
+}
+
+/**
+ * @brief Options for `parse_some_buffer()`.
+ */
+struct ParseSomeBufferOptions {
+    /**
+     * Buffer size to use for reading and decompression.
+     */
+    size_t buffer_size = 65536;
+
+    /**
+     * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+     */
+    bool parallel = false;
 };
 
 /**
- * @brief Parse a (possibly Zlib-compressed) Matrix Market buffer.
+ * Parse a possibly Zlib-compressed or uncompressed Matrix Market buffer.
+ * @param buffer Pointer to an array containing the contents of a possibly-compressed Matrix Market file.
+ * @param len Length of the array referenced by `buffer`.
+ * @param options Further options.
  */
-class SomeBufferParser final : public Parser<byteme::PerByteInterface<char> > {
-public:
-    /**
-     * @brief Options for the constructor.
-     */
-    struct Options {
-        /**
-         * Buffer size to use for reading and decompression.
-         */
-        size_t buffer_size = 65536;
-
-        /**
-         * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
-         */
-        bool parallel = false;
-    };
-
-public:
-    /**
-     * @param buffer Pointer to an array containing the contents of a possibly-compressed Matrix Market file.
-     * @param len Length of the array referenced by `buffer`.
-     * @param options Further options.
-     */
-    SomeBufferParser(const unsigned char* buffer, size_t len, const Options& options) : Parser<byteme::PerByteInterface<char> >(
+inline Parser<byteme::PerByteInterface<char> > parse_some_buffer(const unsigned char* buffer, size_t len, const ParseSomeBufferOptions& options) {
+    return Parser<byteme::PerByteInterface<char> >(
         [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
             byteme::SomeBufferReaderOptions sopt;
             sopt.buffer_size = options.buffer_size;
@@ -177,8 +162,8 @@ public:
                 return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
             }
         }()
-    ) {}
-};
+    );
+}
 
 }
 

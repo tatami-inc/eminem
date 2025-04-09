@@ -6,8 +6,8 @@
 #include <cstring>
 #include <complex>
 #include <type_traits>
+#include <memory>
 
-#include "byteme/PerByte.hpp"
 #include "utils.hpp"
 
 /**
@@ -23,7 +23,7 @@ namespace eminem {
  *
  * @tparam Input_ Class for the source of input bytes, satisfying the `byteme::PerByteInterface` instance.
  */
-template<class Input_ = byteme::PerByteInterface<char> >
+template<class Input_>
 class Parser {
 public:
     /**

@@ -27,7 +27,7 @@ TEST(FromText, File) {
 
     // Works with the text file parser.
     {
-        eminem::TextFileParser parser(path.c_str(), {});
+        auto parser = eminem::parse_text_file(path.c_str(), {});
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -48,7 +48,7 @@ TEST(FromText, File) {
 
     // Works with the Some* parser.
     {
-        eminem::SomeFileParser parser(path.c_str(), {});
+        auto parser = eminem::parse_some_file(path.c_str(), {});
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -79,7 +79,7 @@ TEST(FromText, Buffer) {
     auto input = stored.str();
 
     // Works with the some buffer parser.
-    eminem::SomeBufferParser parser(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), {});
+    auto parser = eminem::parse_some_buffer(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), {});
 
     parser.scan_preamble();
     EXPECT_EQ(parser.get_nrows(), NR);

@@ -13,12 +13,14 @@ Users can supply their own functions to process each line on the fly, based on t
 
 ## Quick start
 
-We first create the desired `Parser` subclass:
+We first create a `Parser` instance, in this case from a text file.
+We also support parsing of Gzip-compressed files, buffers, or any input source of bytes compatible with the [**byteme**](https://github.com/LTLA/byteme) interfaces.
 
 ```cpp
 #include "eminem/eminem.hpp"
 
-eminem::TextFileParser parser("some_path.mm");
+// Using default options, hence the '{}'
+auto parser = eminem::parse_text_file("some_path.mm", {});
 ```
 
 We scan through the preamble, which contains the banner and the size lines.

@@ -32,7 +32,7 @@ TEST(FromGzip, File) {
 
     // Works with the Gzip parser.
     {
-        eminem::GzipFileParser parser(path.c_str(), {});
+        auto parser = eminem::parse_gzip_file(path.c_str(), {});
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -53,7 +53,7 @@ TEST(FromGzip, File) {
 
     // Works with the Some* parser.
     {
-        eminem::SomeFileParser parser(path.c_str(), {});
+        auto parser = eminem::parse_some_file(path.c_str(), {});
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -97,7 +97,7 @@ TEST(FromGzip, Buffer) {
 
     // Works with the Zlib parser.
     {
-        eminem::ZlibBufferParser parser(gzcontents.data(), gzcontents.size(), {});
+        auto parser = eminem::parse_zlib_buffer(gzcontents.data(), gzcontents.size(), {});
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -118,7 +118,7 @@ TEST(FromGzip, Buffer) {
 
     // Works with the Some* parser.
     {
-        eminem::SomeBufferParser parser(gzcontents.data(), gzcontents.size(), {});
+        auto parser = eminem::parse_some_buffer(gzcontents.data(), gzcontents.size(), {});
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
