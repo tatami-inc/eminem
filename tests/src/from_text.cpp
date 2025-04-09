@@ -27,7 +27,7 @@ TEST(FromText, File) {
 
     // Works with the text file parser.
     {
-        eminem::TextFileParser parser(path.c_str());
+        eminem::TextFileParser parser(path.c_str(), {});
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -48,7 +48,7 @@ TEST(FromText, File) {
 
     // Works with the Some* parser.
     {
-        eminem::SomeFileParser parser(path.c_str());
+        eminem::SomeFileParser parser(path.c_str(), {});
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -78,45 +78,22 @@ TEST(FromText, Buffer) {
     stored << "\n"; // add an extra newline.
     auto input = stored.str();
 
-    // Works with the text buffer parser.
-    {
-        eminem::TextBufferParser parser(input.c_str(), input.size());
-
-        parser.scan_preamble();
-        EXPECT_EQ(parser.get_nrows(), NR);
-        EXPECT_EQ(parser.get_ncols(), NC);
-        EXPECT_EQ(parser.get_nlines(), values.size());
-
-        std::vector<int> out_rows, out_cols, out_vals;
-        parser.scan_integer([&](size_t r, size_t c, int v) -> void {
-            out_rows.push_back(r - 1);
-            out_cols.push_back(c - 1);
-            out_vals.push_back(v);
-        });
-
-        EXPECT_EQ(out_rows, coords.first);
-        EXPECT_EQ(out_cols, coords.second);
-        EXPECT_EQ(out_vals, values);
-    }
-
     // Works with the some buffer parser.
-    {
-        eminem::SomeBufferParser parser(reinterpret_cast<const unsigned char*>(input.c_str()), input.size());
+    eminem::SomeBufferParser parser(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), {});
 
-        parser.scan_preamble();
-        EXPECT_EQ(parser.get_nrows(), NR);
-        EXPECT_EQ(parser.get_ncols(), NC);
-        EXPECT_EQ(parser.get_nlines(), values.size());
+    parser.scan_preamble();
+    EXPECT_EQ(parser.get_nrows(), NR);
+    EXPECT_EQ(parser.get_ncols(), NC);
+    EXPECT_EQ(parser.get_nlines(), values.size());
 
-        std::vector<int> out_rows, out_cols, out_vals;
-        parser.scan_integer([&](size_t r, size_t c, int v) -> void {
-            out_rows.push_back(r - 1);
-            out_cols.push_back(c - 1);
-            out_vals.push_back(v);
-        });
+    std::vector<int> out_rows, out_cols, out_vals;
+    parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+        out_rows.push_back(r - 1);
+        out_cols.push_back(c - 1);
+        out_vals.push_back(v);
+    });
 
-        EXPECT_EQ(out_rows, coords.first);
-        EXPECT_EQ(out_cols, coords.second);
-        EXPECT_EQ(out_vals, values);
-    }
+    EXPECT_EQ(out_rows, coords.first);
+    EXPECT_EQ(out_cols, coords.second);
+    EXPECT_EQ(out_vals, values);
 }

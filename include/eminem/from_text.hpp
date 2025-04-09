@@ -15,40 +15,74 @@ namespace eminem {
 
 /**
  * @brief Parse a Matrix Market text file.
- *
- * @tparam parallel_ Whether to parallelize the reading/parsing, see `Parser`.
  */
-template<bool parallel_ = false>
-struct TextFileParser : public Parser<parallel_, std::unique_ptr<byteme::RawFileReader> > { 
+class TextFileParser : public Parser<byteme::PerByteInterface<char> > {
+public:
+    /**
+     * @brief Options for the constructor.
+     */
+    struct Options {
+        /**
+         * Buffer size to use for reading and decompression.
+         */
+        size_t buffer_size = 65536;
+
+        /**
+         * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+         */
+        bool parallel = false;
+    };
+
 public:
     /**
      * @param path Pointer to a string containing a path to an uncompressed Matrix Market file.
-     * @param chunk_size Chunk size to use for reading.
+     * @param options Further options.
      */
-    TextFileParser(const char* path, size_t chunk_size = 65536) : 
-        Parser<parallel_, std::unique_ptr<byteme::RawFileReader> >(std::make_unique<byteme::RawFileReader>(path, chunk_size)) {}
+    TextFileParser(const char* path, const Options& options) : Parser<byteme::PerByteInterface<char> >(
+        [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
+            byteme::RawFileReaderOptions topt;
+            topt.buffer_size = options.buffer_size;
+            auto reader = std::make_unique<byteme::RawFileReader>(path, topt);
+            if (options.parallel) {
+                return std::make_unique<byteme::PerByteParallel<char> >(std::move(reader));
+            } else {
+                return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
+            }
+        }()
+    ) {}
 };
 
 /**
  * @brief Parse a Matrix Market text buffer.
- *
- * @tparam parallel_ Whether to parallelize the reading/parsing, see `Parser`.
  */
-template<bool parallel_ = false>
-struct TextBufferParser : public Parser<parallel_, std::unique_ptr<byteme::RawBufferReader> > { 
+class TextBufferParser : public Parser<byteme::PerByteInterface<char> > {
+public:
+    /**
+     * @brief Options for the constructor.
+     */
+    struct Options {
+        /**
+         * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+         */
+        bool parallel = false;
+    };
+
 public:
     /**
      * @param buffer Pointer to an array containing the contents of an uncompressed Matrix Market file.
      * @param len Length of the array referenced by `buffer`.
+     * @param options Further options.
      */
-    TextBufferParser(const unsigned char* buffer, size_t len) : 
-        Parser<parallel_, std::unique_ptr<byteme::RawBufferReader> >(std::make_unique<byteme::RawBufferReader>(buffer, len)) {}
-
-    /**
-     * @param buffer Pointer to an array containing the contents of an uncompressed Matrix Market file.
-     * @param len Length of the array referenced by `buffer`.
-     */
-    TextBufferParser(const char* buffer, size_t len) : TextBufferParser(reinterpret_cast<const unsigned char*>(buffer), len) {}
+    TextBufferParser(const unsigned char* buffer, size_t len, const Options& options) : Parser<byteme::PerByteInterface<char> >(
+        [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
+            auto reader = std::make_unique<byteme::RawBufferReader>(buffer, len);
+            if (options.parallel) {
+                return std::make_unique<byteme::PerByteParallel<char> >(std::move(reader));
+            } else {
+                return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
+            }
+        }()
+    ) {}
 };
 
 

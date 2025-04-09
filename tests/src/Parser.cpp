@@ -15,10 +15,10 @@
 class ParserPreambleTest : public ::testing::TestWithParam<int> {
 protected:
     void test_error(const std::string& input, std::string msg, int chunksize) {
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         EXPECT_ANY_THROW({
             try {
-                byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-                eminem::Parser parser(&reader);
                 parser.scan_preamble();
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr(msg));
@@ -33,8 +33,8 @@ TEST_P(ParserPreambleTest, Success) {
 
     {
         std::string input = "%MatrixMarket matrix coordinate real symmetric\n5 2 1";
-        byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -50,8 +50,8 @@ TEST_P(ParserPreambleTest, Success) {
 
     {
         std::string input = "%MatrixMarket matrix array integer general\n235 122\n";
-        byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -67,8 +67,8 @@ TEST_P(ParserPreambleTest, Success) {
 
     {
         std::string input = "%%MatrixMarket vector array double skew-symmetric\n52";
-        byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -84,8 +84,8 @@ TEST_P(ParserPreambleTest, Success) {
 
     {
         std::string input = "%%MatrixMarket matrix coordinate complex hermitian\n99 100 352\n";
-        byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -101,8 +101,8 @@ TEST_P(ParserPreambleTest, Success) {
 
     {
         std::string input = "%%MatrixMarket vector coordinate pattern general\n% FOOBAR% WHEE\n100 5\n";
-        byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -137,39 +137,45 @@ TEST_P(ParserPreambleTest, Errors) {
     test_error("%MatrixMarket vector coordinate integer general\n2 -5 1\n", "only non-negative integers", chunksize);
 
     std::string input = "%MatrixMarket matrix coordinate integer general\n5 2 5\n";
-    EXPECT_ANY_THROW({
-        try {
-            byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-            eminem::Parser parser(&reader);
-            parser.get_banner();
-        } catch (std::exception& e) {
-            EXPECT_THAT(e.what(), ::testing::HasSubstr("banner has not yet been scanned"));
-            throw;
-        }
-    });
+    {
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        EXPECT_ANY_THROW({
+            try {
+                parser.get_banner();
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("banner has not yet been scanned"));
+                throw;
+            }
+        });
+    }
 
-    EXPECT_ANY_THROW({
-        try {
-            byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-            eminem::Parser parser(&reader);
-            parser.scan_preamble();
-            parser.scan_preamble();
-        } catch (std::exception& e) {
-            EXPECT_THAT(e.what(), ::testing::HasSubstr("banner has already been scanned"));
-            throw;
-        }
-    });
+    {
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        EXPECT_ANY_THROW({
+            try {
+                parser.scan_preamble();
+                parser.scan_preamble();
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("banner has already been scanned"));
+                throw;
+            }
+        });
+    }
 
-    EXPECT_ANY_THROW({
-        try {
-            byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-            eminem::Parser parser(&reader);
-            parser.get_nlines();
-        } catch (std::exception& e) {
-            EXPECT_THAT(e.what(), ::testing::HasSubstr("size line has not yet been scanned"));
-            throw;
-        }
-    });
+    {
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        EXPECT_ANY_THROW({
+            try {
+                parser.get_nlines();
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("size line has not yet been scanned"));
+                throw;
+            }
+        });
+    }
 }
 
 INSTANTIATE_TEST_SUITE_P(
@@ -195,8 +201,8 @@ TEST_P(ParserIntegerBodyTest, CoordinateMatrix) {
     stored << "\n"; // add an extra newline.
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -227,8 +233,8 @@ TEST_P(ParserIntegerBodyTest, CoordinateVector) {
     format_coordinate(stored, N, coords, values); // Don't add the extra newline!
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -258,8 +264,8 @@ TEST_P(ParserIntegerBodyTest, ArrayMatrix) {
     stored << "\n"; // add an extra newline.
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -298,8 +304,8 @@ TEST_P(ParserIntegerBodyTest, ArrayVector) {
     stored << "\n"; // add an extra newline.
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -352,8 +358,8 @@ TEST_P(ParserRealBodyTest, CoordinateMatrix) {
     format_coordinate(stored, NR, NC, coords.first, coords.second, values); // Don't add an extra new line this time!
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -375,8 +381,8 @@ TEST_P(ParserRealBodyTest, CoordinateMatrix) {
 
     // Getting some coverage on scan_double in coordinate mode.
     {
-        byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         std::vector<double> out_vals2;
@@ -399,8 +405,8 @@ TEST_P(ParserRealBodyTest, CoordinateVector) {
     stored << "\n"; // inject an extra newline.
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -431,8 +437,8 @@ TEST_P(ParserRealBodyTest, ArrayMatrix) {
     format_array(stored, NR, NC, values);
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -463,8 +469,8 @@ TEST_P(ParserRealBodyTest, ArrayMatrix) {
 
     // Getting some coverage on scan_double in array mode.
     {
-        byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         std::vector<double> out_vals2;
@@ -485,8 +491,8 @@ TEST_P(ParserRealBodyTest, ArrayVector) {
     format_array(stored, N, values);
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -541,8 +547,8 @@ TEST_P(ParserComplexBodyTest, CoordinateMatrix) {
     format_coordinate(stored, NR, NC, coords.first, coords.second, values); // Don't add an extra new line this time!
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -575,8 +581,8 @@ TEST_P(ParserComplexBodyTest, CoordinateVector) {
     stored << "\n"; // inject an extra newline.
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -607,8 +613,8 @@ TEST_P(ParserComplexBodyTest, ArrayMatrix) {
     format_array(stored, NR, NC, values);
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -648,8 +654,8 @@ TEST_P(ParserComplexBodyTest, ArrayVector) {
     format_array(stored, N, values);
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -703,8 +709,8 @@ TEST_P(ParserPatternBodyTest, CoordinateMatrix) {
     format_coordinate(stored, NR, NC, coords.first, coords.second, std::vector<char>()); // Don't add an extra new line this time!
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -737,8 +743,8 @@ TEST_P(ParserPatternBodyTest, CoordinateVector) {
     stored << "\n"; // inject an extra newline.
     std::string input = stored.str();
 
-    byteme::ChunkedBufferReader reader(input.data(), input.size(), chunksize);
-    eminem::Parser parser(&reader);
+    auto reader = std::make_unique<byteme::ChunkedBufferReader>(input.data(), input.size(), chunksize); 
+    eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -782,8 +788,8 @@ TEST_F(ParserBodyEarlyTerminationTest, CoordinateMatrix) {
 
     // Early termination inside the loop.
     {
-        byteme::RawBufferReader reader(input.data(), input.size());
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size());
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         std::vector<int> out_rows, out_cols, out_vals;
@@ -817,8 +823,8 @@ TEST_F(ParserBodyEarlyTerminationTest, CoordinateMatrix) {
 
     // Early termination outside the loop.
     {
-        byteme::RawBufferReader reader(input.data(), input.size());
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size());
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         std::vector<int> out_rows, out_cols, out_vals;
@@ -846,8 +852,8 @@ TEST_F(ParserBodyEarlyTerminationTest, ArrayVector) {
 
     // Early termination inside the loop.
     {
-        byteme::RawBufferReader reader(input.data(), input.size());
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size());
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         std::vector<int> out_rows, out_cols;
@@ -870,8 +876,8 @@ TEST_F(ParserBodyEarlyTerminationTest, ArrayVector) {
 
     // Early termination outside the loop.
     {
-        byteme::RawBufferReader reader(input.data(), input.size());
-        eminem::Parser parser(&reader);
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size());
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();
 
         std::vector<int> out_rows, out_cols;
@@ -899,12 +905,12 @@ TEST_F(ParserBodyEarlyTerminationTest, ArrayVector) {
 class ParserBodyErrorTest : public ::testing::Test {
 protected:
     void test_error(const std::string& input, std::string msg) {
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size());
+        eminem::Parser<> parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+
         EXPECT_ANY_THROW({
             try {
-                byteme::RawBufferReader reader(input.data(), input.size());
-                eminem::Parser parser(&reader);
                 parser.scan_preamble();
-
                 auto field = parser.get_banner().field;
                 if (field == eminem::Field::INTEGER) {
                     parser.scan_integer([&](size_t, size_t, int){});
@@ -969,5 +975,3 @@ TEST_F(ParserBodyErrorTest, PatternErrors) {
     test_error("%MatrixMarket vector coordinate pattern general\n5 1\n1 2\n", "expected 1");
     test_error("%MatrixMarket matrix array pattern general\n5 1\n1 2\n", "not supported");
 }
-
-

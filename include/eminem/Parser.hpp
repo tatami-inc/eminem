@@ -21,35 +21,33 @@ namespace eminem {
 /**
  * @brief Parse a matrix from a Matrix Market file.
  *
- * @tparam parallel_ Whether to parallelize the byte reading and parsing.
- * If `true`, a separate thread is used to read the bytes from the input source.
- * @tparam Pointer_ A (possibly smart) pointer to a `byteme::Reader` instance.
+ * @tparam Input_ Class for the source of input bytes, satisfying the `byteme::PerByteInterface` instance.
  */
-template<bool parallel_ = false, class Pointer_ = byteme::Reader*>
+template<class Input_ = byteme::PerByteInterface<char> >
 class Parser {
 public:
     /**
-     * @param r Pointer to an unused `Reader` instance from the [**byteme**](https://github.com/LTLA/byteme) library.
+     * @param input Source of input bytes, typically a `byteme::PerByteInterface` instance.
      */
-    Parser(Pointer_ r) : input(std::move(r)) {}
+    Parser(std::unique_ptr<Input_> input) : my_input(std::move(input)) {}
 
 private:
-    typename std::conditional<parallel_, byteme::PerByteParallel<char, Pointer_>, byteme::PerByte<char, Pointer_> >::type input;
-    size_t current_line = 0;
+    std::unique_ptr<Input_> my_input;
+    size_t my_current_line = 0;
 
 private:
-    bool passed_banner = false;
-    MatrixDetails details;
+    bool my_passed_banner = false;
+    MatrixDetails my_details;
 
     void parse_banner(const std::string& contents) {
         size_t pos = 13; // skip the "MatrixMarket " string.
 
         auto obj_str = contents.c_str() + pos;
         if (std::strncmp(obj_str, "matrix ", 7) == 0) {
-            details.object = Object::MATRIX;
+            my_details.object = Object::MATRIX;
             pos += 7;
         } else if (std::strncmp(obj_str, "vector ", 7) == 0) {
-            details.object = Object::VECTOR;
+            my_details.object = Object::VECTOR;
             pos += 7;
         } else {
             throw std::runtime_error("first banner field should be one of 'matrix' or 'vector'");
@@ -57,10 +55,10 @@ private:
 
         auto format_str = contents.c_str() + pos;
         if (std::strncmp(format_str, "coordinate ", 11) == 0) {
-            details.format = Format::COORDINATE;
+            my_details.format = Format::COORDINATE;
             pos += 11;
         } else if (std::strncmp(format_str, "array ", 6) == 0) {
-            details.format = Format::ARRAY;
+            my_details.format = Format::ARRAY;
             pos += 6;
         } else {
             throw std::runtime_error("second banner field should be one of 'coordinate' or 'array'");
@@ -68,19 +66,19 @@ private:
 
         auto field_str = contents.c_str() + pos;
         if (std::strncmp(field_str, "integer ", 8) == 0) {
-            details.field = Field::INTEGER;
+            my_details.field = Field::INTEGER;
             pos += 8;
         } else if (std::strncmp(field_str, "double ", 7) == 0) {
-            details.field = Field::DOUBLE;
+            my_details.field = Field::DOUBLE;
             pos += 7;
         } else if (std::strncmp(field_str, "complex ", 8) == 0) {
-            details.field = Field::COMPLEX;
+            my_details.field = Field::COMPLEX;
             pos += 8;
         } else if (std::strncmp(field_str, "pattern ", 8) == 0) {
-            details.field = Field::PATTERN;
+            my_details.field = Field::PATTERN;
             pos += 8;
         } else if (std::strncmp(field_str, "real ", 5) == 0) {
-            details.field = Field::REAL;
+            my_details.field = Field::REAL;
             pos += 5;
         } else {
             throw std::runtime_error("third banner field should be one of 'real', 'integer', 'double', 'complex' or 'pattern'");
@@ -88,13 +86,13 @@ private:
 
         auto sym_str = contents.c_str() + pos;
         if (std::strcmp(sym_str, "general") == 0) {
-            details.symmetry = Symmetry::GENERAL;
+            my_details.symmetry = Symmetry::GENERAL;
         } else if (std::strcmp(sym_str, "symmetric") == 0) {
-            details.symmetry = Symmetry::SYMMETRIC;
+            my_details.symmetry = Symmetry::SYMMETRIC;
         } else if (std::strcmp(sym_str, "skew-symmetric") == 0) {
-            details.symmetry = Symmetry::SKEW_SYMMETRIC;
+            my_details.symmetry = Symmetry::SKEW_SYMMETRIC;
         } else if (std::strcmp(sym_str, "hermitian") == 0) {
-            details.symmetry = Symmetry::HERMITIAN;
+            my_details.symmetry = Symmetry::HERMITIAN;
         } else {
             throw std::runtime_error("fourth banner field should be one of 'general', 'symmetric', 'skew-symemtric' or 'hermitian'");
         }
@@ -102,36 +100,36 @@ private:
 
     void scan_banner() {
         std::string contents;
-        bool valid = input.valid();
-        if (passed_banner) {
+        bool valid = my_input->valid();
+        if (my_passed_banner) {
             throw std::runtime_error("banner has already been scanned");
         }
 
         while (valid) {
-            if (input.get() != '%') {
-                throw std::runtime_error("failed to find banner line before non-commented line " + std::to_string(current_line + 1));
+            if (my_input->get() != '%') {
+                throw std::runtime_error("failed to find banner line before non-commented line " + std::to_string(my_current_line + 1));
             }
 
             // Exhaust all leading comment characters.
             do {
-                valid = input.advance();
-            } while (valid && input.get() == '%');
+                valid = my_input->advance();
+            } while (valid && my_input->get() == '%');
 
             // Inserting up to the next line.
-            while (valid && input.get() != '\n') {
-                contents += input.get();
-                valid = input.advance();
+            while (valid && my_input->get() != '\n') {
+                contents += my_input->get();
+                valid = my_input->advance();
             }
 
             if (!valid) {
                 break;
             }
-            ++current_line;
-            valid = input.advance();
+            ++my_current_line;
+            valid = my_input->advance();
 
             if (contents.rfind("MatrixMarket ", 0) == 0) {
                 parse_banner(contents);
-                passed_banner = true;
+                my_passed_banner = true;
                 return;
             } 
             contents.clear();
@@ -148,85 +146,85 @@ public:
      * @return Details about the matrix in this file.
      */
     const MatrixDetails& get_banner() const {
-        if (!passed_banner) {
+        if (!my_passed_banner) {
             throw std::runtime_error("banner has not yet been scanned");
         }
-        return details;
+        return my_details;
     }
 
 private:
-    bool passed_size = false;
-    size_t nrows = 0, ncols = 0, nlines = 0;
+    bool my_passed_size = false;
+    size_t my_nrows = 0, my_ncols = 0, my_nlines = 0;
 
     void check_size(int onto, bool non_empty) {
         if (!non_empty) {
-            throw std::runtime_error("detected an empty size field on line " + std::to_string(current_line + 1));
+            throw std::runtime_error("detected an empty size field on line " + std::to_string(my_current_line + 1));
         }
 
-        if (details.object == Object::MATRIX) {
-            if (details.format == Format::COORDINATE) {
+        if (my_details.object == Object::MATRIX) {
+            if (my_details.format == Format::COORDINATE) {
                 if (onto != 2) {
-                    throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(current_line + 1));
+                    throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
                 }
-            } else if (details.format == Format::ARRAY) {
+            } else if (my_details.format == Format::ARRAY) {
                 if (onto != 1) {
-                    throw std::runtime_error("expected two size fields for array matrices on line " + std::to_string(current_line + 1));
+                    throw std::runtime_error("expected two size fields for array matrices on line " + std::to_string(my_current_line + 1));
                 }
-                nlines = nrows * ncols;
+                my_nlines = my_nrows * my_ncols;
             }
         } else {
-            if (details.format == Format::COORDINATE) {
+            if (my_details.format == Format::COORDINATE) {
                 if (onto != 1) {
-                    throw std::runtime_error("expected two size fields for coordinate vectors on line " + std::to_string(current_line + 1));
+                    throw std::runtime_error("expected two size fields for coordinate vectors on line " + std::to_string(my_current_line + 1));
                 }
-                nlines = ncols;
-            } else if (details.format == Format::ARRAY) {
+                my_nlines = my_ncols;
+            } else if (my_details.format == Format::ARRAY) {
                 if (onto != 0) {
-                    throw std::runtime_error("expected one size field for array vectors on line " + std::to_string(current_line + 1));
+                    throw std::runtime_error("expected one size field for array vectors on line " + std::to_string(my_current_line + 1));
                 }
-                nlines = nrows;
+                my_nlines = my_nrows;
             }
-            ncols = 1;
+            my_ncols = 1;
         }
 
-        passed_size = true;
+        my_passed_size = true;
     }
 
     void scan_size() {
         char onto = 0;
         bool non_empty = false;
-        bool valid = input.valid();
+        bool valid = my_input->valid();
 
         while (valid) {
-            if (input.get() == '%') {
+            if (my_input->get() == '%') {
                 // Handling stray comments... try to get to the next line as quickly as possible.
                 do {
-                    valid = input.advance();
-                } while (valid && input.get() != '\n');
+                    valid = my_input->advance();
+                } while (valid && my_input->get() != '\n');
 
                 if (!valid) {
                     break;
                 } else {
-                    ++current_line;
-                    valid = input.advance();
+                    ++my_current_line;
+                    valid = my_input->advance();
                     continue;
                 }
             }
 
             // Chomping digits.
             do {
-                char current = input.get();
+                char current = my_input->get();
                 switch(current) {
                     case ' ':
                         if (!non_empty) {
-                            throw std::runtime_error("detected an empty size field on line " + std::to_string(current_line + 1));
+                            throw std::runtime_error("detected an empty size field on line " + std::to_string(my_current_line + 1));
                         }
                         ++onto;
                         break;
 
                     case '\n':
-                        ++current_line;
-                        valid = input.advance();
+                        ++my_current_line;
+                        valid = my_input->advance();
                         check_size(onto, non_empty);
                         return;
 
@@ -236,26 +234,26 @@ private:
                             auto delta = current - '0';
                             switch(onto) {
                                 case 0:
-                                    nrows *= 10;
-                                    nrows += delta;
+                                    my_nrows *= 10;
+                                    my_nrows += delta;
                                     break;
                                 case 1:
-                                    ncols *= 10;
-                                    ncols += delta;
+                                    my_ncols *= 10;
+                                    my_ncols += delta;
                                     break;
                                 case 2:
-                                    nlines *= 10;
-                                    nlines += delta;
+                                    my_nlines *= 10;
+                                    my_nlines += delta;
                                     break;
                             }
                         }
                         break;
 
                     default:
-                        throw std::runtime_error("only non-negative integers should be present on line " + std::to_string(current_line + 1));
+                        throw std::runtime_error("only non-negative integers should be present on line " + std::to_string(my_current_line + 1));
                 }
 
-                valid = input.advance();
+                valid = my_input->advance();
             } while (valid);
         }
 
@@ -271,10 +269,10 @@ public:
      * @return Number of rows.
      */
     size_t get_nrows() const {
-        if (!passed_size) {
+        if (!my_passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
         }
-        return nrows;
+        return my_nrows;
     }
 
     /**
@@ -285,10 +283,10 @@ public:
      * @return Number of columns.
      */
     size_t get_ncols() const {
-        if (!passed_size) {
+        if (!my_passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
         }
-        return ncols;
+        return my_ncols;
     }
 
     /**
@@ -299,10 +297,10 @@ public:
      * @return Number of non-zero lines. 
      */
     size_t get_nlines() const {
-        if (!passed_size) {
+        if (!my_passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
         }
-        return nlines;
+        return my_nlines;
     }
 
 public:
@@ -319,18 +317,18 @@ public:
 private:
     void check_coordinate_common(size_t currow, size_t current_data_line, bool non_empty) const {
         if (!non_empty) {
-            throw std::runtime_error("empty field detected on line " + std::to_string(current_line + 1));
+            throw std::runtime_error("empty field detected on line " + std::to_string(my_current_line + 1));
         }
 
-        if (current_data_line >= nlines) {
-            throw std::runtime_error("more lines present than specified in the header (" + std::to_string(nlines) + ")");
+        if (current_data_line >= my_nlines) {
+            throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
 
         if (!currow) {
-            throw std::runtime_error("row index must be positive on line " + std::to_string(current_line + 1));
+            throw std::runtime_error("row index must be positive on line " + std::to_string(my_current_line + 1));
         }
-        if (currow > nrows) {
-            throw std::runtime_error("row index out of range on line " + std::to_string(current_line + 1));
+        if (currow > my_nrows) {
+            throw std::runtime_error("row index out of range on line " + std::to_string(my_current_line + 1));
         }
     }
 
@@ -340,23 +338,23 @@ private:
 
         if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
             if (onto != 2) {
-                throw std::runtime_error("expected 3 fields on line " + std::to_string(current_line + 1));
+                throw std::runtime_error("expected 3 fields on line " + std::to_string(my_current_line + 1));
             }
         } else if constexpr(field_ == Field::PATTERN) {
             if (onto != 1) {
-                throw std::runtime_error("expected 2 fields on line " + std::to_string(current_line + 1));
+                throw std::runtime_error("expected 2 fields on line " + std::to_string(my_current_line + 1));
             }
         } else if constexpr(field_ == Field::COMPLEX) {
             if (onto != 3) {
-                throw std::runtime_error("expected 4 fields on line " + std::to_string(current_line + 1));
+                throw std::runtime_error("expected 4 fields on line " + std::to_string(my_current_line + 1));
             }
         }
 
         if (!curcol) {
-            throw std::runtime_error("column index must be positive on line " + std::to_string(current_line + 1));
+            throw std::runtime_error("column index must be positive on line " + std::to_string(my_current_line + 1));
         }
-        if (curcol > ncols) {
-            throw std::runtime_error("column index out of range on line " + std::to_string(current_line + 1));
+        if (curcol > my_ncols) {
+            throw std::runtime_error("column index out of range on line " + std::to_string(my_current_line + 1));
         }
     }
 
@@ -366,22 +364,22 @@ private:
 
         if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
             if (onto != 1) {
-                throw std::runtime_error("expected 2 fields on line " + std::to_string(current_line + 1));
+                throw std::runtime_error("expected 2 fields on line " + std::to_string(my_current_line + 1));
             }
         } else if constexpr(field_ == Field::PATTERN) {
             if (onto != 0) {
-                throw std::runtime_error("expected 1 field on line " + std::to_string(current_line + 1));
+                throw std::runtime_error("expected 1 field on line " + std::to_string(my_current_line + 1));
             }
         } else if constexpr(field_ == Field::COMPLEX) {
             if (onto != 2) {
-                throw std::runtime_error("expected 3 fields on line " + std::to_string(current_line + 1));
+                throw std::runtime_error("expected 3 fields on line " + std::to_string(my_current_line + 1));
             }
         }
     }
 
     template<Object object_, Field field_, class Store_, class Compose_, class Bump_, class Finish_>
     bool scan_coordinate(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
-        if (!passed_banner || !passed_size) {
+        if (!my_passed_banner || !my_passed_size) {
             throw std::runtime_error("banner or size lines have not yet been parsed");
         }
 
@@ -389,7 +387,7 @@ private:
         size_t currow = 0, curcol = 0;
         char onto = 0;
         bool non_empty = false;
-        bool valid = input.valid();
+        bool valid = my_input->valid();
 
         if constexpr(object_ == Object::VECTOR) {
             curcol = 1;
@@ -399,34 +397,34 @@ private:
         constexpr bool can_quit = std::is_same<typename std::invoke_result<Store_, size_t, size_t, finish_value>::type, bool>::value;
 
         while (valid) {
-            if (input.get() == '%') {
+            if (my_input->get() == '%') {
                 // Try to get quickly to the next line.
                 do {
-                    valid = input.advance();
-                } while (valid && input.get() != '\n');
+                    valid = my_input->advance();
+                } while (valid && my_input->get() != '\n');
 
                 if (!valid) {
                     break;
                 } else {
-                    ++current_line;
-                    valid = input.advance();
+                    ++my_current_line;
+                    valid = my_input->advance();
                     continue;
                 }
             }
 
             do {
-                char current = input.get();
+                char current = my_input->get();
                 if (current == ' ') {
                     if (!non_empty) {
-                        throw std::runtime_error("detected empty field on line " + std::to_string(current_line + 1));
+                        throw std::runtime_error("detected empty field on line " + std::to_string(my_current_line + 1));
                     }
                     if constexpr(object_ == Object::MATRIX) {
                         if (onto >= 2) {
-                            bump(current_line);
+                            bump(my_current_line);
                         }
                     } else {
                         if (onto >= 1) {
-                            bump(current_line);
+                            bump(my_current_line);
                         }
                     }
                     ++onto;
@@ -440,11 +438,11 @@ private:
                     }
 
                     if constexpr(can_quit) {
-                        if (!store(currow, curcol, finish(current_line))) {
+                        if (!store(currow, curcol, finish(my_current_line))) {
                             return false; 
                         }
                     } else {
-                        store(currow, curcol, finish(current_line));
+                        store(currow, curcol, finish(my_current_line));
                     }
 
                     currow = 0;
@@ -454,15 +452,15 @@ private:
                     ++current_data_line;
                     onto = 0;
                     non_empty = false;
-                    ++current_line;
-                    valid = input.advance();
+                    ++my_current_line;
+                    valid = my_input->advance();
                     break;
 
                 } else {
                     switch (onto) {
                         case 0:
                             if (current < '0' || current > '9') {
-                                throw std::runtime_error("row index should be a non-negative integer on line " + std::to_string(current_line + 1));
+                                throw std::runtime_error("row index should be a non-negative integer on line " + std::to_string(my_current_line + 1));
                             }
                             currow *= 10;
                             currow += current - '0';
@@ -471,23 +469,23 @@ private:
                         case 1:
                             if constexpr(object_ == Object::MATRIX) {
                                 if (current < '0' || current > '9') {
-                                    throw std::runtime_error("column index should be a non-negative integer on line " + std::to_string(current_line + 1));
+                                    throw std::runtime_error("column index should be a non-negative integer on line " + std::to_string(my_current_line + 1));
                                 }
                                 curcol *= 10;
                                 curcol += current - '0';
                             } else {
-                                compose(current, current_line);
+                                compose(current, my_current_line);
                             }
                             break;
 
                         default:
-                            compose(current, current_line);
+                            compose(current, my_current_line);
                             break;
                     }
                     non_empty = true;
                 }
 
-                valid = input.advance();
+                valid = my_input->advance();
             } while (valid);
         }
 
@@ -502,18 +500,18 @@ private:
             }
 
             if constexpr(can_quit) {
-                if (!store(currow, curcol, finish(current_line))) {
+                if (!store(currow, curcol, finish(my_current_line))) {
                     return false;
                 }
             } else {
-                store(currow, curcol, finish(current_line));
+                store(currow, curcol, finish(my_current_line));
             }
 
             ++current_data_line;
         }
 
-        if (current_data_line != nlines) {
-            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(nlines) + ")");
+        if (current_data_line != my_nlines) {
+            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
         return true;
     }
@@ -522,27 +520,27 @@ private:
     template<Field field_>
     void check_array(size_t current_data_line, int onto, bool non_empty) const {
         if (!non_empty) {
-            throw std::runtime_error("empty field detected on line " + std::to_string(current_line + 1));
+            throw std::runtime_error("empty field detected on line " + std::to_string(my_current_line + 1));
         }
 
         if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
             if (onto != 0) {
-                throw std::runtime_error("expected 1 field on line " + std::to_string(current_line + 1));
+                throw std::runtime_error("expected 1 field on line " + std::to_string(my_current_line + 1));
             }
         } else if constexpr(field_ == Field::COMPLEX) {
             if (onto != 1) {
-                throw std::runtime_error("expected 2 fields on line " + std::to_string(current_line + 1));
+                throw std::runtime_error("expected 2 fields on line " + std::to_string(my_current_line + 1));
             }
         }
 
-        if (current_data_line >= nlines) {
-            throw std::runtime_error("more lines present than expected for an array format (" + std::to_string(nlines) + ")");
+        if (current_data_line >= my_nlines) {
+            throw std::runtime_error("more lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
         }
     }
 
     template<Field field_, class Store_, class Compose_, class Bump_, class Finish_>
     bool scan_array(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
-        if (!passed_banner || !passed_size) {
+        if (!my_passed_banner || !my_passed_size) {
             throw std::runtime_error("banner or size lines have not yet been parsed");
         }
 
@@ -550,66 +548,66 @@ private:
         size_t currow = 1, curcol = 1;
         char onto = 0;
         bool non_empty = false;
-        bool valid = input.valid();
+        bool valid = my_input->valid();
 
         typedef typename std::invoke_result<Finish_, size_t>::type finish_value;
         constexpr bool can_quit = std::is_same<typename std::invoke_result<Store_, size_t, size_t, finish_value>::type, bool>::value;
 
         while (valid) {
-            if (input.get() == '%') {
+            if (my_input->get() == '%') {
                 // Try to get quickly to the next line.
                 do {
-                    valid = input.advance();
-                } while (valid && input.get() != '\n');
+                    valid = my_input->advance();
+                } while (valid && my_input->get() != '\n');
 
                 if (!valid) {
                     break;
                 } else {
-                    ++current_line;
-                    valid = input.advance();
+                    ++my_current_line;
+                    valid = my_input->advance();
                     continue;
                 }
             }
 
             do {
-                char current = input.get();
+                char current = my_input->get();
                 if (current == ' ') {
                     if (!non_empty) {
-                        throw std::runtime_error("detected empty field on line " + std::to_string(current_line + 1));
+                        throw std::runtime_error("detected empty field on line " + std::to_string(my_current_line + 1));
                     }
-                    bump(current_line);
+                    bump(my_current_line);
                     ++onto;
                     non_empty = false;
 
                 } else if (current == '\n') {
                     check_array<field_>(current_data_line, onto, non_empty); 
                     if constexpr(can_quit) {
-                        if (!store(currow, curcol, finish(current_line))) {
+                        if (!store(currow, curcol, finish(my_current_line))) {
                             return false; 
                         }
                     } else {
-                        store(currow, curcol, finish(current_line));
+                        store(currow, curcol, finish(my_current_line));
                     }
 
                     ++currow;
-                    if (currow > nrows) {
+                    if (currow > my_nrows) {
                         ++curcol;
                         currow = 1;
                     }
                     ++current_data_line;
-                    ++current_line;
+                    ++my_current_line;
                     onto = 0;
                     non_empty = false;
 
-                    valid = input.advance();
+                    valid = my_input->advance();
                     break;
 
                 } else {
-                    compose(current, current_line);
+                    compose(current, my_current_line);
                     non_empty = true;
                 }
 
-                valid = input.advance();
+                valid = my_input->advance();
             } while (valid);
         }
 
@@ -619,17 +617,17 @@ private:
         if (onto != 0 || non_empty) { 
             check_array<field_>(current_data_line, onto, non_empty); 
             if constexpr(can_quit) {
-                if (!store(currow, curcol, finish(current_line))) {
+                if (!store(currow, curcol, finish(my_current_line))) {
                     return false; 
                 }
             } else {
-                store(currow, curcol, finish(current_line));
+                store(currow, curcol, finish(my_current_line));
             }
             ++current_data_line;
         }
 
-        if (current_data_line != nlines) {
-            throw std::runtime_error("fewer lines present than expected for an array format (" + std::to_string(nlines) + ")");
+        if (current_data_line != my_nlines) {
+            throw std::runtime_error("fewer lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
         }
         return true;
     }
@@ -708,8 +706,8 @@ public:
             return copy;
         };
 
-        if (details.format == Format::COORDINATE) {
-            if (details.object == Object::MATRIX) {
+        if (my_details.format == Format::COORDINATE) {
+            if (my_details.object == Object::MATRIX) {
                 return scan_coordinate<Object::MATRIX, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             } else {
                 return scan_coordinate<Object::VECTOR, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
@@ -751,8 +749,8 @@ public:
             return output;
         };
 
-        if (details.format == Format::COORDINATE) {
-            if (details.object == Object::MATRIX) {
+        if (my_details.format == Format::COORDINATE) {
+            if (my_details.object == Object::MATRIX) {
                 return scan_coordinate<Object::MATRIX, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             } else {
                 return scan_coordinate<Object::VECTOR, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
@@ -817,8 +815,8 @@ public:
             return holding;
         };
 
-        if (details.format == Format::COORDINATE) {
-            if (details.object == Object::MATRIX) {
+        if (my_details.format == Format::COORDINATE) {
+            if (my_details.object == Object::MATRIX) {
                 return scan_coordinate<Object::MATRIX, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
             } else {
                 return scan_coordinate<Object::VECTOR, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
@@ -851,11 +849,11 @@ public:
             return true; 
         };
 
-        if (details.format != Format::COORDINATE) {
+        if (my_details.format != Format::COORDINATE) {
             throw std::runtime_error("'array' format for 'pattern' field is not supported");
         }
 
-        if (details.object == Object::MATRIX) {
+        if (my_details.object == Object::MATRIX) {
             return scan_coordinate<Object::MATRIX, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
         } else {
             return scan_coordinate<Object::VECTOR, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));

@@ -7,7 +7,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    eminem::SomeFileParser<false> parser(argv[1]);
+    eminem::SomeFileParser parser(argv[1], {});
     parser.scan_preamble();
     auto banner = parser.get_banner();
 
