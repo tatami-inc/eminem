@@ -7,7 +7,6 @@
 #include <complex>
 #include <type_traits>
 #include <memory>
-#include <iostream>
 
 #include "utils.hpp"
 
@@ -18,6 +17,12 @@
  */
 
 namespace eminem {
+
+/* GENERAL COMMENTS:
+ * - This sticks to the specification described at https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz
+ * - We will allow both tabs and whitespaces when considering a 'blank' character.
+ * - We must consider the possibility that the final line of the file is not newline terminated.
+ */
 
 /**
  * @brief Parse a matrix from a Matrix Market file.
@@ -35,12 +40,58 @@ public:
 private:
     std::unique_ptr<Input_> my_input;
     size_t my_current_line = 0;
+    MatrixDetails my_details;
+
+    bool chomp() {
+        while (1) {
+            char x = my_input->get();
+            if (x != ' ' && x != '\t') {
+                return true;
+            }
+            if (!(my_input->advance())) {
+                break;
+            }
+        }
+        return false;
+    }
 
 private:
     bool my_passed_banner = false;
-    MatrixDetails my_details;
 
-    std::pair<bool, bool> is_expected_string(const char* ptr, size_t len, size_t start) {
+    struct ExpectedMatch {
+        ExpectedMatch(bool found, bool newline, bool remaining) : found(found), newline(newline), remaining(remaining) {}
+        ExpectedMatch() : ExpectedMatch(false, false, false) {}
+        bool found;
+        bool newline;
+        bool remaining;
+    };
+
+    ExpectedMatch advance_past_expected_string() {
+        bool remaining = my_input->advance(); // move off the last character.
+        ExpectedMatch output(true, false, remaining);
+
+        if (output.remaining) {
+            char next = my_input->get();
+            if (next == ' ' || next == '\t') {
+                if (my_input->advance()) {
+                    output.remaining = chomp(); // gobble up all of the remaining horizontal space.
+                    if (output.remaining) {
+                        output.newline = (my_input->get() == '\n');
+                    }
+                } else {
+                    output.remaining = false; 
+                }
+            } else if (next == '\n') {
+                output.newline = true; // don't move past the newline.
+            } else {
+                output.found = false; // if the next character is not a space or whitespace, it's not a match.
+            }
+        }
+
+        return output;
+    }
+
+    ExpectedMatch is_expected_string(const char* ptr, size_t len, size_t start) {
         // It is assumed that the first 'start' characters of 'ptr' where
         // already checked and matched before entering this function, and that
         // 'my_input' is currently positioned at the start-th character, i.e.,
@@ -48,183 +99,127 @@ private:
         // compare against 'ptr[start]').
         for (size_t i = start; i < len; ++i) {
             if (!my_input->advance()) {
-                return std::pair<bool, bool>(false, false);
+                return ExpectedMatch(false, false, false);
             }
             if (my_input->get() != ptr[i]) {
-                return std::pair<bool, bool>(false, true);
+                return ExpectedMatch(false, false, true);
             }
         }
-
-        bool remaining = my_input->advance(); // move off the last character.
-        return std::pair<bool, bool>(true, remaining);
+        return advance_past_expected_string();
     }
 
-    std::pair<bool, bool> is_expected_string(const char* ptr, size_t len) {
+    ExpectedMatch is_expected_string(const char* ptr, size_t len) {
         // Using a default start of 1, assuming that we've already compared
         // the first character before entering this function.
         return is_expected_string(ptr, len, 1);
     }
 
-    void parse_banner_object() {
+    bool parse_banner_object() {
+        ExpectedMatch res;
+
         char x = my_input->get();
-        bool first_found = false;
-        bool first_valid = false;
-
         if (x == 'm') {
-            auto found = is_expected_string("matrix ", 7);
-            if (found.first) {
-                my_details.object = Object::MATRIX;
-                first_found = true;
-            }
-            first_valid = found.second;
-
+            res = is_expected_string("matrix", 6);
+            my_details.object = Object::MATRIX;
         } else if (x == 'v') {
-            auto found = is_expected_string("vector ", 7);
-            if (found.first) {
-                my_details.object = Object::VECTOR;
-                first_found = true;
-            }
-            first_valid = found.second;
+            res = is_expected_string("vector", 6);
+            my_details.object = Object::VECTOR;
         }
 
-        if (!first_found) {
+        if (!res.found) {
             throw std::runtime_error("first banner field should be one of 'matrix' or 'vector'");
         }
-        if (!first_valid) {
-            throw std::runtime_error("banner line terminates after the first field");
+        if (!res.remaining) {
+            throw std::runtime_error("end of file is reached after the first banner field");
         }
+
+        return res.newline;
     }
 
-    void parse_banner_format() {
+    bool parse_banner_format() {
+        ExpectedMatch res;
+
         char x = my_input->get();
-        bool second_found = false;
-        bool second_valid = false;
-
         if (x == 'c') {
-            auto found = is_expected_string("coordinate ", 11);
-            if (found.first) {
-                my_details.format = Format::COORDINATE;
-                second_found = true;
-            }
-            second_valid = found.second;
-
+            res = is_expected_string("coordinate", 10);
+            my_details.format = Format::COORDINATE;
         } else if (x == 'a') {
-            auto found = is_expected_string("array ", 6);
-            if (found.first) {
-                my_details.format = Format::ARRAY;
-                second_found = true;
-            }
-            second_valid = found.second;
+            res = is_expected_string("array", 5);
+            my_details.format = Format::ARRAY;
         }
 
-        if (!second_found) {
+        if (!res.found) {
             throw std::runtime_error("second banner field should be one of 'coordinate' or 'array'");
         }
-        if (!second_valid) {
-            throw std::runtime_error("banner line terminates after the second field");
+        if (!res.remaining) {
+            throw std::runtime_error("end of file is reached after the second banner field");
         }
+
+        return res.newline;
     }
 
-    void parse_banner_field() {
+    bool parse_banner_field() {
+        ExpectedMatch res;
+
         char x = my_input->get();
-        bool third_found = false;
-        bool third_valid = false;
-
         if (x == 'i') { 
-            auto found = is_expected_string("integer ", 8);
-            if (found.first) {
-                my_details.field = Field::INTEGER;
-                third_found = true;
-            }
-            third_valid = found.second;
-
+            res = is_expected_string("integer", 7);
+            my_details.field = Field::INTEGER;
         } else if (x == 'd') { 
-            auto found = is_expected_string("double ", 7);
-            if (found.first) {
-                my_details.field = Field::DOUBLE;
-                third_found = true;
-            }
-            third_valid = found.second;
-
+            res = is_expected_string("double", 6);
+            my_details.field = Field::DOUBLE;
         } else if (x == 'c') {
-            auto found = is_expected_string("complex ", 8);
-            if (found.first) {
-                my_details.field = Field::COMPLEX;
-                third_found = true;
-            }
-            third_valid = found.second;
-
+            res = is_expected_string("complex", 7);
+            my_details.field = Field::COMPLEX;
         } else if (x == 'p') {
-            auto found = is_expected_string("pattern ", 8);
-            if (found.first) {
-                my_details.field = Field::PATTERN;
-                third_found = true;
-            }
-            third_valid = found.second;
-
+            res = is_expected_string("pattern", 7);
+            my_details.field = Field::PATTERN;
         } else if (x == 'r') {
-            auto found = is_expected_string("real ", 5);
-            if (found.first) {
-                my_details.field = Field::REAL;
-                third_found = true;
-            }
-            third_valid = found.second;
+            res = is_expected_string("real", 4);
+            my_details.field = Field::REAL;
         }
 
-        if (!third_found) {
+        if (!res.found) {
             throw std::runtime_error("third banner field should be one of 'real', 'integer', 'double', 'complex' or 'pattern'");
         }
-        if (!third_valid) {
-            throw std::runtime_error("banner line terminates after the third field");
+        if (!res.remaining) {
+            throw std::runtime_error("end of file reached after the third banner field");
         }
+
+        return res.newline;
     }
 
-    void parse_banner_symmetry() {
-        char x = my_input->get();
-        bool fourth_found = false;
-        bool fourth_valid = false;
+    bool parse_banner_symmetry() {
+        ExpectedMatch res;
 
+        char x = my_input->get();
         if (x == 'g') {
-            auto found = is_expected_string("general", 7);
-            if (found.first) {
-                my_details.symmetry = Symmetry::GENERAL;
-                fourth_found = true;
-            }
-            fourth_valid = found.second;
+            res = is_expected_string("general", 7);
+            my_details.symmetry = Symmetry::GENERAL;
         } else if (x == 'h') {
-            auto found = is_expected_string("hermitian", 9);
-            if (found.first) {
-                my_details.symmetry = Symmetry::HERMITIAN;
-                fourth_found = true;
-            }
-            fourth_valid = found.second;
+            res = is_expected_string("hermitian", 9);
+            my_details.symmetry = Symmetry::HERMITIAN;
         } else if (x == 's') {
             if (my_input->advance()) {
                 char x = my_input->get();
                 if (x == 'k') {
-                    auto found = is_expected_string("skew-symmetric", 14, 2);
-                    if (found.first) {
-                        my_details.symmetry = Symmetry::SKEW_SYMMETRIC;
-                        fourth_found = true;
-                    }
-                    fourth_valid = found.second;
+                    res = is_expected_string("skew-symmetric", 14, 2);
+                    my_details.symmetry = Symmetry::SKEW_SYMMETRIC;
                 } else {
-                    auto found = is_expected_string("symmetric", 9, 2);
-                    if (found.first) {
-                        my_details.symmetry = Symmetry::SYMMETRIC;
-                        fourth_found = true;
-                    }
-                    fourth_valid = found.second;
+                    res = is_expected_string("symmetric", 9, 2);
+                    my_details.symmetry = Symmetry::SYMMETRIC;
                 }
             }
         }
 
-        if (!fourth_found) {
-            throw std::runtime_error("fourth banner field should be one of 'real', 'integer', 'double', 'complex' or 'pattern'");
+        if (!res.found) {
+            throw std::runtime_error("fourth banner field should be one of 'general', 'hermitian', 'skew-symmetric' or 'symmetric'");
         }
-        if (!fourth_valid) {
-            throw std::runtime_error("banner line terminates after the fourth field");
+        if (!res.remaining) {
+            throw std::runtime_error("end of file reached after the fourth banner field");
         }
+
+        return res.newline;
     }
 
     void scan_banner() {
@@ -234,55 +229,59 @@ private:
         if (!(my_input->valid())) {
             throw std::runtime_error("failed to find banner line before end of file");
         }
+        if (my_input->get() != '%') {
+            throw std::runtime_error("first line of the file should be the banner");
+        }
 
-        while (1) {
-            if (my_input->get() != '%') {
-                throw std::runtime_error("failed to find banner line before non-commented line " + std::to_string(my_current_line + 1));
+        auto found_banner = is_expected_string("%%MatrixMarket", 14);
+        if (!found_banner.remaining) {
+            throw std::runtime_error("end of file reached before matching the banner");
+        }
+        if (!found_banner.found) {
+            throw std::runtime_error("first line of the file should be the banner");
+        }
+        if (found_banner.newline) {
+            throw std::runtime_error("end of line reached before the first banner field");
+        }
+
+        if (parse_banner_object()) {
+            throw std::runtime_error("end of line is reached after the first banner field");
+        }
+        if (parse_banner_format()) {
+            throw std::runtime_error("end of line is reached after the second banner field");
+        }
+
+        bool eol = false;
+        if (my_details.object == Object::MATRIX) {
+            if (parse_banner_field()) {
+                throw std::runtime_error("end of line is reached after the third banner field");
             }
+            eol = parse_banner_symmetry();
+        } else {
+            // The NIST spec doesn't say anything about symmetry for vector,
+            // and it doesn't really make sense anyway. We'll just set it to
+            // general and hope for the best.
+            my_details.symmetry = Symmetry::GENERAL;
 
-            // Exhaust all leading comment characters.
+            // No need to throw on newline because this might be the last field AFAICT.
+            eol = parse_banner_field();
+        }
+
+        my_passed_banner = true;
+
+        // Ignoring all other fields until the newline. We can use a do/while
+        // to skip a comparison because we know that the current character
+        // cannot be a newline if eol = false.
+        if (!eol) {
             do {
                 if (!(my_input->advance())) {
-                    throw std::runtime_error("failed to find banner line before end of file");
+                    throw std::runtime_error("end of file reached before the end of the banner line");
                 }
-            } while (my_input->get() == '%');
-
-            // Checking if the banner prefix is found.
-            if (my_input->get() == 'M') {
-                auto found_banner = is_expected_string("MatrixMarket ", 13);
-                if (!found_banner.second) {
-                    throw std::runtime_error("failed to find banner line before end of file");
-                }
-
-                if (found_banner.first) {
-                    parse_banner_object();
-                    parse_banner_format();
-                    parse_banner_field();
-                    parse_banner_symmetry();
-                    my_passed_banner = true;
-
-                    if (my_input->get() != '\n') {
-                        throw std::runtime_error("banner line should be terminated by a newline");
-                    }
-                    my_input->advance(); // advance past the newline.
-                    ++my_current_line;
-                    return;
-                }
-            }
-
-            // Inserting up to the next line.
-            while (my_input->get() != '\n') {
-                if (!(my_input->advance())) {
-                    throw std::runtime_error("failed to find banner line before end of file");
-                }
-            }
-
-            // Advance past the newline.
-            if (!(my_input->advance())) { 
-                throw std::runtime_error("failed to find banner line before end of file");
-            }
-            ++my_current_line;
+            } while (my_input->get() != '\n');
         }
+        my_input->advance(); // advance past the newline.
+        ++my_current_line;
+        return;
     }
 
 public:
@@ -299,112 +298,138 @@ public:
         return my_details;
     }
 
+    template<bool terminal_>
+    std::pair<size_t, bool> scan_size_field() {
+        std::pair<size_t, bool> output;
+        bool found = false;
+
+        while (1) {
+            char x = my_input->get();
+            switch(x) {
+                case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                    found = true;
+                    output.first *= 10;
+                    output.first += x - '0';
+                    break;
+                case '\n':
+                    if constexpr(terminal_) {
+                        output.second = my_input->advance(); // advance past the newline.
+                        return output;
+                    }
+                    throw std::runtime_error("unexpected newline when parsing size field on line " + std::to_string(my_current_line + 1));
+                case ' ':
+                    if (!chomp()) {
+                        throw std::runtime_error("premature termination of a size field on line " + std::to_string(my_current_line + 1));
+                    }
+                    if constexpr(terminal_) {
+                        if (my_input->get() != '\n') {
+                            throw std::runtime_error("failed to find a newline after the last size field on line " + std::to_string(my_current_line + 1));
+                        }
+                        output.second = my_input->advance(); // advance past the newline.
+                    } else {
+                        output.second = true;
+                    }
+                    return output;
+                default:
+                    throw std::runtime_error("unexpected character when parsing size field on line " + std::to_string(my_current_line + 1));
+            }
+
+            if (!(my_input->advance())) {
+                if constexpr(terminal_) {
+                    break;
+                } else {
+                    throw std::runtime_error("premature termination of a size field on line " + std::to_string(my_current_line + 1));
+                }
+            }
+        }
+
+        if (!found) {
+            throw std::runtime_error("detected an empty size field on line " + std::to_string(my_current_line + 1));
+        }
+        return output;
+    }
+
 private:
     bool my_passed_size = false;
     size_t my_nrows = 0, my_ncols = 0, my_nlines = 0;
 
-    void check_size(int onto, bool non_empty) {
-        if (!non_empty) {
-            throw std::runtime_error("detected an empty size field on line " + std::to_string(my_current_line + 1));
+    void scan_size() {
+        if (!(my_input->valid())) {
+            throw std::runtime_error("failed to find size line before end of file");
+        }
+
+        // Handling stray comments and empty lines... try to get to the next line as quickly as possible.
+        while (1) {
+            char x = my_input->get();
+            if (x == '%') {
+                do {
+                    if (!(my_input->advance())) {
+                        throw std::runtime_error("failed to find size line before end of file");
+                    }
+                } while (my_input->get() != '\n');
+            } else if (x != '\n') {
+                break;
+            }
+
+            if (!my_input->advance()) { // move past the newline.
+                throw std::runtime_error("failed to find size line before end of file");
+            }
+            ++my_current_line;
+        }
+
+        if (!chomp()) {
+            throw std::runtime_error("expected at least one size field on line " + std::to_string(my_current_line + 1));
         }
 
         if (my_details.object == Object::MATRIX) {
             if (my_details.format == Format::COORDINATE) {
-                if (onto != 2) {
+                std::pair<size_t, bool> first_field = scan_size_field<false>();
+                if (!first_field.second) {
                     throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
                 }
-            } else if (my_details.format == Format::ARRAY) {
-                if (onto != 1) {
+                my_nrows = first_field.first;
+
+                std::pair<size_t, bool> second_field = scan_size_field<false>();
+                if (!second_field.second) {
+                    throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
+                }
+                my_ncols = second_field.first;
+
+                std::pair<size_t, bool> third_field = scan_size_field<true>();
+                my_nlines = third_field.first;
+
+            } else { // i.e., my_details.format == Format::ARRAY
+                std::pair<size_t, bool> first_field = scan_size_field<false>();
+                if (!first_field.second) {
                     throw std::runtime_error("expected two size fields for array matrices on line " + std::to_string(my_current_line + 1));
                 }
+                my_nrows = first_field.first;
+
+                std::pair<size_t, bool> second_field = scan_size_field<true>();
+                my_ncols = second_field.first;
                 my_nlines = my_nrows * my_ncols;
             }
+
         } else {
             if (my_details.format == Format::COORDINATE) {
-                if (onto != 1) {
+                std::pair<size_t, bool> first_field = scan_size_field<false>();
+                if (!first_field.second) {
                     throw std::runtime_error("expected two size fields for coordinate vectors on line " + std::to_string(my_current_line + 1));
                 }
-                my_nlines = my_ncols;
-            } else if (my_details.format == Format::ARRAY) {
-                if (onto != 0) {
-                    throw std::runtime_error("expected one size field for array vectors on line " + std::to_string(my_current_line + 1));
-                }
-                my_nlines = my_nrows;
+                my_nrows = first_field.first;
+
+                std::pair<size_t, bool> second_field = scan_size_field<true>();
+                my_nlines = second_field.first;
+
+            } else { // i.e., my_details.format == Format::ARRAY
+                std::pair<size_t, bool> first_field = scan_size_field<true>();
+                my_nlines = first_field.first;
+                my_nrows = my_nlines;
             }
             my_ncols = 1;
         }
 
         my_passed_size = true;
-    }
-
-    void scan_size() {
-        char onto = 0;
-        bool non_empty = false;
-        bool valid = my_input->valid();
-
-        while (valid) {
-            if (my_input->get() == '%') {
-                // Handling stray comments... try to get to the next line as quickly as possible.
-                do {
-                    valid = my_input->advance();
-                } while (valid && my_input->get() != '\n');
-
-                if (!valid) {
-                    break;
-                } else {
-                    ++my_current_line;
-                    valid = my_input->advance();
-                    continue;
-                }
-            }
-
-            // Chomping digits.
-            do {
-                char current = my_input->get();
-                switch(current) {
-                    case ' ':
-                        if (!non_empty) {
-                            throw std::runtime_error("detected an empty size field on line " + std::to_string(my_current_line + 1));
-                        }
-                        ++onto;
-                        break;
-
-                    case '\n':
-                        ++my_current_line;
-                        valid = my_input->advance();
-                        check_size(onto, non_empty);
-                        return;
-
-                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                        {
-                            non_empty = true;
-                            auto delta = current - '0';
-                            switch(onto) {
-                                case 0:
-                                    my_nrows *= 10;
-                                    my_nrows += delta;
-                                    break;
-                                case 1:
-                                    my_ncols *= 10;
-                                    my_ncols += delta;
-                                    break;
-                                case 2:
-                                    my_nlines *= 10;
-                                    my_nlines += delta;
-                                    break;
-                            }
-                        }
-                        break;
-
-                    default:
-                        throw std::runtime_error("only non-negative integers should be present on line " + std::to_string(my_current_line + 1));
-                }
-
-                valid = my_input->advance();
-            } while (valid);
-        }
-
-        check_size(onto, non_empty);
     }
 
 public:
@@ -462,6 +487,7 @@ public:
     }
 
 private:
+
     void check_coordinate_common(size_t currow, size_t current_data_line, bool non_empty) const {
         if (!non_empty) {
             throw std::runtime_error("empty field detected on line " + std::to_string(my_current_line + 1));
