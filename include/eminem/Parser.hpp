@@ -7,6 +7,7 @@
 #include <complex>
 #include <type_traits>
 #include <memory>
+#include <iostream>
 
 #include "utils.hpp"
 
@@ -39,103 +40,249 @@ private:
     bool my_passed_banner = false;
     MatrixDetails my_details;
 
-    void parse_banner(const std::string& contents) {
-        size_t pos = 13; // skip the "MatrixMarket " string.
+    std::pair<bool, bool> is_expected_string(const char* ptr, size_t len, size_t start) {
+        // It is assumed that the first 'start' characters of 'ptr' where
+        // already checked and matched before entering this function, and that
+        // 'my_input' is currently positioned at the start-th character, i.e.,
+        // 'ptr[start-1]' (and thus requires an advance() call before we can
+        // compare against 'ptr[start]').
+        for (size_t i = start; i < len; ++i) {
+            if (!my_input->advance()) {
+                return std::pair<bool, bool>(false, false);
+            }
+            if (my_input->get() != ptr[i]) {
+                return std::pair<bool, bool>(false, true);
+            }
+        }
 
-        auto obj_str = contents.c_str() + pos;
-        if (std::strncmp(obj_str, "matrix ", 7) == 0) {
-            my_details.object = Object::MATRIX;
-            pos += 7;
-        } else if (std::strncmp(obj_str, "vector ", 7) == 0) {
-            my_details.object = Object::VECTOR;
-            pos += 7;
-        } else {
+        bool remaining = my_input->advance(); // move off the last character.
+        return std::pair<bool, bool>(true, remaining);
+    }
+
+    std::pair<bool, bool> is_expected_string(const char* ptr, size_t len) {
+        // Using a default start of 1, assuming that we've already compared
+        // the first character before entering this function.
+        return is_expected_string(ptr, len, 1);
+    }
+
+    void parse_banner_object() {
+        char x = my_input->get();
+        bool first_found = false;
+        bool first_valid = false;
+
+        if (x == 'm') {
+            auto found = is_expected_string("matrix ", 7);
+            if (found.first) {
+                my_details.object = Object::MATRIX;
+                first_found = true;
+            }
+            first_valid = found.second;
+
+        } else if (x == 'v') {
+            auto found = is_expected_string("vector ", 7);
+            if (found.first) {
+                my_details.object = Object::VECTOR;
+                first_found = true;
+            }
+            first_valid = found.second;
+        }
+
+        if (!first_found) {
             throw std::runtime_error("first banner field should be one of 'matrix' or 'vector'");
         }
+        if (!first_valid) {
+            throw std::runtime_error("banner line terminates after the first field");
+        }
+    }
 
-        auto format_str = contents.c_str() + pos;
-        if (std::strncmp(format_str, "coordinate ", 11) == 0) {
-            my_details.format = Format::COORDINATE;
-            pos += 11;
-        } else if (std::strncmp(format_str, "array ", 6) == 0) {
-            my_details.format = Format::ARRAY;
-            pos += 6;
-        } else {
+    void parse_banner_format() {
+        char x = my_input->get();
+        bool second_found = false;
+        bool second_valid = false;
+
+        if (x == 'c') {
+            auto found = is_expected_string("coordinate ", 11);
+            if (found.first) {
+                my_details.format = Format::COORDINATE;
+                second_found = true;
+            }
+            second_valid = found.second;
+
+        } else if (x == 'a') {
+            auto found = is_expected_string("array ", 6);
+            if (found.first) {
+                my_details.format = Format::ARRAY;
+                second_found = true;
+            }
+            second_valid = found.second;
+        }
+
+        if (!second_found) {
             throw std::runtime_error("second banner field should be one of 'coordinate' or 'array'");
         }
+        if (!second_valid) {
+            throw std::runtime_error("banner line terminates after the second field");
+        }
+    }
 
-        auto field_str = contents.c_str() + pos;
-        if (std::strncmp(field_str, "integer ", 8) == 0) {
-            my_details.field = Field::INTEGER;
-            pos += 8;
-        } else if (std::strncmp(field_str, "double ", 7) == 0) {
-            my_details.field = Field::DOUBLE;
-            pos += 7;
-        } else if (std::strncmp(field_str, "complex ", 8) == 0) {
-            my_details.field = Field::COMPLEX;
-            pos += 8;
-        } else if (std::strncmp(field_str, "pattern ", 8) == 0) {
-            my_details.field = Field::PATTERN;
-            pos += 8;
-        } else if (std::strncmp(field_str, "real ", 5) == 0) {
-            my_details.field = Field::REAL;
-            pos += 5;
-        } else {
-            throw std::runtime_error("third banner field should be one of 'real', 'integer', 'double', 'complex' or 'pattern'");
+    void parse_banner_field() {
+        char x = my_input->get();
+        bool third_found = false;
+        bool third_valid = false;
+
+        if (x == 'i') { 
+            auto found = is_expected_string("integer ", 8);
+            if (found.first) {
+                my_details.field = Field::INTEGER;
+                third_found = true;
+            }
+            third_valid = found.second;
+
+        } else if (x == 'd') { 
+            auto found = is_expected_string("double ", 7);
+            if (found.first) {
+                my_details.field = Field::DOUBLE;
+                third_found = true;
+            }
+            third_valid = found.second;
+
+        } else if (x == 'c') {
+            auto found = is_expected_string("complex ", 8);
+            if (found.first) {
+                my_details.field = Field::COMPLEX;
+                third_found = true;
+            }
+            third_valid = found.second;
+
+        } else if (x == 'p') {
+            auto found = is_expected_string("pattern ", 8);
+            if (found.first) {
+                my_details.field = Field::PATTERN;
+                third_found = true;
+            }
+            third_valid = found.second;
+
+        } else if (x == 'r') {
+            auto found = is_expected_string("real ", 5);
+            if (found.first) {
+                my_details.field = Field::REAL;
+                third_found = true;
+            }
+            third_valid = found.second;
         }
 
-        auto sym_str = contents.c_str() + pos;
-        if (std::strcmp(sym_str, "general") == 0) {
-            my_details.symmetry = Symmetry::GENERAL;
-        } else if (std::strcmp(sym_str, "symmetric") == 0) {
-            my_details.symmetry = Symmetry::SYMMETRIC;
-        } else if (std::strcmp(sym_str, "skew-symmetric") == 0) {
-            my_details.symmetry = Symmetry::SKEW_SYMMETRIC;
-        } else if (std::strcmp(sym_str, "hermitian") == 0) {
-            my_details.symmetry = Symmetry::HERMITIAN;
-        } else {
-            throw std::runtime_error("fourth banner field should be one of 'general', 'symmetric', 'skew-symemtric' or 'hermitian'");
+        if (!third_found) {
+            throw std::runtime_error("third banner field should be one of 'real', 'integer', 'double', 'complex' or 'pattern'");
+        }
+        if (!third_valid) {
+            throw std::runtime_error("banner line terminates after the third field");
+        }
+    }
+
+    void parse_banner_symmetry() {
+        char x = my_input->get();
+        bool fourth_found = false;
+        bool fourth_valid = false;
+
+        if (x == 'g') {
+            auto found = is_expected_string("general", 7);
+            if (found.first) {
+                my_details.symmetry = Symmetry::GENERAL;
+                fourth_found = true;
+            }
+            fourth_valid = found.second;
+        } else if (x == 'h') {
+            auto found = is_expected_string("hermitian", 9);
+            if (found.first) {
+                my_details.symmetry = Symmetry::HERMITIAN;
+                fourth_found = true;
+            }
+            fourth_valid = found.second;
+        } else if (x == 's') {
+            if (my_input->advance()) {
+                char x = my_input->get();
+                if (x == 'k') {
+                    auto found = is_expected_string("skew-symmetric", 14, 2);
+                    if (found.first) {
+                        my_details.symmetry = Symmetry::SKEW_SYMMETRIC;
+                        fourth_found = true;
+                    }
+                    fourth_valid = found.second;
+                } else {
+                    auto found = is_expected_string("symmetric", 9, 2);
+                    if (found.first) {
+                        my_details.symmetry = Symmetry::SYMMETRIC;
+                        fourth_found = true;
+                    }
+                    fourth_valid = found.second;
+                }
+            }
+        }
+
+        if (!fourth_found) {
+            throw std::runtime_error("fourth banner field should be one of 'real', 'integer', 'double', 'complex' or 'pattern'");
+        }
+        if (!fourth_valid) {
+            throw std::runtime_error("banner line terminates after the fourth field");
         }
     }
 
     void scan_banner() {
-        std::string contents;
-        bool valid = my_input->valid();
         if (my_passed_banner) {
             throw std::runtime_error("banner has already been scanned");
         }
+        if (!(my_input->valid())) {
+            throw std::runtime_error("failed to find banner line before end of file");
+        }
 
-        while (valid) {
+        while (1) {
             if (my_input->get() != '%') {
                 throw std::runtime_error("failed to find banner line before non-commented line " + std::to_string(my_current_line + 1));
             }
 
             // Exhaust all leading comment characters.
             do {
-                valid = my_input->advance();
-            } while (valid && my_input->get() == '%');
+                if (!(my_input->advance())) {
+                    throw std::runtime_error("failed to find banner line before end of file");
+                }
+            } while (my_input->get() == '%');
+
+            // Checking if the banner prefix is found.
+            if (my_input->get() == 'M') {
+                auto found_banner = is_expected_string("MatrixMarket ", 13);
+                if (!found_banner.second) {
+                    throw std::runtime_error("failed to find banner line before end of file");
+                }
+
+                if (found_banner.first) {
+                    parse_banner_object();
+                    parse_banner_format();
+                    parse_banner_field();
+                    parse_banner_symmetry();
+                    my_passed_banner = true;
+
+                    if (my_input->get() != '\n') {
+                        throw std::runtime_error("banner line should be terminated by a newline");
+                    }
+                    my_input->advance(); // advance past the newline.
+                    ++my_current_line;
+                    return;
+                }
+            }
 
             // Inserting up to the next line.
-            while (valid && my_input->get() != '\n') {
-                contents += my_input->get();
-                valid = my_input->advance();
+            while (my_input->get() != '\n') {
+                if (!(my_input->advance())) {
+                    throw std::runtime_error("failed to find banner line before end of file");
+                }
             }
 
-            if (!valid) {
-                break;
+            // Advance past the newline.
+            if (!(my_input->advance())) { 
+                throw std::runtime_error("failed to find banner line before end of file");
             }
             ++my_current_line;
-            valid = my_input->advance();
-
-            if (contents.rfind("MatrixMarket ", 0) == 0) {
-                parse_banner(contents);
-                my_passed_banner = true;
-                return;
-            } 
-            contents.clear();
-        } 
-
-        throw std::runtime_error("failed to find banner line before end of file");
+        }
     }
 
 public:
