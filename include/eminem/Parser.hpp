@@ -370,7 +370,7 @@ public:
                     }
                     if constexpr(terminal_) {
                         if (my_input->get() != '\n') {
-                            throw std::runtime_error("failed to find a newline after the last size field on line " + std::to_string(my_current_line + 1));
+                            throw std::runtime_error("expected newline after the last size field on line " + std::to_string(my_current_line + 1));
                         }
                         output.remaining = my_input->advance(); // advance past the newline.
                     } else {
@@ -569,7 +569,7 @@ private:
             // 'store' should leave 'my_input' at the start of the next line, if any exists.
             auto res = store(first_field.index, second_field.index);
             if (res.quit_early) {
-                return true;
+                return false;
             }
             ++current_data_line;
             ++my_current_line;
@@ -577,9 +577,10 @@ private:
         }
 
         if (current_data_line != my_nlines) {
-            throw std::runtime_error("observed and expected number of lines are different for a coordinate matrix (" + std::to_string(my_nlines) + ")");
+            // Must be fewer, otherwise we would have triggered the error in check_*.
+            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
-        return false;
+        return true;
     }
 
     template<class PatternStore_>
@@ -609,7 +610,7 @@ private:
             // 'pstore' returns boolean indicating whether to quit early;
             // it doesn't modify 'my_input' at all.
             if (pstore(first_field.index, second_field.index)) {
-                return true;
+                return false;
             }
             ++current_data_line;
             ++my_current_line;
@@ -617,9 +618,10 @@ private:
         }
 
         if (current_data_line != my_nlines) {
-            throw std::runtime_error("observed and expected number of lines are different for a coordinate matrix (" + std::to_string(my_nlines) + ")");
+            // Must be fewer, otherwise we would have triggered the error in check_*.
+            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
-        return false;
+        return true;
     }
 
 public:
@@ -661,7 +663,7 @@ public:
             // 'store' should leave 'my_input' at the start of the next line, if any exists.
             auto res = store(first_field.index, 1);
             if (res.quit_early) {
-                return true;
+                return false;
             }
             ++current_data_line;
             ++my_current_line;
@@ -669,9 +671,10 @@ public:
         }
 
         if (current_data_line != my_nlines) {
-            throw std::runtime_error("observed and expected number of lines are different for a coordinate vector (" + std::to_string(my_nlines) + ")");
+            // Must be fewer, otherwise we would have triggered the error in check_*.
+            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
-        return false;
+        return true;
     }
 
     template<class PatternStore_>
@@ -697,7 +700,7 @@ public:
             // 'pstore' returns boolean indicating whether to quit early;
             // it doesn't modify 'my_input' at all.
             if (pstore(first_field.index, 1)) {
-                return true;
+                return false;
             }
             ++current_data_line;
             ++my_current_line;
@@ -705,9 +708,10 @@ public:
         }
 
         if (current_data_line != my_nlines) {
-            throw std::runtime_error("observed and expected number of lines are different for a coordinate vector (" + std::to_string(my_nlines) + ")");
+            // Must be fewer, otherwise we would have triggered the error in check_*.
+            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
-        return false;
+        return true;
     }
 
 private:
@@ -736,7 +740,7 @@ private:
             // 'store' should leave 'my_input' at the start of the next line, if any exists.
             auto res = store(currow, curcol);
             if (res.quit_early) {
-                return true;
+                return false;
             }
             ++current_data_line;
             ++currow;
@@ -775,9 +779,9 @@ private:
             }
 
             // 'store' should leave 'my_input' at the start of the next line, if any exists.
-            auto res = store(current_data_line, 1);
+            auto res = store(current_data_line + 1, 1);
             if (res.quit_early) {
-                return true;
+                return false;
             }
             ++current_data_line;
             valid = res.remaining;
@@ -832,8 +836,10 @@ public:
     bool scan_integer(Store_ store) {
         auto store_int = [&](size_t r, size_t c) -> StoreInfo {
             bool negative = (my_input->get() == '-');
-            if (!(my_input->advance())) {
-                throw std::runtime_error("premature termination of an integer on line " + std::to_string(my_current_line + 1));
+            if (negative) {
+                if (!(my_input->advance())) {
+                    throw std::runtime_error("premature termination of an integer on line " + std::to_string(my_current_line + 1));
+                }
             }
 
             Type_ val = 0;
@@ -848,7 +854,7 @@ public:
                     val *= -1;
                 }
                 if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, Type_>::type, bool>::value) {
-                    output.quit_early = store(r, c, val);
+                    output.quit_early = !store(r, c, val);
                 } else {
                     store(r, c, val);
                 }
@@ -954,7 +960,7 @@ public:
             auto converted = convert_to_real<Type_>(temporary);
 
             if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, Type_>::type, bool>::value) {
-                output.quit_early = store(r, c, converted);
+                output.quit_early = !store(r, c, converted);
             } else {
                 store(r, c, converted);
             }
@@ -1079,7 +1085,7 @@ public:
             holding.imag(convert_to_real<Type_>(temporary));
 
             if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, decltype(holding)>::type, bool>::value) {
-                output.quit_early = store(r, c, holding);
+                output.quit_early = !store(r, c, holding);
             } else {
                 store(r, c, holding);
             }

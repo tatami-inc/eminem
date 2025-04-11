@@ -120,21 +120,21 @@ TEST_P(ParserPreambleTest, Success) {
 TEST_P(ParserPreambleTest, Errors) {
     auto chunksize = GetParam();
 
-    test_error("% %MatrixMarket matrix coordinate real symmetric\n5 2 1", "failed to find banner", chunksize);
-    test_error("%matrix coordinate real symmetric\n5 2 1", "failed to find banner", chunksize);
-    test_error("%other stuff\n5 2 1\n", "failed to find banner", chunksize);
+    test_error("% %MatrixMarket matrix coordinate real symmetric\n5 2 1", "first line", chunksize);
+    test_error("%matrix coordinate real symmetric\n5 2 1", "first line", chunksize);
+    test_error("%other stuff\n5 2 1\n", "first line", chunksize);
 
     test_error("%%MatrixMarket foo\n5 2 1\n", "'matrix' or 'vector'", chunksize);
     test_error("%%MatrixMarket matrix foo\n5 2 1\n", "'coordinate' or 'array'", chunksize);
     test_error("%%MatrixMarket matrix coordinate foo\n5 2 1\n", "third banner field", chunksize);
     test_error("%%MatrixMarket matrix coordinate integer foo\n5 2 1\n", "fourth banner field", chunksize);
 
-    test_error("%%MatrixMarket matrix coordinate integer general\n5 2\n", "three size fields", chunksize);
-    test_error("%%MatrixMarket matrix array integer general\n5 2 1\n", "two size fields", chunksize);
-    test_error("%%MatrixMarket vector array integer general\n5 1\n", "one size field", chunksize);
-    test_error("%%MatrixMarket vector coordinate integer general\n4\n", "two size fields", chunksize);
-    test_error("%%MatrixMarket vector coordinate integer general\na 2 1\n", "only non-negative integers", chunksize);
-    test_error("%%MatrixMarket vector coordinate integer general\n2 -5 1\n", "only non-negative integers", chunksize);
+    test_error("%%MatrixMarket matrix coordinate integer general\n5 2\n", "unexpected newline", chunksize);
+    test_error("%%MatrixMarket matrix array integer general\n5 2 1\n", "expected newline", chunksize);
+    test_error("%%MatrixMarket vector array integer general\n5 1\n", "expected newline", chunksize);
+    test_error("%%MatrixMarket vector coordinate integer general\n4\n", "unexpected newline", chunksize);
+    test_error("%%MatrixMarket vector coordinate integer general\na 2 1\n", "unexpected character", chunksize);
+    test_error("%%MatrixMarket vector coordinate integer general\n2 -5 1\n", "unexpected character", chunksize);
 
     std::string input = "%%MatrixMarket matrix coordinate integer general\n5 2 5\n";
     {
@@ -930,26 +930,26 @@ protected:
 };
 
 TEST_F(ParserBodyErrorTest, CoordinateErrors) {
-    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n1\n", "expected 3 fields");
-    test_error("%%MatrixMarket vector coordinate integer general\n5 2 1\n1\n", "expected two size fields");
-    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n1  2\n", "detected empty field");
-    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n1 2 \n", "empty field detected");
+    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n1\n", "unexpected newline");
+    test_error("%%MatrixMarket vector coordinate integer general\n5 2 1\n1\n", "expected newline");
+    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n1  2\n", "unexpected newline");
+    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n1 2 \n", "empty integer field");
 
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n0 2 1\n", "row index must be positive");
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n6 2 1\n", "row index out of range");
-    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\nasd 2 1\n", "row index should be a non-negative integer");
+    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\nasd 2 1\n", "unexpected character");
 
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n2 0 1\n", "column index must be positive");
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n2 5 1\n", "column index out of range");
-    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n5 -5 1\n", "column index should be a non-negative integer");
+    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n5 -5 1\n", "unexpected character");
 
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n2 1 1\n3 2 4\n", "more lines present than specified");
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1\n", "fewer lines present than specified");
 }
 
 TEST_F(ParserBodyErrorTest, ArrayErrors) {
-    test_error("%%MatrixMarket matrix array integer general\n5 2\n1 2\n", "expected 1 field");
-    test_error("%%MatrixMarket matrix array integer general\n5 2\n\n", "empty field detected");
+    test_error("%%MatrixMarket matrix array integer general\n5 2\n1 2\n", "more fields than expected");
+    test_error("%%MatrixMarket matrix array integer general\n5 2\n \n", "empty integer field");
     test_error("%%MatrixMarket matrix array integer general\n5 2\n2\n3\n", "fewer lines present than expected");
     test_error("%%MatrixMarket matrix array integer general\n1 1\n2\n2\n", "more lines present than expected");
 }
@@ -966,12 +966,12 @@ TEST_F(ParserBodyErrorTest, RealErrors) {
 TEST_F(ParserBodyErrorTest, ComplexErrors) {
     test_error("%%MatrixMarket matrix coordinate complex general\n5 2 1\n1 2 asdasd 23\n", "failed to convert");
     test_error("%%MatrixMarket matrix coordinate complex general\n5 2 1\n1 2 123 127.0.0.1\n", "failed to convert");
-    test_error("%%MatrixMarket matrix coordinate complex general\n5 2 1\n1 2 123\n", "expected 4");
-    test_error("%%MatrixMarket vector coordinate complex general\n5 1\n1 2 123 42\n", "expected 3");
+    test_error("%%MatrixMarket matrix coordinate complex general\n5 2 1\n1 2 123\n", "missing the imaginary part");
+    test_error("%%MatrixMarket vector coordinate complex general\n5 1\n1 2 123 42\n", "more fields than expected");
 }
 
 TEST_F(ParserBodyErrorTest, PatternErrors) {
-    test_error("%%MatrixMarket matrix coordinate pattern general\n5 2 1\n1 2 123\n", "expected 2");
-    test_error("%%MatrixMarket vector coordinate pattern general\n5 1\n1 2\n", "expected 1");
+    test_error("%%MatrixMarket matrix coordinate pattern general\n5 2 1\n1 2 123\n", "expected newline");
+    test_error("%%MatrixMarket vector coordinate pattern general\n5 1\n1 2\n", "expected newline");
     test_error("%%MatrixMarket matrix array pattern general\n5 1\n1 2\n", "not supported");
 }
