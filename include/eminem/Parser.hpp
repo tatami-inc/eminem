@@ -921,8 +921,20 @@ public:
             output.remaining = true;
 
             temporary.clear();
+            char x = my_input->get();
             while (1) {
-                char x = my_input->get();
+                if (x == '\n') {
+                    output.remaining = my_input->advance(); // move past the newline.
+                    break;
+                }
+                temporary += x;
+                if (!(my_input->advance())) {
+                    output.remaining = false;
+                    break;
+                }
+                x = my_input->get();
+                // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
+                // so there wouldn't be any point doing this check at the start of the first loop iteration.
                 if (x == ' ' || x == '\t') {
                     if (!advance_and_chomp()) { // skipping past the current position before chomping.
                         output.remaining = false;
@@ -932,14 +944,6 @@ public:
                         throw std::runtime_error("more fields than expected for a coordinate matrix on line " + std::to_string(my_current_line + 1));
                     }
                     output.remaining = my_input->advance(); // move past the newline.
-                    break;
-                } else if (x == '\n') {
-                    output.remaining = my_input->advance(); // move past the newline.
-                    break;
-                }
-                temporary += x;
-                if (!(my_input->advance())) {
-                    output.remaining = false;
                     break;
                 }
             }
@@ -1014,8 +1018,18 @@ public:
 
             // Pulling out the real part first.
             temporary.clear();
+            char x = my_input->get();
             while (1) {
-                char x = my_input->get();
+                if (x == '\n') {
+                    throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
+                }
+                temporary += x;
+                if (!(my_input->advance())) {
+                    throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
+                }
+                x = my_input->get();
+                // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
+                // so there wouldn't be any point putting this check at the start of the first loop iteration.
                 if (x == ' ' || x == '\t') {
                     if (!advance_and_chomp()) { // skipping past the current position before chomping.
                         throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
@@ -1024,12 +1038,6 @@ public:
                         throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
                     }
                     break;
-                } else if (x == '\n') {
-                    throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
-                }
-                temporary += x;
-                if (!(my_input->advance())) {
-                    throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
                 }
             }
             if (temporary.empty()) {
@@ -1039,8 +1047,20 @@ public:
 
             // Now pulling out the imaginary part.
             temporary.clear();
+            x = my_input->get();
             while (1) {
-                char x = my_input->get();
+                if (x == '\n') {
+                    output.remaining = my_input->advance(); // skipping past the newline.
+                    break;
+                }
+                temporary += x;
+                if (!(my_input->advance())) {
+                    output.remaining = false;
+                    break;
+                }
+                x = my_input->get();
+                // Again, moving the blank space check here, as the scan for the imaginary component has already chomped
+                // leading blanks; the first iteration of this loop cannot have any blanks before other characters.
                 if (x == ' ' || x == '\t') {
                     if (!advance_and_chomp()) { // skipping past the current position before chomping.
                         output.remaining = false;
@@ -1050,14 +1070,6 @@ public:
                         throw std::runtime_error("more fields than expected for a coordinate matrix on line " + std::to_string(my_current_line + 1));
                     }
                     output.remaining = my_input->advance(); // skipping past the newline.
-                    break;
-                } else if (x == '\n') {
-                    output.remaining = my_input->advance(); // skipping past the newline.
-                    break;
-                }
-                temporary += x;
-                if (!(my_input->advance())) {
-                    output.remaining = false;
                     break;
                 }
             }
