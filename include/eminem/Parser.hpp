@@ -84,33 +84,39 @@ private:
         ExpectedMatch(bool found, bool newline, bool remaining) : found(found), newline(newline), remaining(remaining) {}
         ExpectedMatch() : ExpectedMatch(false, false, false) {}
         bool found;
-        bool on_newline;
+        bool newline;
         bool remaining;
     };
 
     ExpectedMatch advance_past_expected_string() {
-        bool remaining = my_input->advance(); // move off the last character.
-        ExpectedMatch output(true, false, remaining);
-
-        if (output.remaining) {
-            char next = my_input->get();
-            if (next == ' ' || next == '\t') {
-                if (my_input->advance()) {
-                    output.remaining = chomp(); // gobble up all of the remaining horizontal space.
-                    if (output.remaining) {
-                        output.on_newline = (my_input->get() == '\n');
-                    }
-                } else {
-                    output.remaining = false; 
-                }
-            } else if (next == '\n') {
-                output.on_newline = true; // don't move past the newline.
-            } else {
-                output.found = false; // if the next character is not a space or whitespace, it's not a match.
-            }
+        if (!(my_input->advance())) { // move off the last character.
+            return ExpectedMatch output(true, false, false);
         }
 
-        return output;
+        char next = my_input->get();
+        if (next == ' ' || next == '\t') {
+            if (!(my_input->advance())) {
+                return ExpectedMatch(true, false, false);
+            }
+
+            if (!chomp()) { // gobble up all of the remaining horizontal space.
+                return ExpectedMatch(true, false, false);
+            }
+
+            if (my_input->get() == '\n') {
+                bool remaining = my_input->advance(); // move past the newline for consistency with other functions.
+                return ExpectedMatch(true, true, remaining); // move past the newline for consistency with other functions.
+            }
+
+            return ExpectedMatch(true, false, true);
+
+        } else if (next == '\n') {
+            bool remaining = my_input->advance(); // move past the newline for consistency with other functions.
+            return ExpectedMatch(true, true, remaining);
+        }
+
+        // If the next character is not a space or whitespace, it's not a match.
+        return ExpectedMatch(false, true, true);
     }
 
     ExpectedMatch is_expected_string(const char* ptr, size_t len, size_t start) {
@@ -155,7 +161,7 @@ private:
             throw std::runtime_error("end of file is reached after the first banner field");
         }
 
-        return res.on_newline;
+        return res.newline;
     }
 
     bool parse_banner_format() {
@@ -177,7 +183,7 @@ private:
             throw std::runtime_error("end of file is reached after the second banner field");
         }
 
-        return res.on_newline;
+        return res.newline;
     }
 
     bool parse_banner_field() {
@@ -208,7 +214,7 @@ private:
             throw std::runtime_error("end of file reached after the third banner field");
         }
 
-        return res.on_newline;
+        return res.newline;
     }
 
     bool parse_banner_symmetry() {
@@ -241,7 +247,7 @@ private:
             throw std::runtime_error("end of file reached after the fourth banner field");
         }
 
-        return res.on_newline;
+        return res.newline;
     }
 
     void scan_banner() {
@@ -262,7 +268,7 @@ private:
         if (!found_banner.found) {
             throw std::runtime_error("first line of the file should be the banner");
         }
-        if (found_banner.on_newline) {
+        if (found_banner.newline) {
             throw std::runtime_error("end of line reached before the first banner field");
         }
 
@@ -299,9 +305,9 @@ private:
                 if (!(my_input->advance())) {
                     throw std::runtime_error("end of file reached before the end of the banner line");
                 }
-            } while (my_input->get() != '\n');
+            } while (my_input->get() != '\n'); 
         }
-        my_input->advance(); // advance past the newline.
+
         ++my_current_line;
         return;
     }
@@ -667,7 +673,7 @@ public:
             }
 
             // Cleaning up blanks in the rest of the line.
-            if (!res.on_newline) {
+            if (!res.newline) {
                 if (!chomp()) {
                     break;
                 }
@@ -762,7 +768,7 @@ private:
             }
 
             // Cleaning up blanks in the rest of the line.
-            if (!res.on_newline) {
+            if (!res.newline) {
                 if (!chomp()) {
                     break;
                 }
@@ -812,7 +818,7 @@ private:
             }
 
             // Cleaning up blanks in the rest of the line.
-            if (!res.on_newline) {
+            if (!res.newline) {
                 if (!chomp()) {
                     break;
                 }
