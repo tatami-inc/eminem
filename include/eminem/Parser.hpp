@@ -161,7 +161,7 @@ private:
             throw std::runtime_error("first banner field should be one of 'matrix' or 'vector'");
         }
         if (!res.remaining) {
-            throw std::runtime_error("end of file is reached after the first banner field");
+            throw std::runtime_error("end of file reached after the first banner field");
         }
 
         return res.newline;
@@ -183,7 +183,7 @@ private:
             throw std::runtime_error("second banner field should be one of 'coordinate' or 'array'");
         }
         if (!res.remaining) {
-            throw std::runtime_error("end of file is reached after the second banner field");
+            throw std::runtime_error("end of file reached after the second banner field");
         }
 
         return res.newline;
@@ -263,7 +263,7 @@ private:
         if (my_input->get() != '%') {
             throw std::runtime_error("first line of the file should be the banner");
         }
-
+ 
         auto found_banner = is_expected_string("%%MatrixMarket", 14);
         if (!found_banner.remaining) {
             throw std::runtime_error("end of file reached before matching the banner");
@@ -272,20 +272,20 @@ private:
             throw std::runtime_error("first line of the file should be the banner");
         }
         if (found_banner.newline) {
-            throw std::runtime_error("end of line reached before the first banner field");
+            throw std::runtime_error("end of line reached before matching the banner");
         }
 
         if (parse_banner_object()) {
-            throw std::runtime_error("end of line is reached after the first banner field");
+            throw std::runtime_error("end of line reached after the first banner field");
         }
         if (parse_banner_format()) {
-            throw std::runtime_error("end of line is reached after the second banner field");
+            throw std::runtime_error("end of line reached after the second banner field");
         }
 
         bool eol = false;
         if (my_details.object == Object::MATRIX) {
             if (parse_banner_field()) {
-                throw std::runtime_error("end of line is reached after the third banner field");
+                throw std::runtime_error("end of line reached after the third banner field");
             }
             eol = parse_banner_symmetry();
         } else {
@@ -334,63 +334,85 @@ public:
         bool remaining = false;
     };
 
-    template<bool terminal_>
-    SizeInfo scan_size_field() {
+    template<bool first_, bool last_>
+    SizeInfo scan_integer_field(bool size) {
         SizeInfo output;
         bool found = false;
 
-        auto finish = [&]() -> SizeInfo {
-            if (!found) {
-                throw std::runtime_error("detected an empty size field on line " + std::to_string(my_current_line + 1));
+        auto what = [&]() -> std::string {
+            if (size) {
+                return "size";
+            } else {
+                return "index";
             }
-            return output;
         };
 
         while (1) {
             char x = my_input->get();
             switch(x) {
                 case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                    found = true;
+                    if constexpr(first_) {
+                        found = true;
+                    }
                     output.index *= 10;
                     output.index += x - '0';
                     break;
                 case '\n':
-                    if constexpr(terminal_) {
+                    if constexpr(first_) {
+                        // This check only needs to be put here, as all blanks should be chomped before calling
+                        // this function; so we must start on a non-blank character. Either this would be a digit,
+                        // in which case found = true and this check is unnecessary; or it is a non-digit, in case
+                        // we throw; or it is a newline, and we arrive here.
+                        if (!found) {
+                            throw std::runtime_error("empty " + what() + " field on line " + std::to_string(my_current_line + 1));
+                        }
+                    }
+                    if constexpr(last_) {
                         output.remaining = my_input->advance(); // advance past the newline.
                         return output;
                     }
-                    throw std::runtime_error("unexpected newline when parsing size field on line " + std::to_string(my_current_line + 1));
+                    throw std::runtime_error("unexpected newline when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
                 case ' ': case '\t':
                     if (!advance_and_chomp()) { // skipping the current and subsequent blanks.
-                        if constexpr(terminal_) {
-                            return finish();
+                        if constexpr(last_) {
+                            return output;
                         } else {
-                            throw std::runtime_error("premature termination of a size field on line " + std::to_string(my_current_line + 1));
+                            throw std::runtime_error("unexpected end of file when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
                         }
                     }
-                    if constexpr(terminal_) {
+                    if constexpr(last_) {
                         if (my_input->get() != '\n') {
-                            throw std::runtime_error("expected newline after the last size field on line " + std::to_string(my_current_line + 1));
+                            throw std::runtime_error("expected newline after the last " + what() + " field on line " + std::to_string(my_current_line + 1));
                         }
                         output.remaining = my_input->advance(); // advance past the newline.
                     } else {
                         output.remaining = true;
                     }
-                    return finish();
+                    return output;
                 default:
-                    throw std::runtime_error("unexpected character when parsing size field on line " + std::to_string(my_current_line + 1));
+                    throw std::runtime_error("unexpected character when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
             }
 
             if (!(my_input->advance())) { // moving past the current digit.
-                if constexpr(terminal_) {
+                if constexpr(last_) {
                     break;
                 } else {
-                    throw std::runtime_error("premature termination of a size field on line " + std::to_string(my_current_line + 1));
+                    throw std::runtime_error("unexpected end of file when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
                 }
             }
         }
 
-        return finish();
+        return output;
+    }
+
+    template<bool first_, bool last_>
+    SizeInfo scan_size_field() {
+        return scan_integer_field<first_, last_>(true);
+    }
+
+    template<bool first_, bool last_>
+    SizeInfo scan_index_field() {
+        return scan_integer_field<first_, last_>(false);
     }
 
 private:
@@ -412,46 +434,46 @@ private:
 
         if (my_details.object == Object::MATRIX) {
             if (my_details.format == Format::COORDINATE) {
-                auto first_field = scan_size_field<false>();
+                auto first_field = scan_size_field<true, false>();
                 if (!first_field.remaining) {
                     throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
                 }
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<false>();
+                auto second_field = scan_size_field<false, false>();
                 if (!second_field.remaining) {
                     throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
                 }
                 my_ncols = second_field.index;
 
-                auto third_field = scan_size_field<true>();
+                auto third_field = scan_size_field<false, true>();
                 my_nlines = third_field.index;
 
             } else { // i.e., my_details.format == Format::ARRAY
-                auto first_field = scan_size_field<false>();
+                auto first_field = scan_size_field<true, false>();
                 if (!first_field.remaining) {
                     throw std::runtime_error("expected two size fields for array matrices on line " + std::to_string(my_current_line + 1));
                 }
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<true>();
+                auto second_field = scan_size_field<false, true>();
                 my_ncols = second_field.index;
                 my_nlines = my_nrows * my_ncols;
             }
 
         } else {
             if (my_details.format == Format::COORDINATE) {
-                auto first_field = scan_size_field<false>();
+                auto first_field = scan_size_field<true, false>();
                 if (!first_field.remaining) {
                     throw std::runtime_error("expected two size fields for coordinate vectors on line " + std::to_string(my_current_line + 1));
                 }
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<true>();
+                auto second_field = scan_size_field<false, true>();
                 my_nlines = second_field.index;
 
             } else { // i.e., my_details.format == Format::ARRAY
-                auto first_field = scan_size_field<true>();
+                auto first_field = scan_size_field<true, true>();
                 my_nlines = first_field.index;
                 my_nrows = my_nlines;
             }
@@ -556,11 +578,11 @@ private:
                 throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
 
-            auto first_field = scan_size_field<false>();
+            auto first_field = scan_index_field<true, false>();
             if (!first_field.remaining) {
                 throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
-            auto second_field = scan_size_field<false>();
+            auto second_field = scan_index_field<false, false>();
             if (!second_field.remaining) {
                 throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
@@ -600,11 +622,11 @@ private:
                 throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
 
-            auto first_field = scan_size_field<false>();
+            auto first_field = scan_index_field<true, false>();
             if (!first_field.remaining) {
                 throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
-            auto second_field = scan_size_field<true>();
+            auto second_field = scan_index_field<false, true>();
             check_matrix_coordinate_line(current_data_line, first_field.index, second_field.index);
 
             // 'pstore' returns boolean indicating whether to quit early;
@@ -654,7 +676,7 @@ public:
                 throw std::runtime_error("expected at least two fields for a coordinate vector on line " + std::to_string(my_current_line + 1));
             }
 
-            auto first_field = scan_size_field<false>();
+            auto first_field = scan_index_field<true, false>();
             if (!first_field.remaining) {
                 throw std::runtime_error("expected at least two fields for a coordinate vector on line " + std::to_string(my_current_line + 1));
             }
@@ -694,7 +716,7 @@ public:
                 throw std::runtime_error("expected at least one field for a coordinate vector on line " + std::to_string(my_current_line + 1));
             }
 
-            auto first_field = scan_size_field<true>();
+            auto first_field = scan_index_field<true, true>();
             check_vector_coordinate_line(current_data_line, first_field.index);
 
             // 'pstore' returns boolean indicating whether to quit early;
