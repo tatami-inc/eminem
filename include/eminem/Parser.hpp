@@ -329,14 +329,24 @@ public:
         return my_details;
     }
 
-    struct SizeInfo {
+private:
+    // Only calls with 'last_ = true' need to know if there are any remaining bytes after the newline.
+    // This is because all non-last calls with no remaining bytes must have thrown.
+    struct NotLastSizeInfo {
+        size_t index = 0;
+    };
+
+    struct LastSizeInfo {
         size_t index = 0;
         bool remaining = false;
     };
 
     template<bool last_>
-    SizeInfo scan_integer_field(bool size) {
-        SizeInfo output;
+    using SizeInfo = typename std::conditional<last_, LastSizeInfo, NotLastSizeInfo>::type;
+
+    template<bool last_>
+    SizeInfo<last_> scan_integer_field(bool size) {
+        SizeInfo<last_> output;
         bool found = false;
 
         auto what = [&]() -> std::string {
@@ -382,8 +392,6 @@ public:
                             throw std::runtime_error("expected newline after the last " + what() + " field on line " + std::to_string(my_current_line + 1));
                         }
                         output.remaining = my_input->advance(); // advance past the newline.
-                    } else {
-                        output.remaining = true;
                     }
                     return output;
                 default:
@@ -403,12 +411,12 @@ public:
     }
 
     template<bool last_>
-    SizeInfo scan_size_field() {
+    SizeInfo<last_> scan_size_field() {
         return scan_integer_field<last_>(true);
     }
 
     template<bool last_>
-    SizeInfo scan_index_field() {
+    SizeInfo<last_> scan_index_field() {
         return scan_integer_field<last_>(false);
     }
 
@@ -432,15 +440,9 @@ private:
         if (my_details.object == Object::MATRIX) {
             if (my_details.format == Format::COORDINATE) {
                 auto first_field = scan_size_field<false>();
-                if (!first_field.remaining) {
-                    throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
-                }
                 my_nrows = first_field.index;
 
                 auto second_field = scan_size_field<false>();
-                if (!second_field.remaining) {
-                    throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
-                }
                 my_ncols = second_field.index;
 
                 auto third_field = scan_size_field<true>();
@@ -448,9 +450,6 @@ private:
 
             } else { // i.e., my_details.format == Format::ARRAY
                 auto first_field = scan_size_field<false>();
-                if (!first_field.remaining) {
-                    throw std::runtime_error("expected two size fields for array matrices on line " + std::to_string(my_current_line + 1));
-                }
                 my_nrows = first_field.index;
 
                 auto second_field = scan_size_field<true>();
@@ -461,9 +460,6 @@ private:
         } else {
             if (my_details.format == Format::COORDINATE) {
                 auto first_field = scan_size_field<false>();
-                if (!first_field.remaining) {
-                    throw std::runtime_error("expected two size fields for coordinate vectors on line " + std::to_string(my_current_line + 1));
-                }
                 my_nrows = first_field.index;
 
                 auto second_field = scan_size_field<true>();
@@ -576,13 +572,7 @@ private:
             }
 
             auto first_field = scan_index_field<false>();
-            if (!first_field.remaining) {
-                throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
-            }
             auto second_field = scan_index_field<false>();
-            if (!second_field.remaining) {
-                throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
-            }
             check_matrix_coordinate_line(current_data_line, first_field.index, second_field.index);
 
             // 'store' should leave 'my_input' at the start of the next line, if any exists.
@@ -620,9 +610,6 @@ private:
             }
 
             auto first_field = scan_index_field<false>();
-            if (!first_field.remaining) {
-                throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
-            }
             auto second_field = scan_index_field<true>();
             check_matrix_coordinate_line(current_data_line, first_field.index, second_field.index);
 
@@ -674,9 +661,6 @@ public:
             }
 
             auto first_field = scan_index_field<false>();
-            if (!first_field.remaining) {
-                throw std::runtime_error("expected at least two fields for a coordinate vector on line " + std::to_string(my_current_line + 1));
-            }
             check_vector_coordinate_line(current_data_line, first_field.index);
 
             // 'store' should leave 'my_input' at the start of the next line, if any exists.
