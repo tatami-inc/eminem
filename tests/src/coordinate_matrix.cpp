@@ -241,7 +241,7 @@ TEST(ParserCoordinateMatrix, QuitEarly) {
         EXPECT_EQ(observed, expected);
     }
 
-    { // never quits but still returns a value.
+    { // never quits but function still returns a value.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
         eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         parser.scan_preamble();

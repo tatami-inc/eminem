@@ -874,7 +874,7 @@ public:
                             return finish(false);
                         }
                         if (my_input->get() != '\n') {
-                            throw std::runtime_error("more fields than expected for a coordinate matrix on line " + std::to_string(my_current_line + 1));
+                            throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
                         }
                         return finish(my_input->advance()); // move past the newline.
                     case '\n':
@@ -959,7 +959,7 @@ public:
                         break;
                     }
                     if (my_input->get() != '\n') {
-                        throw std::runtime_error("more fields than expected for a coordinate matrix on line " + std::to_string(my_current_line + 1));
+                        throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
                     }
                     output.remaining = my_input->advance(); // move past the newline.
                     break;
@@ -1090,7 +1090,7 @@ public:
                         break;
                     }
                     if (my_input->get() != '\n') {
-                        throw std::runtime_error("more fields than expected for a coordinate matrix on line " + std::to_string(my_current_line + 1));
+                        throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
                     }
                     output.remaining = my_input->advance(); // skipping past the newline.
                     break;
