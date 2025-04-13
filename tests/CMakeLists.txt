@@ -23,6 +23,7 @@ add_executable(libtest
     src/real.cpp
     src/complex.cpp
     src/coordinate_matrix.cpp
+    src/coordinate_vector.cpp
     src/from_text.cpp
     src/from_gzip.cpp)
 
