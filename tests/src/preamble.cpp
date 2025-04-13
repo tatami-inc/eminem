@@ -7,8 +7,6 @@
 #include <string>
 #include <memory>
 
-#include "test_error.h"
-
 /**********************************************
  **********************************************/
 
@@ -16,7 +14,7 @@ class ParserPreambleCoordinateMatrixTest : public ::testing::TestWithParam<std::
 
 TEST_P(ParserPreambleCoordinateMatrixTest, Success) {
     auto param = GetParam();
-    std::string input = std::get<0>(param);
+    const std::string& input = std::get<0>(param);
     int nr = std::get<1>(param);
     int nc = std::get<2>(param);
     int nl = std::get<3>(param);
@@ -41,6 +39,7 @@ INSTANTIATE_TEST_SUITE_P(
     ParserPreambleCoordinateMatrixTest,
     ::testing::Values(
         std::tuple<std::string, int, int, int>("%%MatrixMarket matrix coordinate integer general\n5 2 1", 5, 2, 1), // no trailing newline
+        std::tuple<std::string, int, int, int>("%%MatrixMarket matrix coordinate integer general\n5 2 1   ", 5, 2, 1), // trailing blank but no trailing newline
         std::tuple<std::string, int, int, int>("%%MatrixMarket matrix coordinate integer general\n69 2 43\n", 69, 2, 43), // trailing newline
         std::tuple<std::string, int, int, int>("%%MatrixMarket matrix coordinate integer general\n%other comment\n%morestuff\n\n5 124 27\n", 5, 124, 27), // comments and empty lines
         std::tuple<std::string, int, int, int>("%%MatrixMarket  matrix\tcoordinate    integer  general    \n\t19\t 110 \t88\t\n", 19, 110, 88), // extra blanks
@@ -55,7 +54,7 @@ class ParserPreambleCoordinateVectorTest : public ::testing::TestWithParam<std::
 
 TEST_P(ParserPreambleCoordinateVectorTest, Success) {
     auto param = GetParam();
-    std::string input = std::get<0>(param);
+    const std::string& input = std::get<0>(param);
     int nr = std::get<1>(param);
     int nl = std::get<2>(param);
 
@@ -79,6 +78,7 @@ INSTANTIATE_TEST_SUITE_P(
     ParserPreambleCoordinateVectorTest,
     ::testing::Values(
         std::tuple<std::string, int, int>("%%MatrixMarket vector coordinate integer general\n50 21", 50, 21), // no trailing newline
+        std::tuple<std::string, int, int>("%%MatrixMarket vector coordinate integer general\n50 21 \t ", 50, 21), // trailing blank but no trailing newline
         std::tuple<std::string, int, int>("%%MatrixMarket vector coordinate integer general\n69 23\n", 69, 23), // trailing newline
         std::tuple<std::string, int, int>("%%MatrixMarket vector coordinate integer general\n\n%other comment\n% FOO BAR\n5124 27\n", 5124, 27), // comments and empty lines
         std::tuple<std::string, int, int>("%%MatrixMarket   vector \tcoordinate    integer  general    \n  1910 \t88\t\n", 1910, 88), // extra blanks
@@ -93,7 +93,7 @@ class ParserPreambleArrayMatrixTest : public ::testing::TestWithParam<std::tuple
 
 TEST_P(ParserPreambleArrayMatrixTest, Success) {
     auto param = GetParam();
-    std::string input = std::get<0>(param);
+    const std::string& input = std::get<0>(param);
     int nr = std::get<1>(param);
     int nc = std::get<2>(param);
 
@@ -117,6 +117,7 @@ INSTANTIATE_TEST_SUITE_P(
     ParserPreambleArrayMatrixTest,
     ::testing::Values(
         std::tuple<std::string, int, int>("%%MatrixMarket matrix array integer general\n5 2", 5, 2), // no trailing newline
+        std::tuple<std::string, int, int>("%%MatrixMarket matrix array integer general\n5 2\t", 5, 2), // trailing blank but no trailing newline
         std::tuple<std::string, int, int>("%%MatrixMarket matrix array integer general\n69 243\n", 69, 243), // trailing newline
         std::tuple<std::string, int, int>("%%MatrixMarket matrix array integer general\n%other comment\n%morestuff\n\n512 427\n", 512, 427), // comments and empty lines
         std::tuple<std::string, int, int>("%%MatrixMarket\t\tmatrix\tarray    integer  general    \n\t\t 110 \t88\t\n", 110, 88), // extra blanks
@@ -131,7 +132,7 @@ class ParserPreambleArrayVectorTest : public ::testing::TestWithParam<std::tuple
 
 TEST_P(ParserPreambleArrayVectorTest, Success) {
     auto param = GetParam();
-    std::string input = std::get<0>(param);
+    const std::string& input = std::get<0>(param);
     int nr = std::get<1>(param);
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
@@ -154,6 +155,7 @@ INSTANTIATE_TEST_SUITE_P(
     ParserPreambleArrayVectorTest,
     ::testing::Values(
         std::tuple<std::string, int>("%%MatrixMarket vector array integer general\n5", 5), // no trailing newline
+        std::tuple<std::string, int>("%%MatrixMarket vector array integer general\n5  ", 5), // trailing blanks but no trailing newline
         std::tuple<std::string, int>("%%MatrixMarket vector array integer general\n69243\n", 69243), // trailing newline
         std::tuple<std::string, int>("%%MatrixMarket vector array integer general\n%other comment\n%morestuff\n\n512427\n", 512427), // comments and empty lines
         std::tuple<std::string, int>("%%MatrixMarket  vector    array    integer  general    \n\t\t 11088\t\n", 11088), // extra blanks
@@ -163,6 +165,19 @@ INSTANTIATE_TEST_SUITE_P(
 
 /**********************************************
  **********************************************/
+
+static void test_error(const std::string& input, std::string msg) {
+    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    EXPECT_ANY_THROW({
+        try {
+            parser.scan_preamble();
+        } catch (std::exception& e) {
+            EXPECT_THAT(e.what(), ::testing::HasSubstr(msg));
+            throw;
+        }
+    });
+}
 
 TEST(ParserPreamble, GeneralErrors) {
     test_error("", "failed to find banner");
@@ -194,20 +209,24 @@ TEST(ParserPreamble, SizeErrors) {
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 ", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate integer general\n5", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2\n", "unexpected newline");
+    test_error("%%MatrixMarket matrix coordinate integer general\n5 2 \n", "empty size field");
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1 3\n", "expected newline after");
     test_error("%%MatrixMarket matrix coordinate integer general\n\n", "failed to find size line");
     test_error("%%MatrixMarket matrix coordinate integer general\n \n", "empty size field");
 
     test_error("%%MatrixMarket vector coordinate integer general\n5 1 3\n", "expected newline after");
+    test_error("%%MatrixMarket vector coordinate integer general\n5\n", "unexpected newline");
+    test_error("%%MatrixMarket vector coordinate integer general\n5 \n", "empty size field");
     test_error("%%MatrixMarket vector coordinate integer general\n5", "unexpected end of file");
     test_error("%%MatrixMarket vector coordinate integer general\n\n", "failed to find size line");
     test_error("%%MatrixMarket vector coordinate integer general\n   \n", "empty size field");
 
     test_error("%%MatrixMarket matrix array integer general\n5", "unexpected end of file");
     test_error("%%MatrixMarket matrix array integer general\n5\n", "unexpected newline");
+    test_error("%%MatrixMarket matrix array integer general\n5 \n", "empty size field");
     test_error("%%MatrixMarket matrix array integer general\n5 2 1\n", "expected newline after");
-    test_error("%%MatrixMarket matrix coordinate integer general\n\n", "failed to find size line");
-    test_error("%%MatrixMarket matrix coordinate integer general\n \n", "empty size field");
+    test_error("%%MatrixMarket matrix array integer general\n\n", "failed to find size line");
+    test_error("%%MatrixMarket matrix array integer general\n \n", "empty size field");
 
     test_error("%%MatrixMarket vector array integer general\n\n", "failed to find size line");
     test_error("%%MatrixMarket vector array integer general\n\t\t\n", "empty size field");

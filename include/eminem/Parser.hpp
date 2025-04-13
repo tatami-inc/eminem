@@ -334,7 +334,7 @@ public:
         bool remaining = false;
     };
 
-    template<bool first_, bool last_>
+    template<bool last_>
     SizeInfo scan_integer_field(bool size) {
         SizeInfo output;
         bool found = false;
@@ -351,21 +351,18 @@ public:
             char x = my_input->get();
             switch(x) {
                 case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                    if constexpr(first_) {
-                        found = true;
-                    }
+                    found = true;
                     output.index *= 10;
                     output.index += x - '0';
                     break;
                 case '\n':
-                    if constexpr(first_) {
-                        // This check only needs to be put here, as all blanks should be chomped before calling
-                        // this function; so we must start on a non-blank character. Either this would be a digit,
-                        // in which case found = true and this check is unnecessary; or it is a non-digit, in case
-                        // we throw; or it is a newline, and we arrive here.
-                        if (!found) {
-                            throw std::runtime_error("empty " + what() + " field on line " + std::to_string(my_current_line + 1));
-                        }
+                    // This check only needs to be put here, as all blanks should be chomped before calling
+                    // this function; so we must start on a non-blank character. This starting character is either:
+                    // - a digit, in which case found = true and this check is unnecessary.
+                    // - a non-newline non-digit, in case we throw.
+                    // - a newline, in which case we arrive here.
+                    if (!found) {
+                        throw std::runtime_error("empty " + what() + " field on line " + std::to_string(my_current_line + 1));
                     }
                     if constexpr(last_) {
                         output.remaining = my_input->advance(); // advance past the newline.
@@ -405,14 +402,14 @@ public:
         return output;
     }
 
-    template<bool first_, bool last_>
+    template<bool last_>
     SizeInfo scan_size_field() {
-        return scan_integer_field<first_, last_>(true);
+        return scan_integer_field<last_>(true);
     }
 
-    template<bool first_, bool last_>
+    template<bool last_>
     SizeInfo scan_index_field() {
-        return scan_integer_field<first_, last_>(false);
+        return scan_integer_field<last_>(false);
     }
 
 private:
@@ -434,46 +431,46 @@ private:
 
         if (my_details.object == Object::MATRIX) {
             if (my_details.format == Format::COORDINATE) {
-                auto first_field = scan_size_field<true, false>();
+                auto first_field = scan_size_field<false>();
                 if (!first_field.remaining) {
                     throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
                 }
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<false, false>();
+                auto second_field = scan_size_field<false>();
                 if (!second_field.remaining) {
                     throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
                 }
                 my_ncols = second_field.index;
 
-                auto third_field = scan_size_field<false, true>();
+                auto third_field = scan_size_field<true>();
                 my_nlines = third_field.index;
 
             } else { // i.e., my_details.format == Format::ARRAY
-                auto first_field = scan_size_field<true, false>();
+                auto first_field = scan_size_field<false>();
                 if (!first_field.remaining) {
                     throw std::runtime_error("expected two size fields for array matrices on line " + std::to_string(my_current_line + 1));
                 }
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<false, true>();
+                auto second_field = scan_size_field<true>();
                 my_ncols = second_field.index;
                 my_nlines = my_nrows * my_ncols;
             }
 
         } else {
             if (my_details.format == Format::COORDINATE) {
-                auto first_field = scan_size_field<true, false>();
+                auto first_field = scan_size_field<false>();
                 if (!first_field.remaining) {
                     throw std::runtime_error("expected two size fields for coordinate vectors on line " + std::to_string(my_current_line + 1));
                 }
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<false, true>();
+                auto second_field = scan_size_field<true>();
                 my_nlines = second_field.index;
 
             } else { // i.e., my_details.format == Format::ARRAY
-                auto first_field = scan_size_field<true, true>();
+                auto first_field = scan_size_field<true>();
                 my_nlines = first_field.index;
                 my_nrows = my_nlines;
             }
@@ -578,11 +575,11 @@ private:
                 throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
 
-            auto first_field = scan_index_field<true, false>();
+            auto first_field = scan_index_field<false>();
             if (!first_field.remaining) {
                 throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
-            auto second_field = scan_index_field<false, false>();
+            auto second_field = scan_index_field<false>();
             if (!second_field.remaining) {
                 throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
@@ -622,11 +619,11 @@ private:
                 throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
 
-            auto first_field = scan_index_field<true, false>();
+            auto first_field = scan_index_field<false>();
             if (!first_field.remaining) {
                 throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
-            auto second_field = scan_index_field<false, true>();
+            auto second_field = scan_index_field<true>();
             check_matrix_coordinate_line(current_data_line, first_field.index, second_field.index);
 
             // 'pstore' returns boolean indicating whether to quit early;
@@ -676,7 +673,7 @@ public:
                 throw std::runtime_error("expected at least two fields for a coordinate vector on line " + std::to_string(my_current_line + 1));
             }
 
-            auto first_field = scan_index_field<true, false>();
+            auto first_field = scan_index_field<false>();
             if (!first_field.remaining) {
                 throw std::runtime_error("expected at least two fields for a coordinate vector on line " + std::to_string(my_current_line + 1));
             }
@@ -716,7 +713,7 @@ public:
                 throw std::runtime_error("expected at least one field for a coordinate vector on line " + std::to_string(my_current_line + 1));
             }
 
-            auto first_field = scan_index_field<true, true>();
+            auto first_field = scan_index_field<true>();
             check_vector_coordinate_line(current_data_line, first_field.index);
 
             // 'pstore' returns boolean indicating whether to quit early;
@@ -867,9 +864,6 @@ public:
             Type_ val = 0;
             bool found = false;
             auto finish = [&](bool valid) -> StoreInfo {
-                if (!found) {
-                    throw std::runtime_error("empty integer field on line " + std::to_string(my_current_line + 1));
-                }
                 StoreInfo output;
                 output.remaining = valid;
                 if (negative) {
@@ -900,6 +894,14 @@ public:
                         }
                         return finish(my_input->advance()); // move past the newline.
                     case '\n':
+                        // This check only needs to be put here, as all blanks should be chomped before calling
+                        // this function; so we must start on a non-blank character. This starting character is either:
+                        // - a digit, in which case found = true and this check is unnecessary.
+                        // - a non-newline non-digit, in case we throw.
+                        // - a newline, in which case we arrive here.
+                        if (!found) {
+                            throw std::runtime_error("empty integer field on line " + std::to_string(my_current_line + 1));
+                        }
                         return finish(my_input->advance()); // move past the newline.
                     default:
                         throw std::runtime_error("expected an integer value on line " + std::to_string(my_current_line + 1));
@@ -952,6 +954,10 @@ public:
             char x = my_input->get();
             while (1) {
                 if (x == '\n') {
+                    if (temporary.empty()) {
+                        // This is the only place we need to check as temporary is extended immediately after this.
+                        throw std::runtime_error("empty number field on line " + std::to_string(my_current_line + 1));
+                    }
                     output.remaining = my_input->advance(); // move past the newline.
                     break;
                 }
@@ -976,9 +982,6 @@ public:
                 }
             }
 
-            if (temporary.empty()) {
-                throw std::runtime_error("empty number field on line " + std::to_string(my_current_line + 1));
-            }
             auto converted = convert_to_real<Type_>(temporary);
 
             if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, Type_>::type, bool>::value) {
@@ -1049,13 +1052,20 @@ public:
             char x = my_input->get();
             while (1) {
                 if (x == '\n') {
-                    throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
+                    if (temporary.empty()) {
+                        // This is the only place we need to check this error, as temporary is filled up immediately after this clause.
+                        throw std::runtime_error("empty real field on line " + std::to_string(my_current_line + 1));
+                    } else {
+                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
+                    }
                 }
+
                 temporary += x;
                 if (!(my_input->advance())) {
                     throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
                 }
                 x = my_input->get();
+
                 // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
                 // so there wouldn't be any point putting this check at the start of the first loop iteration.
                 if (x == ' ' || x == '\t') {
@@ -1068,26 +1078,27 @@ public:
                     break;
                 }
             }
-            if (temporary.empty()) {
-                throw std::runtime_error("empty real field on line " + std::to_string(my_current_line + 1));
-            }
             holding.real(convert_to_real<Type_>(temporary));
 
             // Now pulling out the imaginary part.
             temporary.clear();
             x = my_input->get();
             while (1) {
-                if (x == '\n') {
-                    output.remaining = my_input->advance(); // skipping past the newline.
-                    break;
-                }
                 temporary += x;
                 if (!(my_input->advance())) {
                     output.remaining = false;
                     break;
                 }
                 x = my_input->get();
-                // Again, moving the blank space check here, as the scan for the imaginary component has already chomped
+
+                // Moving the newline check here, as the previous loop to parse the real part already precludes
+                // the presence of a newline character before any other characters. 
+                if (x == '\n') {
+                    output.remaining = my_input->advance(); // skipping past the newline.
+                    break;
+                }
+
+                // Also moving the blank space check here, as the scan for the imaginary component has already chomped
                 // leading blanks; the first iteration of this loop cannot have any blanks before other characters.
                 if (x == ' ' || x == '\t') {
                     if (!advance_and_chomp()) { // skipping past the current position before chomping.
@@ -1100,9 +1111,6 @@ public:
                     output.remaining = my_input->advance(); // skipping past the newline.
                     break;
                 }
-            }
-            if (temporary.empty()) {
-                throw std::runtime_error("empty imaginary field on line " + std::to_string(my_current_line + 1));
             }
             holding.imag(convert_to_real<Type_>(temporary));
 

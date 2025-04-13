@@ -19,6 +19,9 @@ enable_testing()
 add_executable(libtest 
     src/Parser.cpp
     src/preamble.cpp
+    src/integer.cpp
+    src/real.cpp
+    src/complex.cpp
     src/from_text.cpp
     src/from_gzip.cpp)
 
