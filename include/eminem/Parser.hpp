@@ -626,7 +626,7 @@ private:
         return true;
     }
 
-public:
+private:
     void check_vector_coordinate_line(size_t current_data_line, size_t currow) {
         if (current_data_line >= my_nlines) {
             throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
