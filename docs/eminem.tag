@@ -138,8 +138,8 @@
       <type>bool</type>
       <name>scan_integer</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>ad193bf1e908858259c04675409c186aa</anchor>
-      <arglist>(Store_ &amp;&amp;store)</arglist>
+      <anchor>a3e5320df82912206164d5fcafb7f1f4e</anchor>
+      <arglist>(Store_ store)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
@@ -152,22 +152,22 @@
       <type>bool</type>
       <name>scan_double</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>aea3e8cf47e58ad04dd77fb1f2c57afd7</anchor>
-      <arglist>(Store_ &amp;&amp;store)</arglist>
+      <anchor>a9136c73b661df9587a36e79d52b995eb</anchor>
+      <arglist>(Store_ store)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>scan_complex</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a69da36fe34d9e1999cc390c3d88c0d01</anchor>
-      <arglist>(Store_ &amp;&amp;store)</arglist>
+      <anchor>a67a0424acaeb50b22474dfd77010c2be</anchor>
+      <arglist>(Store_ store)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>scan_pattern</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>ac8eb590833da94ceeb3e682a2acdeef6</anchor>
-      <arglist>(Store_ &amp;&amp;store)</arglist>
+      <anchor>a65285363373e976d790a2ff764621f86</anchor>
+      <arglist>(Store_ store)</arglist>
     </member>
   </compound>
   <compound kind="struct">

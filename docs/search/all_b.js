@@ -13,6 +13,6 @@ var searchData=
   ['rawfilewriteroptions_10',['RawFileWriterOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1RawFileWriterOptions.html',1,'byteme']]],
   ['reader_11',['Reader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1Reader.html',1,'byteme']]],
   ['reader_2ehpp_12',['Reader.hpp',['https://ltla.github.io/byteme/byteme.tag/Reader_8hpp.html',1,'']]],
-  ['refill_13',['refill',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html#a8cb67ac7c5517d17adb6fe88b803516d',1,'byteme::PerByteInterface::refill()'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteParallel.html#a3fcaea3cd5fbd6e72e6432ddced29fbd',1,'byteme::PerByteParallel::refill()'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteSerial.html#a2857fc81b94832188db130a234f82129',1,'byteme::PerByteSerial::refill()']]],
+  ['refill_13',['refill',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html#a8cb67ac7c5517d17adb6fe88b803516d',1,'byteme::PerByteInterface::refill()'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteParallel.html#aa7e9be70da45b85254a16e5e1c47e036',1,'byteme::PerByteParallel::refill()'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteSerial.html#ae6424f8d002deb991f21f2812b103705',1,'byteme::PerByteSerial::refill()']]],
   ['reserve_14',['reserve',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1RawBufferWriterOptions.html#ad4302569f8c1ba99c3776c70a5f1faf0',1,'byteme::RawBufferWriterOptions']]]
 ];
