@@ -18,6 +18,12 @@
 
 namespace eminem {
 
+/* GENERAL COMMENTS:
+ * - This sticks to the specification described at https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz
+ * - We will allow both tabs and whitespaces when considering a 'blank' character.
+ * - We must consider the possibility that the final line of the file is not newline terminated.
+ */
+
 /**
  * @brief Parse a matrix from a Matrix Market file.
  *
@@ -34,108 +40,279 @@ public:
 private:
     std::unique_ptr<Input_> my_input;
     size_t my_current_line = 0;
+    MatrixDetails my_details;
+
+    bool chomp() {
+        while (1) {
+            char x = my_input->get();
+            if (x != ' ' && x != '\t') {
+                return true;
+            }
+            if (!(my_input->advance())) {
+                break;
+            }
+        }
+        return false;
+    }
+
+    bool advance_and_chomp() {
+        // When the input is currently on a whitespace, we advance first so we
+        // avoid a redundant iteration where the comparison is always true.
+        if (!(my_input->advance())) {
+            return false;
+        }
+        return chomp();
+    }
+
+    // Skip comments and empty lines.
+    bool skip_lines() {
+        while (1) {
+            char x = my_input->get();
+            if (x == '%') {
+                do {
+                    if (!(my_input->advance())) {
+                        return false;
+                    }
+                } while (my_input->get() != '\n');
+            } else if (x != '\n') {
+                break;
+            }
+
+            if (!my_input->advance()) { // move past the newline.
+                return false;
+            }
+            ++my_current_line;
+        }
+        return true;
+    }
 
 private:
     bool my_passed_banner = false;
-    MatrixDetails my_details;
 
-    void parse_banner(const std::string& contents) {
-        size_t pos = 13; // skip the "MatrixMarket " string.
+    struct ExpectedMatch {
+        ExpectedMatch(bool found, bool newline, bool remaining) : found(found), newline(newline), remaining(remaining) {}
+        ExpectedMatch() : ExpectedMatch(false, false, false) {}
+        bool found;
+        bool newline;
+        bool remaining;
+    };
 
-        auto obj_str = contents.c_str() + pos;
-        if (std::strncmp(obj_str, "matrix ", 7) == 0) {
+    ExpectedMatch advance_past_expected_string() {
+        if (!(my_input->advance())) { // move off the last character.
+            return ExpectedMatch(true, false, false);
+        }
+
+        char next = my_input->get();
+        if (next == ' ' || next == '\t') {
+            if (!advance_and_chomp()) { // gobble up all of the remaining horizontal space.
+                return ExpectedMatch(true, false, false);
+            }
+            if (my_input->get() == '\n') {
+                bool remaining = my_input->advance(); // move past the newline for consistency with other functions.
+                return ExpectedMatch(true, true, remaining); // move past the newline for consistency with other functions.
+            }
+            return ExpectedMatch(true, false, true);
+
+        } else if (next == '\n') {
+            bool remaining = my_input->advance(); // move past the newline for consistency with other functions.
+            return ExpectedMatch(true, true, remaining);
+        }
+
+        // If the next character is not a space or whitespace, it's not a match.
+        return ExpectedMatch(false, true, true);
+    }
+
+    ExpectedMatch is_expected_string(const char* ptr, size_t len, size_t start) {
+        // It is assumed that the first 'start' characters of 'ptr' where
+        // already checked and matched before entering this function, and that
+        // 'my_input' is currently positioned at the start-th character, i.e.,
+        // 'ptr[start-1]' (and thus requires an advance() call before we can
+        // compare against 'ptr[start]').
+        for (size_t i = start; i < len; ++i) {
+            if (!my_input->advance()) {
+                return ExpectedMatch(false, false, false);
+            }
+            if (my_input->get() != ptr[i]) {
+                return ExpectedMatch(false, false, true);
+            }
+        }
+        return advance_past_expected_string();
+    }
+
+    ExpectedMatch is_expected_string(const char* ptr, size_t len) {
+        // Using a default start of 1, assuming that we've already compared
+        // the first character before entering this function.
+        return is_expected_string(ptr, len, 1);
+    }
+
+    bool parse_banner_object() {
+        ExpectedMatch res;
+
+        char x = my_input->get();
+        if (x == 'm') {
+            res = is_expected_string("matrix", 6);
             my_details.object = Object::MATRIX;
-            pos += 7;
-        } else if (std::strncmp(obj_str, "vector ", 7) == 0) {
+        } else if (x == 'v') {
+            res = is_expected_string("vector", 6);
             my_details.object = Object::VECTOR;
-            pos += 7;
-        } else {
+        }
+
+        if (!res.found) {
             throw std::runtime_error("first banner field should be one of 'matrix' or 'vector'");
         }
+        if (!res.remaining) {
+            throw std::runtime_error("end of file reached after the first banner field");
+        }
 
-        auto format_str = contents.c_str() + pos;
-        if (std::strncmp(format_str, "coordinate ", 11) == 0) {
+        return res.newline;
+    }
+
+    bool parse_banner_format() {
+        ExpectedMatch res;
+
+        char x = my_input->get();
+        if (x == 'c') {
+            res = is_expected_string("coordinate", 10);
             my_details.format = Format::COORDINATE;
-            pos += 11;
-        } else if (std::strncmp(format_str, "array ", 6) == 0) {
+        } else if (x == 'a') {
+            res = is_expected_string("array", 5);
             my_details.format = Format::ARRAY;
-            pos += 6;
-        } else {
+        }
+
+        if (!res.found) {
             throw std::runtime_error("second banner field should be one of 'coordinate' or 'array'");
         }
+        if (!res.remaining) {
+            throw std::runtime_error("end of file reached after the second banner field");
+        }
 
-        auto field_str = contents.c_str() + pos;
-        if (std::strncmp(field_str, "integer ", 8) == 0) {
+        return res.newline;
+    }
+
+    bool parse_banner_field() {
+        ExpectedMatch res;
+
+        char x = my_input->get();
+        if (x == 'i') { 
+            res = is_expected_string("integer", 7);
             my_details.field = Field::INTEGER;
-            pos += 8;
-        } else if (std::strncmp(field_str, "double ", 7) == 0) {
+        } else if (x == 'd') { 
+            res = is_expected_string("double", 6);
             my_details.field = Field::DOUBLE;
-            pos += 7;
-        } else if (std::strncmp(field_str, "complex ", 8) == 0) {
+        } else if (x == 'c') {
+            res = is_expected_string("complex", 7);
             my_details.field = Field::COMPLEX;
-            pos += 8;
-        } else if (std::strncmp(field_str, "pattern ", 8) == 0) {
+        } else if (x == 'p') {
+            res = is_expected_string("pattern", 7);
             my_details.field = Field::PATTERN;
-            pos += 8;
-        } else if (std::strncmp(field_str, "real ", 5) == 0) {
+        } else if (x == 'r') {
+            res = is_expected_string("real", 4);
             my_details.field = Field::REAL;
-            pos += 5;
-        } else {
+        }
+
+        if (!res.found) {
             throw std::runtime_error("third banner field should be one of 'real', 'integer', 'double', 'complex' or 'pattern'");
         }
-
-        auto sym_str = contents.c_str() + pos;
-        if (std::strcmp(sym_str, "general") == 0) {
-            my_details.symmetry = Symmetry::GENERAL;
-        } else if (std::strcmp(sym_str, "symmetric") == 0) {
-            my_details.symmetry = Symmetry::SYMMETRIC;
-        } else if (std::strcmp(sym_str, "skew-symmetric") == 0) {
-            my_details.symmetry = Symmetry::SKEW_SYMMETRIC;
-        } else if (std::strcmp(sym_str, "hermitian") == 0) {
-            my_details.symmetry = Symmetry::HERMITIAN;
-        } else {
-            throw std::runtime_error("fourth banner field should be one of 'general', 'symmetric', 'skew-symemtric' or 'hermitian'");
+        if (!res.remaining) {
+            throw std::runtime_error("end of file reached after the third banner field");
         }
+
+        return res.newline;
+    }
+
+    bool parse_banner_symmetry() {
+        ExpectedMatch res;
+
+        char x = my_input->get();
+        if (x == 'g') {
+            res = is_expected_string("general", 7);
+            my_details.symmetry = Symmetry::GENERAL;
+        } else if (x == 'h') {
+            res = is_expected_string("hermitian", 9);
+            my_details.symmetry = Symmetry::HERMITIAN;
+        } else if (x == 's') {
+            if (my_input->advance()) {
+                char x = my_input->get();
+                if (x == 'k') {
+                    res = is_expected_string("skew-symmetric", 14, 2);
+                    my_details.symmetry = Symmetry::SKEW_SYMMETRIC;
+                } else {
+                    res = is_expected_string("symmetric", 9, 2);
+                    my_details.symmetry = Symmetry::SYMMETRIC;
+                }
+            }
+        }
+
+        if (!res.found) {
+            throw std::runtime_error("fourth banner field should be one of 'general', 'hermitian', 'skew-symmetric' or 'symmetric'");
+        }
+        if (!res.remaining) {
+            throw std::runtime_error("end of file reached after the fourth banner field");
+        }
+
+        return res.newline;
     }
 
     void scan_banner() {
-        std::string contents;
-        bool valid = my_input->valid();
         if (my_passed_banner) {
             throw std::runtime_error("banner has already been scanned");
         }
+        if (!(my_input->valid())) {
+            throw std::runtime_error("failed to find banner line before end of file");
+        }
+        if (my_input->get() != '%') {
+            throw std::runtime_error("first line of the file should be the banner");
+        }
+ 
+        auto found_banner = is_expected_string("%%MatrixMarket", 14);
+        if (!found_banner.remaining) {
+            throw std::runtime_error("end of file reached before matching the banner");
+        }
+        if (!found_banner.found) {
+            throw std::runtime_error("first line of the file should be the banner");
+        }
+        if (found_banner.newline) {
+            throw std::runtime_error("end of line reached before matching the banner");
+        }
 
-        while (valid) {
-            if (my_input->get() != '%') {
-                throw std::runtime_error("failed to find banner line before non-commented line " + std::to_string(my_current_line + 1));
+        if (parse_banner_object()) {
+            throw std::runtime_error("end of line reached after the first banner field");
+        }
+        if (parse_banner_format()) {
+            throw std::runtime_error("end of line reached after the second banner field");
+        }
+
+        bool eol = false;
+        if (my_details.object == Object::MATRIX) {
+            if (parse_banner_field()) {
+                throw std::runtime_error("end of line reached after the third banner field");
             }
+            eol = parse_banner_symmetry();
+        } else {
+            // The NIST spec doesn't say anything about symmetry for vector,
+            // and it doesn't really make sense anyway. We'll just set it to
+            // general and hope for the best.
+            my_details.symmetry = Symmetry::GENERAL;
 
-            // Exhaust all leading comment characters.
+            // No need to throw on newline because this might be the last field AFAICT.
+            eol = parse_banner_field();
+        }
+
+        my_passed_banner = true;
+
+        // Ignoring all other fields until the newline. We can use a do/while
+        // to skip a comparison because we know that the current character
+        // cannot be a newline if eol = false.
+        if (!eol) {
             do {
-                valid = my_input->advance();
-            } while (valid && my_input->get() == '%');
+                if (!(my_input->advance())) {
+                    throw std::runtime_error("end of file reached before the end of the banner line");
+                }
+            } while (my_input->get() != '\n'); 
+        }
 
-            // Inserting up to the next line.
-            while (valid && my_input->get() != '\n') {
-                contents += my_input->get();
-                valid = my_input->advance();
-            }
-
-            if (!valid) {
-                break;
-            }
-            ++my_current_line;
-            valid = my_input->advance();
-
-            if (contents.rfind("MatrixMarket ", 0) == 0) {
-                parse_banner(contents);
-                my_passed_banner = true;
-                return;
-            } 
-            contents.clear();
-        } 
-
-        throw std::runtime_error("failed to find banner line before end of file");
+        ++my_current_line;
+        return;
     }
 
 public:
@@ -153,111 +330,150 @@ public:
     }
 
 private:
+    // Only calls with 'last_ = true' need to know if there are any remaining bytes after the newline.
+    // This is because all non-last calls with no remaining bytes must have thrown.
+    struct NotLastSizeInfo {
+        size_t index = 0;
+    };
+
+    struct LastSizeInfo {
+        size_t index = 0;
+        bool remaining = false;
+    };
+
+    template<bool last_>
+    using SizeInfo = typename std::conditional<last_, LastSizeInfo, NotLastSizeInfo>::type;
+
+    template<bool last_>
+    SizeInfo<last_> scan_integer_field(bool size) {
+        SizeInfo<last_> output;
+        bool found = false;
+
+        auto what = [&]() -> std::string {
+            if (size) {
+                return "size";
+            } else {
+                return "index";
+            }
+        };
+
+        while (1) {
+            char x = my_input->get();
+            switch(x) {
+                case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                    found = true;
+                    output.index *= 10;
+                    output.index += x - '0';
+                    break;
+                case '\n':
+                    // This check only needs to be put here, as all blanks should be chomped before calling
+                    // this function; so we must start on a non-blank character. This starting character is either:
+                    // - a digit, in which case found = true and this check is unnecessary.
+                    // - a non-newline non-digit, in case we throw.
+                    // - a newline, in which case we arrive here.
+                    if (!found) {
+                        throw std::runtime_error("empty " + what() + " field on line " + std::to_string(my_current_line + 1));
+                    }
+                    if constexpr(last_) {
+                        output.remaining = my_input->advance(); // advance past the newline.
+                        return output;
+                    }
+                    throw std::runtime_error("unexpected newline when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
+                case ' ': case '\t':
+                    if (!advance_and_chomp()) { // skipping the current and subsequent blanks.
+                        if constexpr(last_) {
+                            return output;
+                        } else {
+                            throw std::runtime_error("unexpected end of file when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
+                        }
+                    }
+                    if constexpr(last_) {
+                        if (my_input->get() != '\n') {
+                            throw std::runtime_error("expected newline after the last " + what() + " field on line " + std::to_string(my_current_line + 1));
+                        }
+                        output.remaining = my_input->advance(); // advance past the newline.
+                    }
+                    return output;
+                default:
+                    throw std::runtime_error("unexpected character when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
+            }
+
+            if (!(my_input->advance())) { // moving past the current digit.
+                if constexpr(last_) {
+                    break;
+                } else {
+                    throw std::runtime_error("unexpected end of file when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
+                }
+            }
+        }
+
+        return output;
+    }
+
+    template<bool last_>
+    SizeInfo<last_> scan_size_field() {
+        return scan_integer_field<last_>(true);
+    }
+
+    template<bool last_>
+    SizeInfo<last_> scan_index_field() {
+        return scan_integer_field<last_>(false);
+    }
+
+private:
     bool my_passed_size = false;
     size_t my_nrows = 0, my_ncols = 0, my_nlines = 0;
 
-    void check_size(int onto, bool non_empty) {
-        if (!non_empty) {
-            throw std::runtime_error("detected an empty size field on line " + std::to_string(my_current_line + 1));
+    void scan_size() {
+        if (!(my_input->valid())) {
+            throw std::runtime_error("failed to find size line before end of file");
+        }
+
+        // Handling stray comments, empty lines, and leading whitespace.
+        if (!skip_lines()) {
+            throw std::runtime_error("failed to find size line before end of file");
+        }
+        if (!chomp()) {
+            throw std::runtime_error("expected at least one size field on line " + std::to_string(my_current_line + 1));
         }
 
         if (my_details.object == Object::MATRIX) {
             if (my_details.format == Format::COORDINATE) {
-                if (onto != 2) {
-                    throw std::runtime_error("expected three size fields for coordinate matrices on line " + std::to_string(my_current_line + 1));
-                }
-            } else if (my_details.format == Format::ARRAY) {
-                if (onto != 1) {
-                    throw std::runtime_error("expected two size fields for array matrices on line " + std::to_string(my_current_line + 1));
-                }
+                auto first_field = scan_size_field<false>();
+                my_nrows = first_field.index;
+
+                auto second_field = scan_size_field<false>();
+                my_ncols = second_field.index;
+
+                auto third_field = scan_size_field<true>();
+                my_nlines = third_field.index;
+
+            } else { // i.e., my_details.format == Format::ARRAY
+                auto first_field = scan_size_field<false>();
+                my_nrows = first_field.index;
+
+                auto second_field = scan_size_field<true>();
+                my_ncols = second_field.index;
                 my_nlines = my_nrows * my_ncols;
             }
+
         } else {
             if (my_details.format == Format::COORDINATE) {
-                if (onto != 1) {
-                    throw std::runtime_error("expected two size fields for coordinate vectors on line " + std::to_string(my_current_line + 1));
-                }
-                my_nlines = my_ncols;
-            } else if (my_details.format == Format::ARRAY) {
-                if (onto != 0) {
-                    throw std::runtime_error("expected one size field for array vectors on line " + std::to_string(my_current_line + 1));
-                }
-                my_nlines = my_nrows;
+                auto first_field = scan_size_field<false>();
+                my_nrows = first_field.index;
+
+                auto second_field = scan_size_field<true>();
+                my_nlines = second_field.index;
+
+            } else { // i.e., my_details.format == Format::ARRAY
+                auto first_field = scan_size_field<true>();
+                my_nlines = first_field.index;
+                my_nrows = my_nlines;
             }
             my_ncols = 1;
         }
 
         my_passed_size = true;
-    }
-
-    void scan_size() {
-        char onto = 0;
-        bool non_empty = false;
-        bool valid = my_input->valid();
-
-        while (valid) {
-            if (my_input->get() == '%') {
-                // Handling stray comments... try to get to the next line as quickly as possible.
-                do {
-                    valid = my_input->advance();
-                } while (valid && my_input->get() != '\n');
-
-                if (!valid) {
-                    break;
-                } else {
-                    ++my_current_line;
-                    valid = my_input->advance();
-                    continue;
-                }
-            }
-
-            // Chomping digits.
-            do {
-                char current = my_input->get();
-                switch(current) {
-                    case ' ':
-                        if (!non_empty) {
-                            throw std::runtime_error("detected an empty size field on line " + std::to_string(my_current_line + 1));
-                        }
-                        ++onto;
-                        break;
-
-                    case '\n':
-                        ++my_current_line;
-                        valid = my_input->advance();
-                        check_size(onto, non_empty);
-                        return;
-
-                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                        {
-                            non_empty = true;
-                            auto delta = current - '0';
-                            switch(onto) {
-                                case 0:
-                                    my_nrows *= 10;
-                                    my_nrows += delta;
-                                    break;
-                                case 1:
-                                    my_ncols *= 10;
-                                    my_ncols += delta;
-                                    break;
-                                case 2:
-                                    my_nlines *= 10;
-                                    my_nlines += delta;
-                                    break;
-                            }
-                        }
-                        break;
-
-                    default:
-                        throw std::runtime_error("only non-negative integers should be present on line " + std::to_string(my_current_line + 1));
-                }
-
-                valid = my_input->advance();
-            } while (valid);
-        }
-
-        check_size(onto, non_empty);
     }
 
 public:
@@ -315,41 +531,16 @@ public:
     }
 
 private:
-    void check_coordinate_common(size_t currow, size_t current_data_line, bool non_empty) const {
-        if (!non_empty) {
-            throw std::runtime_error("empty field detected on line " + std::to_string(my_current_line + 1));
-        }
-
+    void check_matrix_coordinate_line(size_t current_data_line, size_t currow, size_t curcol) {
         if (current_data_line >= my_nlines) {
             throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
-
         if (!currow) {
             throw std::runtime_error("row index must be positive on line " + std::to_string(my_current_line + 1));
         }
         if (currow > my_nrows) {
             throw std::runtime_error("row index out of range on line " + std::to_string(my_current_line + 1));
         }
-    }
-
-    template<Field field_>
-    void check_coordinate_matrix(size_t currow, size_t curcol, size_t current_data_line, int onto, bool non_empty) const {
-        check_coordinate_common(currow, current_data_line, non_empty);
-
-        if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
-            if (onto != 2) {
-                throw std::runtime_error("expected 3 fields on line " + std::to_string(my_current_line + 1));
-            }
-        } else if constexpr(field_ == Field::PATTERN) {
-            if (onto != 1) {
-                throw std::runtime_error("expected 2 fields on line " + std::to_string(my_current_line + 1));
-            }
-        } else if constexpr(field_ == Field::COMPLEX) {
-            if (onto != 3) {
-                throw std::runtime_error("expected 4 fields on line " + std::to_string(my_current_line + 1));
-            }
-        }
-
         if (!curcol) {
             throw std::runtime_error("column index must be positive on line " + std::to_string(my_current_line + 1));
         }
@@ -358,272 +549,225 @@ private:
         }
     }
 
-    template<Field field_>
-    void check_coordinate_vector(size_t currow, size_t current_data_line, int onto, bool non_empty) const {
-        check_coordinate_common(currow, current_data_line, non_empty);
+    struct StoreInfo {
+        bool quit_early = false;
+        bool remaining = false;
+    };
 
-        if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
-            if (onto != 1) {
-                throw std::runtime_error("expected 2 fields on line " + std::to_string(my_current_line + 1));
-            }
-        } else if constexpr(field_ == Field::PATTERN) {
-            if (onto != 0) {
-                throw std::runtime_error("expected 1 field on line " + std::to_string(my_current_line + 1));
-            }
-        } else if constexpr(field_ == Field::COMPLEX) {
-            if (onto != 2) {
-                throw std::runtime_error("expected 3 fields on line " + std::to_string(my_current_line + 1));
-            }
-        }
-    }
-
-    template<Object object_, Field field_, class Store_, class Compose_, class Bump_, class Finish_>
-    bool scan_coordinate(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
+    template<class Store_>
+    bool scan_matrix_coordinate_non_pattern(Store_ store) {
         if (!my_passed_banner || !my_passed_size) {
             throw std::runtime_error("banner or size lines have not yet been parsed");
         }
 
         size_t current_data_line = 0;
-        size_t currow = 0, curcol = 0;
-        char onto = 0;
-        bool non_empty = false;
         bool valid = my_input->valid();
-
-        if constexpr(object_ == Object::VECTOR) {
-            curcol = 1;
-        }
-
-        typedef typename std::invoke_result<Finish_, size_t>::type finish_value;
-        constexpr bool can_quit = std::is_same<typename std::invoke_result<Store_, size_t, size_t, finish_value>::type, bool>::value;
-
         while (valid) {
-            if (my_input->get() == '%') {
-                // Try to get quickly to the next line.
-                do {
-                    valid = my_input->advance();
-                } while (valid && my_input->get() != '\n');
-
-                if (!valid) {
-                    break;
-                } else {
-                    ++my_current_line;
-                    valid = my_input->advance();
-                    continue;
-                }
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines()) {
+                break;
+            }
+            if (!chomp()) {
+                throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
 
-            do {
-                char current = my_input->get();
-                if (current == ' ') {
-                    if (!non_empty) {
-                        throw std::runtime_error("detected empty field on line " + std::to_string(my_current_line + 1));
-                    }
-                    if constexpr(object_ == Object::MATRIX) {
-                        if (onto >= 2) {
-                            bump(my_current_line);
-                        }
-                    } else {
-                        if (onto >= 1) {
-                            bump(my_current_line);
-                        }
-                    }
-                    ++onto;
-                    non_empty = false;
+            auto first_field = scan_index_field<false>();
+            auto second_field = scan_index_field<false>();
+            check_matrix_coordinate_line(current_data_line, first_field.index, second_field.index);
 
-                } else if (current == '\n') {
-                    if constexpr(object_ == Object::MATRIX) {
-                        check_coordinate_matrix<field_>(currow, curcol, current_data_line, onto, non_empty);
-                    } else {
-                        check_coordinate_vector<field_>(currow, current_data_line, onto, non_empty);
-                    }
-
-                    if constexpr(can_quit) {
-                        if (!store(currow, curcol, finish(my_current_line))) {
-                            return false; 
-                        }
-                    } else {
-                        store(currow, curcol, finish(my_current_line));
-                    }
-
-                    currow = 0;
-                    if constexpr(object_ == Object::MATRIX) {
-                        curcol = 0;
-                    }
-                    ++current_data_line;
-                    onto = 0;
-                    non_empty = false;
-                    ++my_current_line;
-                    valid = my_input->advance();
-                    break;
-
-                } else {
-                    switch (onto) {
-                        case 0:
-                            if (current < '0' || current > '9') {
-                                throw std::runtime_error("row index should be a non-negative integer on line " + std::to_string(my_current_line + 1));
-                            }
-                            currow *= 10;
-                            currow += current - '0';
-                            break;
-
-                        case 1:
-                            if constexpr(object_ == Object::MATRIX) {
-                                if (current < '0' || current > '9') {
-                                    throw std::runtime_error("column index should be a non-negative integer on line " + std::to_string(my_current_line + 1));
-                                }
-                                curcol *= 10;
-                                curcol += current - '0';
-                            } else {
-                                compose(current, my_current_line);
-                            }
-                            break;
-
-                        default:
-                            compose(current, my_current_line);
-                            break;
-                    }
-                    non_empty = true;
-                }
-
-                valid = my_input->advance();
-            } while (valid);
-        }
-
-        // If onto = 0 and non_empty = false, we ended on a newline, so 
-        // there's no extra entry to add. Otherwise, we try to add the 
-        // last line that was _not_ terminated by a newline.
-        if (onto != 0 || non_empty) { 
-            if constexpr(object_ == Object::MATRIX) {
-                check_coordinate_matrix<field_>(currow, curcol, current_data_line, onto, non_empty);
-            } else {
-                check_coordinate_vector<field_>(currow, current_data_line, onto, non_empty);
+            // 'store' should leave 'my_input' at the start of the next line, if any exists.
+            auto res = store(first_field.index, second_field.index);
+            if (res.quit_early) {
+                return false;
             }
-
-            if constexpr(can_quit) {
-                if (!store(currow, curcol, finish(my_current_line))) {
-                    return false;
-                }
-            } else {
-                store(currow, curcol, finish(my_current_line));
-            }
-
             ++current_data_line;
+            ++my_current_line;
+            valid = res.remaining;
         }
 
         if (current_data_line != my_nlines) {
+            // Must be fewer, otherwise we would have triggered the error in check_*.
+            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
+        }
+        return true;
+    }
+
+    template<class PatternStore_>
+    bool scan_matrix_coordinate_pattern(PatternStore_ pstore) {
+        size_t current_data_line = 0;
+        bool valid = my_input->valid();
+        while (valid) {
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines()) {
+                break;
+            }
+            if (!chomp()) {
+                throw std::runtime_error("expected two fields for a pattern matrix on line " + std::to_string(my_current_line + 1));
+            }
+
+            auto first_field = scan_index_field<false>();
+            auto second_field = scan_index_field<true>();
+            check_matrix_coordinate_line(current_data_line, first_field.index, second_field.index);
+
+            // 'pstore' returns boolean indicating whether to quit early;
+            // it doesn't modify 'my_input' at all.
+            if (pstore(first_field.index, second_field.index)) {
+                return false;
+            }
+            ++current_data_line;
+            ++my_current_line;
+            valid = second_field.remaining;
+        }
+
+        if (current_data_line != my_nlines) {
+            // Must be fewer, otherwise we would have triggered the error in check_*.
             throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
         return true;
     }
 
 private:
-    template<Field field_>
-    void check_array(size_t current_data_line, int onto, bool non_empty) const {
-        if (!non_empty) {
-            throw std::runtime_error("empty field detected on line " + std::to_string(my_current_line + 1));
-        }
-
-        if constexpr(field_ == Field::REAL || field_ == Field::DOUBLE || field_ == Field::INTEGER) {
-            if (onto != 0) {
-                throw std::runtime_error("expected 1 field on line " + std::to_string(my_current_line + 1));
-            }
-        } else if constexpr(field_ == Field::COMPLEX) {
-            if (onto != 1) {
-                throw std::runtime_error("expected 2 fields on line " + std::to_string(my_current_line + 1));
-            }
-        }
-
+    void check_vector_coordinate_line(size_t current_data_line, size_t currow) {
         if (current_data_line >= my_nlines) {
-            throw std::runtime_error("more lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
+            throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
+        }
+        if (!currow) {
+            throw std::runtime_error("row index must be positive on line " + std::to_string(my_current_line + 1));
+        }
+        if (currow > my_nrows) {
+            throw std::runtime_error("row index out of range on line " + std::to_string(my_current_line + 1));
         }
     }
 
-    template<Field field_, class Store_, class Compose_, class Bump_, class Finish_>
-    bool scan_array(Store_ store, Compose_ compose, Bump_ bump, Finish_ finish) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
-
+    template<class Store_>
+    bool scan_vector_coordinate_non_pattern(Store_ store) {
         size_t current_data_line = 0;
-        size_t currow = 1, curcol = 1;
-        char onto = 0;
-        bool non_empty = false;
         bool valid = my_input->valid();
-
-        typedef typename std::invoke_result<Finish_, size_t>::type finish_value;
-        constexpr bool can_quit = std::is_same<typename std::invoke_result<Store_, size_t, size_t, finish_value>::type, bool>::value;
-
         while (valid) {
-            if (my_input->get() == '%') {
-                // Try to get quickly to the next line.
-                do {
-                    valid = my_input->advance();
-                } while (valid && my_input->get() != '\n');
-
-                if (!valid) {
-                    break;
-                } else {
-                    ++my_current_line;
-                    valid = my_input->advance();
-                    continue;
-                }
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines()) {
+                break;
+            }
+            if (!chomp()) {
+                throw std::runtime_error("expected at least two fields for a coordinate vector on line " + std::to_string(my_current_line + 1));
             }
 
-            do {
-                char current = my_input->get();
-                if (current == ' ') {
-                    if (!non_empty) {
-                        throw std::runtime_error("detected empty field on line " + std::to_string(my_current_line + 1));
-                    }
-                    bump(my_current_line);
-                    ++onto;
-                    non_empty = false;
+            auto first_field = scan_index_field<false>();
+            check_vector_coordinate_line(current_data_line, first_field.index);
 
-                } else if (current == '\n') {
-                    check_array<field_>(current_data_line, onto, non_empty); 
-                    if constexpr(can_quit) {
-                        if (!store(currow, curcol, finish(my_current_line))) {
-                            return false; 
-                        }
-                    } else {
-                        store(currow, curcol, finish(my_current_line));
-                    }
-
-                    ++currow;
-                    if (currow > my_nrows) {
-                        ++curcol;
-                        currow = 1;
-                    }
-                    ++current_data_line;
-                    ++my_current_line;
-                    onto = 0;
-                    non_empty = false;
-
-                    valid = my_input->advance();
-                    break;
-
-                } else {
-                    compose(current, my_current_line);
-                    non_empty = true;
-                }
-
-                valid = my_input->advance();
-            } while (valid);
-        }
-
-        // If onto = 0 and non_empty = false, we ended on a newline, so 
-        // there's no extra entry to add. Otherwise, we try to add the 
-        // last line that was _not_ terminated by a newline.
-        if (onto != 0 || non_empty) { 
-            check_array<field_>(current_data_line, onto, non_empty); 
-            if constexpr(can_quit) {
-                if (!store(currow, curcol, finish(my_current_line))) {
-                    return false; 
-                }
-            } else {
-                store(currow, curcol, finish(my_current_line));
+            // 'store' should leave 'my_input' at the start of the next line, if any exists.
+            auto res = store(first_field.index, 1);
+            if (res.quit_early) {
+                return false;
             }
             ++current_data_line;
+            ++my_current_line;
+            valid = res.remaining;
+        }
+
+        if (current_data_line != my_nlines) {
+            // Must be fewer, otherwise we would have triggered the error in check_*.
+            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
+        }
+        return true;
+    }
+
+    template<class PatternStore_>
+    bool scan_vector_coordinate_pattern(PatternStore_ pstore) {
+        size_t current_data_line = 0;
+        bool valid = my_input->valid();
+        while (valid) {
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines()) {
+                break;
+            }
+            if (!chomp()) {
+                throw std::runtime_error("expected one field for a coordinate vector on line " + std::to_string(my_current_line + 1));
+            }
+
+            auto first_field = scan_index_field<true>();
+            check_vector_coordinate_line(current_data_line, first_field.index);
+
+            // 'pstore' returns boolean indicating whether to quit early;
+            // it doesn't modify 'my_input' at all.
+            if (pstore(first_field.index, 1)) {
+                return false;
+            }
+            ++current_data_line;
+            ++my_current_line;
+            valid = first_field.remaining;
+        }
+
+        if (current_data_line != my_nlines) {
+            // Must be fewer, otherwise we would have triggered the error in check_*.
+            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
+        }
+        return true;
+    }
+
+private:
+    template<class Store_>
+    bool scan_matrix_array(Store_ store) {
+        size_t current_data_line = 0;
+        size_t currow = 1, curcol = 1;
+        bool valid = my_input->valid();
+        while (valid) {
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines()) {
+                break;
+            }
+            if (!chomp()) {
+                throw std::runtime_error("expected at least one field for an array matrix on line " + std::to_string(my_current_line + 1));
+            }
+
+            if (current_data_line >= my_nlines) {
+                throw std::runtime_error("more lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
+            }
+
+            // 'store' should leave 'my_input' at the start of the next line, if any exists.
+            auto res = store(currow, curcol);
+            if (res.quit_early) {
+                return false;
+            }
+            ++current_data_line;
+            ++currow;
+            if (currow > my_nrows) {
+                ++curcol;
+                currow = 1;
+            }
+            valid = res.remaining;
+        }
+
+        if (current_data_line != my_nlines) {
+            throw std::runtime_error("fewer lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
+        }
+        return true;
+    }
+
+    template<class Store_>
+    bool scan_vector_array(Store_ store) {
+        size_t current_data_line = 0;
+        bool valid = my_input->valid();
+        while (valid) {
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines()) {
+                break;
+            }
+            if (!chomp()) {
+                throw std::runtime_error("expected at least one field for an array vector on line " + std::to_string(my_current_line + 1));
+            }
+
+            if (current_data_line >= my_nlines) {
+                throw std::runtime_error("more lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
+            }
+
+            // 'store' should leave 'my_input' at the start of the next line, if any exists.
+            auto res = store(current_data_line + 1, 1);
+            if (res.quit_early) {
+                return false;
+            }
+            ++current_data_line;
+            valid = res.remaining;
         }
 
         if (current_data_line != my_nlines) {
@@ -634,7 +778,7 @@ private:
 
 private:
     template<typename Type_>
-    static Type_ convert_to_real(const std::string& temporary, size_t line) {
+    Type_ convert_to_real(const std::string& temporary) const {
         Type_ output;
         size_t n = 0;
 
@@ -647,11 +791,11 @@ private:
                 output = std::stod(temporary, &n);
             }
         } catch (std::invalid_argument& e) {
-            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(line + 1));
+            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(my_current_line + 1));
         }
 
         if (n != temporary.size()) {
-            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(line + 1));
+            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(my_current_line + 1));
         }
 
         return output;
@@ -672,48 +816,85 @@ public:
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = int, class Store_>
-    bool scan_integer(Store_&& store) {
-        bool init = true;
-        bool negative = false;
-        Type_ curval = 0;
+    bool scan_integer(Store_ store) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
 
-        auto compose = [&](char x, size_t line) -> void {
-            if (init) {
-                if (x == '-') {
-                    negative = true;
-                    return;
-                }
-                init = false;
-            }
-            if (x < '0' || x > '9') {
-                throw std::runtime_error("expected an integer value on line " + std::to_string(line + 1));
-            }
-            curval *= 10;
-            curval += (x - '0'); 
-        };
-
-        auto bump = [](size_t) -> void {};
-
-        auto finish = [&](size_t) -> Type_ {
+        auto store_int = [&](size_t r, size_t c) -> StoreInfo {
+            bool negative = (my_input->get() == '-');
             if (negative) {
-                curval *= -1;
+                if (!(my_input->advance())) {
+                    throw std::runtime_error("premature termination of an integer on line " + std::to_string(my_current_line + 1));
+                }
             }
-            init = true;
-            negative = false;
 
-            auto copy = curval;
-            curval = 0;
-            return copy;
+            Type_ val = 0;
+            bool found = false;
+            auto finish = [&](bool valid) -> StoreInfo {
+                StoreInfo output;
+                output.remaining = valid;
+                if (negative) {
+                    val *= -1;
+                }
+                if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, Type_>::type, bool>::value) {
+                    output.quit_early = !store(r, c, val);
+                } else {
+                    store(r, c, val);
+                }
+                return output;
+            };
+
+            while (1) {
+                char x = my_input->get();
+                switch (x) {
+                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                        val *= 10;
+                        val += x - '0';
+                        found = true;
+                        break;
+                    case ' ': case '\t':
+                        if (!advance_and_chomp()) { // skipping past the current position before chomping.
+                            return finish(false);
+                        }
+                        if (my_input->get() != '\n') {
+                            throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
+                        }
+                        return finish(my_input->advance()); // move past the newline.
+                    case '\n':
+                        // This check only needs to be put here, as all blanks should be chomped before calling
+                        // this function; so we must start on a non-blank character. This starting character is either:
+                        // - a digit, in which case found = true and this check is unnecessary.
+                        // - a non-newline non-digit, in case we throw.
+                        // - a newline, in which case we arrive here.
+                        if (!found) {
+                            throw std::runtime_error("empty integer field on line " + std::to_string(my_current_line + 1));
+                        }
+                        return finish(my_input->advance()); // move past the newline.
+                    default:
+                        throw std::runtime_error("expected an integer value on line " + std::to_string(my_current_line + 1));
+                }
+
+                if (!(my_input->advance())) {
+                    break;
+                }
+            }
+
+            return finish(false);
         };
 
         if (my_details.format == Format::COORDINATE) {
             if (my_details.object == Object::MATRIX) {
-                return scan_coordinate<Object::MATRIX, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_matrix_coordinate_non_pattern(std::move(store_int));
             } else {
-                return scan_coordinate<Object::VECTOR, Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_vector_coordinate_non_pattern(std::move(store_int));
             }
         } else {
-            return scan_array<Field::INTEGER>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            if (my_details.object == Object::MATRIX) {
+                return scan_matrix_array(std::move(store_int));
+            } else {
+                return scan_vector_array(std::move(store_int));
+            }
         }
     }
 
@@ -732,31 +913,69 @@ public:
      */
     template<typename Type_ = double, class Store_>
     bool scan_real(Store_&& store) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+
         std::string temporary;
+        auto store_real = [&](size_t r, size_t c) -> StoreInfo {
+            StoreInfo output;
+            output.remaining = true;
 
-        auto compose = [&](char x, size_t line) -> void {
-            if (std::isspace(x)) {
-                throw std::runtime_error("detected whitespace in value on line " + std::to_string(line + 1));
-            }
-            temporary += x;
-        };
-
-        auto bump = [](size_t) -> void {};
-
-        auto finish = [&](size_t line) -> double {
-            double output = convert_to_real<Type_>(temporary, line);
             temporary.clear();
+            char x = my_input->get();
+            while (1) {
+                if (x == '\n') {
+                    if (temporary.empty()) {
+                        // This is the only place we need to check as temporary is extended immediately after this.
+                        throw std::runtime_error("empty number field on line " + std::to_string(my_current_line + 1));
+                    }
+                    output.remaining = my_input->advance(); // move past the newline.
+                    break;
+                }
+                temporary += x;
+                if (!(my_input->advance())) {
+                    output.remaining = false;
+                    break;
+                }
+                x = my_input->get();
+                // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
+                // so there wouldn't be any point doing this check at the start of the first loop iteration.
+                if (x == ' ' || x == '\t') {
+                    if (!advance_and_chomp()) { // skipping past the current position before chomping.
+                        output.remaining = false;
+                        break;
+                    }
+                    if (my_input->get() != '\n') {
+                        throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
+                    }
+                    output.remaining = my_input->advance(); // move past the newline.
+                    break;
+                }
+            }
+
+            auto converted = convert_to_real<Type_>(temporary);
+
+            if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, Type_>::type, bool>::value) {
+                output.quit_early = !store(r, c, converted);
+            } else {
+                store(r, c, converted);
+            }
             return output;
         };
 
         if (my_details.format == Format::COORDINATE) {
             if (my_details.object == Object::MATRIX) {
-                return scan_coordinate<Object::MATRIX, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_matrix_coordinate_non_pattern(std::move(store_real));
             } else {
-                return scan_coordinate<Object::VECTOR, Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_vector_coordinate_non_pattern(std::move(store_real));
             }
         } else {
-            return scan_array<Field::REAL>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            if (my_details.object == Object::MATRIX) {
+                return scan_matrix_array(std::move(store_real));
+            } else {
+                return scan_vector_array(std::move(store_real));
+            }
         }
     }
 
@@ -775,8 +994,8 @@ public:
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = double, class Store_>
-    bool scan_double(Store_&& store) {
-        return scan_real<Type_, Store_>(std::forward<Store_>(store));
+    bool scan_double(Store_ store) {
+        return scan_real<Type_, Store_>(std::move(store));
     }
 
     /**
@@ -793,36 +1012,104 @@ public:
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = double, class Store_>
-    bool scan_complex(Store_&& store) {
+    bool scan_complex(Store_ store) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+
         std::string temporary;
-        std::complex<Type_> holding;
+        auto store_comp = [&](size_t r, size_t c) -> StoreInfo {
+            StoreInfo output;
+            output.remaining = true;
+            std::complex<Type_> holding;
 
-        auto compose = [&](char x, size_t line) -> void {
-            if (std::isspace(x)) {
-                throw std::runtime_error("detected whitespace in value on line " + std::to_string(line + 1));
+            // Pulling out the real part first.
+            temporary.clear();
+            char x = my_input->get();
+            while (1) {
+                if (x == '\n') {
+                    if (temporary.empty()) {
+                        // This is the only place we need to check this error, as temporary is filled up immediately after this clause.
+                        throw std::runtime_error("empty real field on line " + std::to_string(my_current_line + 1));
+                    } else {
+                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
+                    }
+                }
+
+                temporary += x;
+                if (!(my_input->advance())) {
+                    throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
+                }
+                x = my_input->get();
+
+                // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
+                // so there wouldn't be any point putting this check at the start of the first loop iteration.
+                if (x == ' ' || x == '\t') {
+                    if (!advance_and_chomp()) { // skipping past the current position before chomping.
+                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
+                    }
+                    if (my_input->get() == '\n') {
+                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
+                    }
+                    break;
+                }
             }
-            temporary += x;
-        };
+            holding.real(convert_to_real<Type_>(temporary));
 
-        auto bump = [&](size_t line) -> void {
-            holding.real(convert_to_real<Type_>(temporary, line));
+            // Now pulling out the imaginary part.
             temporary.clear();
-        };
+            x = my_input->get();
+            while (1) {
+                temporary += x;
+                if (!(my_input->advance())) {
+                    output.remaining = false;
+                    break;
+                }
+                x = my_input->get();
 
-        auto finish = [&](size_t line) -> std::complex<Type_> {
-            holding.imag(convert_to_real<Type_>(temporary, line));
-            temporary.clear();
-            return holding;
+                // Moving the newline check here, as the previous loop to parse the real part already precludes
+                // the presence of a newline character before any other characters. 
+                if (x == '\n') {
+                    output.remaining = my_input->advance(); // skipping past the newline.
+                    break;
+                }
+
+                // Also moving the blank space check here, as the scan for the imaginary component has already chomped
+                // leading blanks; the first iteration of this loop cannot have any blanks before other characters.
+                if (x == ' ' || x == '\t') {
+                    if (!advance_and_chomp()) { // skipping past the current position before chomping.
+                        output.remaining = false;
+                        break;
+                    }
+                    if (my_input->get() != '\n') {
+                        throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
+                    }
+                    output.remaining = my_input->advance(); // skipping past the newline.
+                    break;
+                }
+            }
+            holding.imag(convert_to_real<Type_>(temporary));
+
+            if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, decltype(holding)>::type, bool>::value) {
+                output.quit_early = !store(r, c, holding);
+            } else {
+                store(r, c, holding);
+            }
+            return output;
         };
 
         if (my_details.format == Format::COORDINATE) {
             if (my_details.object == Object::MATRIX) {
-                return scan_coordinate<Object::MATRIX, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_matrix_coordinate_non_pattern(std::move(store_comp));
             } else {
-                return scan_coordinate<Object::VECTOR, Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+                return scan_vector_coordinate_non_pattern(std::move(store_comp));
             }
         } else {
-            return scan_array<Field::COMPLEX>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            if (my_details.object == Object::MATRIX) {
+                return scan_matrix_array(std::move(store_comp));
+            } else {
+                return scan_vector_array(std::move(store_comp));
+            }
         }
     }
 
@@ -842,21 +1129,27 @@ public:
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = bool, class Store_>
-    bool scan_pattern(Store_&& store) {
-        auto compose = [](char, size_t) -> void {};
-        auto bump = [](size_t) -> void {};
-        auto finish = [](size_t) -> Type_ { 
-            return true; 
-        };
-
+    bool scan_pattern(Store_ store) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
         if (my_details.format != Format::COORDINATE) {
             throw std::runtime_error("'array' format for 'pattern' field is not supported");
         }
 
+        auto store_pat = [&](size_t r, size_t c) -> bool {
+            if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, bool>::type, bool>::value) {
+                return !store(r, c, true);
+            } else {
+                store(r, c, true);
+                return false;
+            }
+        };
+
         if (my_details.object == Object::MATRIX) {
-            return scan_coordinate<Object::MATRIX, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            return scan_matrix_coordinate_pattern(std::move(store_pat));
         } else {
-            return scan_coordinate<Object::VECTOR, Field::PATTERN>(std::forward<Store_>(store), std::move(compose), std::move(bump), std::move(finish));
+            return scan_vector_coordinate_pattern(std::move(store_pat));
         }
     }
 };
