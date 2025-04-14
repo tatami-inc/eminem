@@ -116,7 +116,7 @@ static void test_error(const std::string& input, std::string msg) {
 }
 
 TEST(ParserCoordinateMatrix, Errors) {
-    test_error("%%MatrixMarket matrix coordinate integer general\n1 1 1\n ", "expected two size fields");
+    test_error("%%MatrixMarket matrix coordinate integer general\n1 1 1\n ", "expected at least three fields");
     test_error("%%MatrixMarket matrix coordinate integer general\n1 1 1\n1", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate integer general\n1 1 1\n1 ", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate integer general\n1 1 1\n1\n", "unexpected newline");

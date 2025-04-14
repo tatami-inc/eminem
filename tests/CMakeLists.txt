@@ -26,6 +26,8 @@ add_executable(libtest
     src/coordinate_vector.cpp
     src/array_matrix.cpp
     src/array_vector.cpp
+    src/pattern_matrix.cpp
+    src/pattern_vector.cpp
     src/from_text.cpp
     src/from_gzip.cpp)
 

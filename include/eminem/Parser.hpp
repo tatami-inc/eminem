@@ -568,7 +568,7 @@ private:
                 break;
             }
             if (!chomp()) {
-                throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
+                throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
             }
 
             auto first_field = scan_index_field<false>();
@@ -594,10 +594,6 @@ private:
 
     template<class PatternStore_>
     bool scan_matrix_coordinate_pattern(PatternStore_ pstore) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
-
         size_t current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
@@ -606,7 +602,7 @@ private:
                 break;
             }
             if (!chomp()) {
-                throw std::runtime_error("expected two size fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
+                throw std::runtime_error("expected two fields for a pattern matrix on line " + std::to_string(my_current_line + 1));
             }
 
             auto first_field = scan_index_field<false>();
@@ -645,10 +641,6 @@ public:
 
     template<class Store_>
     bool scan_vector_coordinate_non_pattern(Store_ store) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
-
         size_t current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
@@ -682,10 +674,6 @@ public:
 
     template<class PatternStore_>
     bool scan_vector_coordinate_pattern(PatternStore_ pstore) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
-
         size_t current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
@@ -694,7 +682,7 @@ public:
                 break;
             }
             if (!chomp()) {
-                throw std::runtime_error("expected at least one field for a coordinate vector on line " + std::to_string(my_current_line + 1));
+                throw std::runtime_error("expected one field for a coordinate vector on line " + std::to_string(my_current_line + 1));
             }
 
             auto first_field = scan_index_field<true>();
@@ -720,10 +708,6 @@ public:
 private:
     template<class Store_>
     bool scan_matrix_array(Store_ store) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
-
         size_t current_data_line = 0;
         size_t currow = 1, curcol = 1;
         bool valid = my_input->valid();
@@ -762,10 +746,6 @@ private:
 
     template<class Store_>
     bool scan_vector_array(Store_ store) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
-
         size_t current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
@@ -837,6 +817,10 @@ public:
      */
     template<typename Type_ = int, class Store_>
     bool scan_integer(Store_ store) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+
         auto store_int = [&](size_t r, size_t c) -> StoreInfo {
             bool negative = (my_input->get() == '-');
             if (negative) {
@@ -929,6 +913,10 @@ public:
      */
     template<typename Type_ = double, class Store_>
     bool scan_real(Store_&& store) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+
         std::string temporary;
         auto store_real = [&](size_t r, size_t c) -> StoreInfo {
             StoreInfo output;
@@ -1025,6 +1013,10 @@ public:
      */
     template<typename Type_ = double, class Store_>
     bool scan_complex(Store_ store) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+
         std::string temporary;
         auto store_comp = [&](size_t r, size_t c) -> StoreInfo {
             StoreInfo output;
@@ -1138,18 +1130,22 @@ public:
      */
     template<typename Type_ = bool, class Store_>
     bool scan_pattern(Store_ store) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+        if (my_details.format != Format::COORDINATE) {
+            throw std::runtime_error("'array' format for 'pattern' field is not supported");
+        }
+
         auto store_pat = [&](size_t r, size_t c) -> bool {
             if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, bool>::type, bool>::value) {
-                return store(r, c, true);
+                return !store(r, c, true);
             } else {
                 store(r, c, true);
                 return false;
             }
         };
 
-        if (my_details.format != Format::COORDINATE) {
-            throw std::runtime_error("'array' format for 'pattern' field is not supported");
-        }
         if (my_details.object == Object::MATRIX) {
             return scan_matrix_coordinate_pattern(std::move(store_pat));
         } else {
