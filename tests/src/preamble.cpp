@@ -358,6 +358,32 @@ TEST(ParserPreamble, ScanErrors) {
         eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         EXPECT_ANY_THROW({
             try {
+                parser.get_nrows();
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("size line has not yet been scanned"));
+                throw;
+            }
+        });
+    }
+
+    {
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        EXPECT_ANY_THROW({
+            try {
+                parser.get_ncols();
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("size line has not yet been scanned"));
+                throw;
+            }
+        });
+    }
+
+    {
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        EXPECT_ANY_THROW({
+            try {
                 parser.get_nlines();
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("size line has not yet been scanned"));
