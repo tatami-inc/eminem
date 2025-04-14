@@ -112,20 +112,6 @@ TEST(ParserCoordinateVector, Errors) {
     test_error("%%MatrixMarket vector coordinate integer general\n1 1\n2 1", "row index out of range");
 
     test_error("%%MatrixMarket vector coordinate integer general\n2 2\n1 1\n", "fewer lines present");
-
-    {
-        std::string input = "%%MatrixMarket vector coordinate integer general\n1 1 1\n1 1 1";
-        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
-        EXPECT_ANY_THROW({
-            try {
-                parser.scan_integer([&](size_t, size_t, int){});
-            } catch (std::exception& e) {
-                EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
-                throw;
-            }
-        });
-    }
 }
 
 TEST(ParserCoordinateVector, Types) {

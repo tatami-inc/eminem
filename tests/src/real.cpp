@@ -7,6 +7,9 @@
 #include <string>
 #include <memory>
 
+#include "simulate.h"
+#include "format.h"
+
 class ParserRealTest : public ::testing::TestWithParam<std::tuple<std::string, int, int, std::vector<double> > > {};
 
 TEST_P(ParserRealTest, Success) {
@@ -74,6 +77,20 @@ TEST(ParserReal, Error) {
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1\t\n", "empty number field");
 
     test_error("%%MatrixMarket vector array real\n1\n \n", "empty number field");
+
+    {
+        std::string input = "%%MatrixMarket vector coordinate real general\n1 1 1\n1 1 1";
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        EXPECT_ANY_THROW({
+            try {
+                parser.scan_integer([&](size_t, size_t, int){});
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
+                throw;
+            }
+        });
+    }
 }
 
 TEST(ParserReal, OtherTypes) {
@@ -139,4 +156,146 @@ TEST(ParserReal, QuitEarly) {
     }));
     std::vector<double> expected { 33, 666 };
     EXPECT_EQ(observed, expected);
+}
+
+static void test_equal_vectors(const std::vector<double>& left, const std::vector<double>& right) {
+    // using a more generous tolerance to account for loss of precision when saving to text.
+    ASSERT_EQ(left.size(), right.size());
+    for (size_t i = 0; i < left.size(); ++i) {
+        EXPECT_TRUE(std::abs(left[i] - right[i]) <= 0.00000001);
+    }
+}
+
+TEST(ParserReal, SimulatedCoordinateMatrix) {
+    size_t NR = 65, NC = 58;
+    auto coords = simulate_coordinate(NR, NC, 0.1);
+    auto values = simulate_real(coords.first.size());
+
+    std::stringstream stored;
+    format_coordinate(stored, NR, NC, coords.first, coords.second, values);
+    std::string input = stored.str();
+
+    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    parser.scan_preamble();
+
+    EXPECT_EQ(parser.get_nrows(), NR);
+    EXPECT_EQ(parser.get_ncols(), NC);
+    EXPECT_EQ(parser.get_nlines(), values.size());
+
+    std::vector<int> out_rows, out_cols;
+    std::vector<double> out_vals;
+    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
+        out_rows.push_back(r - 1);
+        out_cols.push_back(c - 1);
+        out_vals.push_back(v);
+    });
+
+    EXPECT_TRUE(success);
+    EXPECT_EQ(out_rows, coords.first);
+    EXPECT_EQ(out_cols, coords.second);
+    test_equal_vectors(out_vals, values);
+}
+
+TEST(ParserReal, SimulatedCoordinateVector) {
+    size_t N = 6558;
+    auto coords = simulate_coordinate(N, 0.05);
+    auto values = simulate_real(coords.size());
+
+    std::stringstream stored;
+    format_coordinate(stored, N, coords, values);
+    std::string input = stored.str();
+
+    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    parser.scan_preamble();
+
+    EXPECT_EQ(parser.get_nrows(), N);
+    EXPECT_EQ(parser.get_ncols(), 1);
+    EXPECT_EQ(parser.get_nlines(), values.size());
+
+    std::vector<int> out_rows, out_cols;
+    std::vector<double> out_vals;
+    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
+        out_rows.push_back(r - 1);
+        out_cols.push_back(c - 1);
+        out_vals.push_back(v);
+    });
+
+    EXPECT_TRUE(success);
+    EXPECT_EQ(out_rows, coords);
+    EXPECT_EQ(out_cols, std::vector<int>(coords.size()));
+    test_equal_vectors(out_vals, values);
+}
+
+TEST(ParserReal, SimulatedArrayMatrix) {
+    size_t NR = 93, NC = 85;
+    auto values = simulate_real(NR * NC);
+
+    std::stringstream stored;
+    format_array(stored, NR, NC, values);
+    std::string input = stored.str();
+
+    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    parser.scan_preamble();
+
+    EXPECT_EQ(parser.get_nrows(), NR);
+    EXPECT_EQ(parser.get_ncols(), NC);
+    EXPECT_EQ(parser.get_nlines(), NR * NC);
+
+    std::vector<int> out_rows, out_cols;
+    std::vector<double> out_vals;
+    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
+        out_rows.push_back(r - 1);
+        out_cols.push_back(c - 1);
+        out_vals.push_back(v);
+    });
+
+    EXPECT_TRUE(success);
+
+    std::vector<int> expected_rows, expected_cols;
+    for (size_t c = 0; c < NC; ++c) {
+        for (size_t r = 0; r < NR; ++r) {
+            expected_rows.push_back(r);
+            expected_cols.push_back(c);
+        }
+    }
+
+    EXPECT_EQ(out_rows, expected_rows);
+    EXPECT_EQ(out_cols, expected_cols);
+    test_equal_vectors(out_vals, values);
+}
+
+TEST(ParserReal, SimulatedArrayVector) {
+    size_t N = 632;
+    auto values = simulate_real(N);
+
+    std::stringstream stored;
+    format_array(stored, N, values);
+    std::string input = stored.str();
+
+    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    parser.scan_preamble();
+
+    EXPECT_EQ(parser.get_nrows(), N);
+    EXPECT_EQ(parser.get_ncols(), 1);
+    EXPECT_EQ(parser.get_nlines(), N);
+
+    std::vector<int> out_rows, out_cols;
+    std::vector<double> out_vals;
+    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
+        out_rows.push_back(r - 1);
+        out_cols.push_back(c - 1);
+        out_vals.push_back(v);
+    });
+
+    EXPECT_TRUE(success);
+
+    std::vector<int> expected_rows(N);
+    std::iota(expected_rows.begin(), expected_rows.end(), 0);
+    EXPECT_EQ(out_rows, expected_rows);
+    EXPECT_EQ(out_cols, std::vector<int>(N));
+    test_equal_vectors(out_vals, values);
 }

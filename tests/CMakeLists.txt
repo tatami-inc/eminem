@@ -17,7 +17,6 @@ set(CMAKE_CXX_STANDARD 17)
 enable_testing()
 
 add_executable(libtest 
-    src/Parser.cpp
     src/preamble.cpp
     src/integer.cpp
     src/real.cpp

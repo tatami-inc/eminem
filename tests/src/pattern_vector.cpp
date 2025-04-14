@@ -6,8 +6,9 @@
 
 #include <string>
 #include <memory>
-#include <cstdint>
-#include <limits>
+
+#include "simulate.h"
+#include "format.h"
 
 class ParserPatternVectorTest : public ::testing::TestWithParam<std::tuple<std::string, int, std::vector<int> > > {};
 
@@ -181,9 +182,41 @@ TEST(ParserPatternVector, Empty) {
     EXPECT_EQ(parser.get_ncols(), 1);
     EXPECT_EQ(parser.get_nlines(), 0);
 
-    std::vector<bool> observed;
+    std::vector<char> observed;
     EXPECT_TRUE(parser.scan_pattern([&](size_t, size_t, bool val) -> void {
         observed.push_back(val);
     }));
     EXPECT_TRUE(observed.empty());
 }
+
+TEST(ParserPatternVector, Simulated) {
+    size_t N = 4896;
+    auto coords = simulate_coordinate(N, 0.05);
+
+    std::stringstream stored;
+    format_coordinate(stored, N, coords, std::vector<char>());
+    std::string input = stored.str();
+
+    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    parser.scan_preamble();
+
+    EXPECT_EQ(parser.get_nrows(), N);
+    EXPECT_EQ(parser.get_ncols(), 1);
+    EXPECT_EQ(parser.get_nlines(), coords.size());
+
+    std::vector<int> out_rows, out_cols;
+    std::vector<char> out_vals;
+    bool success = parser.scan_pattern([&](size_t r, size_t c, bool v) -> void {
+        out_rows.push_back(r - 1);
+        out_cols.push_back(c - 1);
+        out_vals.push_back(v);
+    });
+
+    EXPECT_TRUE(success);
+
+    EXPECT_EQ(out_rows, coords);
+    EXPECT_EQ(out_cols, std::vector<int>(coords.size()));
+    EXPECT_EQ(out_vals, std::vector<char>(coords.size(), 1));
+}
+
