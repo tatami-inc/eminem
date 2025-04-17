@@ -1,13 +1,15 @@
 #ifndef EMINEM_FROM_GZIP_HPP
 #define EMINEM_FROM_GZIP_HPP
 
+#include <memory>
+#include <cstddef>
+
 #include "Parser.hpp"
 #include "byteme/PerByte.hpp"
 #include "byteme/GzipFileReader.hpp"
 #include "byteme/ZlibBufferReader.hpp"
 #include "byteme/SomeFileReader.hpp"
 #include "byteme/SomeBufferReader.hpp"
-#include <memory>
 
 /**
  * @file from_gzip.hpp
@@ -23,7 +25,7 @@ struct ParseGzipFileOptions {
     /**
      * Buffer size to use for reading and decompression.
      */
-    size_t buffer_size = 65536;
+    std::size_t buffer_size = 65536;
 
     /**
      * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
@@ -58,7 +60,7 @@ struct ParseZlibBufferOptions {
     /**
      * Buffer size to use for reading.
      */
-    size_t buffer_size = 65536;
+    std::size_t buffer_size = 65536;
 
     /**
      * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
@@ -78,7 +80,7 @@ struct ParseZlibBufferOptions {
  * @param len Length of the array referenced by `buffer`.
  * @param options Further options.
  */
-inline Parser<byteme::PerByteInterface<char> > parse_zlib_buffer(const unsigned char* buffer, size_t len, const ParseZlibBufferOptions& options) {
+inline Parser<byteme::PerByteInterface<char> > parse_zlib_buffer(const unsigned char* buffer, std::size_t len, const ParseZlibBufferOptions& options) {
     return Parser<byteme::PerByteInterface<char> >(
         [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
             byteme::ZlibBufferReaderOptions zopt;
@@ -101,7 +103,7 @@ struct ParseSomeFileOptions {
     /**
      * Buffer size to use for reading and decompression.
      */
-    size_t buffer_size = 65536;
+    std::size_t buffer_size = 65536;
 
     /**
      * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
@@ -136,7 +138,7 @@ struct ParseSomeBufferOptions {
     /**
      * Buffer size to use for reading and decompression.
      */
-    size_t buffer_size = 65536;
+    std::size_t buffer_size = 65536;
 
     /**
      * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
@@ -150,7 +152,7 @@ struct ParseSomeBufferOptions {
  * @param len Length of the array referenced by `buffer`.
  * @param options Further options.
  */
-inline Parser<byteme::PerByteInterface<char> > parse_some_buffer(const unsigned char* buffer, size_t len, const ParseSomeBufferOptions& options) {
+inline Parser<byteme::PerByteInterface<char> > parse_some_buffer(const unsigned char* buffer, std::size_t len, const ParseSomeBufferOptions& options) {
     return Parser<byteme::PerByteInterface<char> >(
         [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
             byteme::SomeBufferReaderOptions sopt;

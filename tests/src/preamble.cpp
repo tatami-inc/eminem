@@ -109,7 +109,7 @@ TEST_P(ParserPreambleArrayMatrixTest, Success) {
 
     EXPECT_EQ(parser.get_nrows(), nr);
     EXPECT_EQ(parser.get_ncols(), nc);
-    EXPECT_EQ(parser.get_nlines(), static_cast<size_t>(nr) * static_cast<size_t>(nc));
+    EXPECT_EQ(parser.get_nlines(), static_cast<eminem::Index>(nr) * static_cast<eminem::Index>(nc));
 }
 
 INSTANTIATE_TEST_SUITE_P(

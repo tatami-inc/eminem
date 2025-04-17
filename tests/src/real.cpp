@@ -35,11 +35,11 @@ TEST_P(ParserRealTest, Success) {
     EXPECT_EQ(parser.get_nlines(), expected.size());
 
     std::vector<double> observed;
-    EXPECT_TRUE(parser.scan_real([&](size_t, size_t, double val) {
+    EXPECT_TRUE(parser.scan_real([&](eminem::Index, eminem::Index, double val) {
         observed.push_back(val);
     }));
     ASSERT_EQ(observed.size(), expected.size());
-    for (size_t i = 0; i < observed.size(); ++i) {
+    for (decltype(observed.size()) i = 0, end = observed.size(); i < end; ++i) {
         EXPECT_DOUBLE_EQ(observed[i], expected[i]);
     }
 }
@@ -61,7 +61,7 @@ static void test_error(const std::string& input, std::string msg) {
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
-            parser.scan_real([&](size_t, size_t, double){});
+            parser.scan_real([&](eminem::Index, eminem::Index, double){});
         } catch (std::exception& e) {
             EXPECT_THAT(e.what(), ::testing::HasSubstr(msg));
             throw;
@@ -84,7 +84,7 @@ TEST(ParserReal, Error) {
         eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         EXPECT_ANY_THROW({
             try {
-                parser.scan_integer([&](size_t, size_t, int){});
+                parser.scan_integer([&](eminem::Index, eminem::Index, int){});
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
                 throw;
@@ -103,7 +103,7 @@ TEST(ParserReal, OtherTypes) {
         parser.scan_preamble();
 
         std::vector<float> observed;
-        EXPECT_TRUE(parser.template scan_real<float>([&](size_t, size_t, float val) {
+        EXPECT_TRUE(parser.template scan_real<float>([&](eminem::Index, eminem::Index, float val) {
             observed.push_back(val);
         }));
         std::vector<float> expected { 33, 666, 9 };
@@ -117,7 +117,7 @@ TEST(ParserReal, OtherTypes) {
         parser.scan_preamble();
 
         std::vector<long double> observed;
-        EXPECT_TRUE(parser.template scan_real<long double>([&](size_t, size_t, long double val) {
+        EXPECT_TRUE(parser.template scan_real<long double>([&](eminem::Index, eminem::Index, long double val) {
             observed.push_back(val);
         }));
         std::vector<long double> expected { 33, 666, 9 };
@@ -133,7 +133,7 @@ TEST(ParserReal, Specials) {
     parser.scan_preamble();
 
     std::vector<double> observed;
-    EXPECT_TRUE(parser.scan_double([&](size_t, size_t, double val) { // using scan_double() to get some coverage of the alias.
+    EXPECT_TRUE(parser.scan_double([&](eminem::Index, eminem::Index, double val) { // using scan_double() to get some coverage of the alias.
         observed.push_back(val);
     }));
     ASSERT_EQ(observed.size(), 4);
@@ -150,7 +150,7 @@ TEST(ParserReal, QuitEarly) {
     parser.scan_preamble();
 
     std::vector<double> observed;
-    EXPECT_FALSE(parser.scan_real([&](size_t, size_t, double val) -> bool {
+    EXPECT_FALSE(parser.scan_real([&](eminem::Index, eminem::Index, double val) -> bool {
         observed.push_back(val);
         return val < 100;
     }));
@@ -161,13 +161,13 @@ TEST(ParserReal, QuitEarly) {
 static void test_equal_vectors(const std::vector<double>& left, const std::vector<double>& right) {
     // using a more generous tolerance to account for loss of precision when saving to text.
     ASSERT_EQ(left.size(), right.size());
-    for (size_t i = 0; i < left.size(); ++i) {
+    for (decltype(left.size()) i = 0, end = left.size(); i < end; ++i) {
         EXPECT_TRUE(std::abs(left[i] - right[i]) <= 0.00000001);
     }
 }
 
 TEST(ParserReal, SimulatedCoordinateMatrix) {
-    size_t NR = 65, NC = 58;
+    std::size_t NR = 65, NC = 58;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_real(coords.first.size());
 
@@ -185,7 +185,7 @@ TEST(ParserReal, SimulatedCoordinateMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<double> out_vals;
-    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
+    bool success = parser.scan_real([&](eminem::Index r, eminem::Index c, double v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -198,7 +198,7 @@ TEST(ParserReal, SimulatedCoordinateMatrix) {
 }
 
 TEST(ParserReal, SimulatedCoordinateVector) {
-    size_t N = 6558;
+    std::size_t N = 6558;
     auto coords = simulate_coordinate(N, 0.05);
     auto values = simulate_real(coords.size());
 
@@ -216,7 +216,7 @@ TEST(ParserReal, SimulatedCoordinateVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<double> out_vals;
-    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
+    bool success = parser.scan_real([&](eminem::Index r, eminem::Index c, double v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -229,7 +229,7 @@ TEST(ParserReal, SimulatedCoordinateVector) {
 }
 
 TEST(ParserReal, SimulatedArrayMatrix) {
-    size_t NR = 93, NC = 85;
+    std::size_t NR = 93, NC = 85;
     auto values = simulate_real(NR * NC);
 
     std::stringstream stored;
@@ -246,7 +246,7 @@ TEST(ParserReal, SimulatedArrayMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<double> out_vals;
-    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
+    bool success = parser.scan_real([&](eminem::Index r, eminem::Index c, double v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -255,8 +255,8 @@ TEST(ParserReal, SimulatedArrayMatrix) {
     EXPECT_TRUE(success);
 
     std::vector<int> expected_rows, expected_cols;
-    for (size_t c = 0; c < NC; ++c) {
-        for (size_t r = 0; r < NR; ++r) {
+    for (std::size_t c = 0; c < NC; ++c) {
+        for (std::size_t r = 0; r < NR; ++r) {
             expected_rows.push_back(r);
             expected_cols.push_back(c);
         }
@@ -268,7 +268,7 @@ TEST(ParserReal, SimulatedArrayMatrix) {
 }
 
 TEST(ParserReal, SimulatedArrayVector) {
-    size_t N = 632;
+    std::size_t N = 632;
     auto values = simulate_real(N);
 
     std::stringstream stored;
@@ -285,7 +285,7 @@ TEST(ParserReal, SimulatedArrayVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<double> out_vals;
-    bool success = parser.scan_real([&](size_t r, size_t c, double v) -> void {
+    bool success = parser.scan_real([&](eminem::Index r, eminem::Index c, double v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);

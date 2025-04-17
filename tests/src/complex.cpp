@@ -36,11 +36,11 @@ TEST_P(ParserComplexTest, Success) {
     EXPECT_EQ(parser.get_nlines(), expected.size());
 
     std::vector<std::complex<double> > observed;
-    EXPECT_TRUE(parser.scan_complex([&](size_t, size_t, std::complex<double> val) {
+    EXPECT_TRUE(parser.scan_complex([&](eminem::Index, eminem::Index, std::complex<double> val) {
         observed.push_back(val);
     }));
     ASSERT_EQ(observed.size(), expected.size());
-    for (size_t i = 0; i < observed.size(); ++i) {
+    for (decltype(observed.size()) i = 0, end = observed.size(); i < end; ++i) {
         EXPECT_DOUBLE_EQ(observed[i].real(), expected[i].real());
         EXPECT_DOUBLE_EQ(observed[i].imag(), expected[i].imag());
     }
@@ -83,7 +83,7 @@ static void test_error(const std::string& input, std::string msg) {
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
-            parser.scan_complex([&](size_t, size_t, std::complex<double>){});
+            parser.scan_complex([&](eminem::Index, eminem::Index, std::complex<double>){});
         } catch (std::exception& e) {
             EXPECT_THAT(e.what(), ::testing::HasSubstr(msg));
             throw;
@@ -112,7 +112,7 @@ TEST(ParserComplex, Error) {
         eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         EXPECT_ANY_THROW({
             try {
-                parser.scan_integer([&](size_t, size_t, int){});
+                parser.scan_integer([&](eminem::Index, eminem::Index, int){});
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
                 throw;
@@ -131,7 +131,7 @@ TEST(ParserComplex, OtherTypes) {
         parser.scan_preamble();
 
         std::vector<std::complex<float> > observed;
-        EXPECT_TRUE(parser.template scan_complex<float>([&](size_t, size_t, std::complex<float> val) {
+        EXPECT_TRUE(parser.template scan_complex<float>([&](eminem::Index, eminem::Index, std::complex<float> val) {
             observed.push_back(val);
         }));
         std::vector<std::complex<float> > expected { { 33, 3e3 }, { 660, -66 }, { -9999, 0 } };
@@ -145,7 +145,7 @@ TEST(ParserComplex, OtherTypes) {
         parser.scan_preamble();
 
         std::vector<std::complex<long double> > observed;
-        EXPECT_TRUE(parser.template scan_complex<long double>([&](size_t, size_t, std::complex<long double> val) {
+        EXPECT_TRUE(parser.template scan_complex<long double>([&](eminem::Index, eminem::Index, std::complex<long double> val) {
             observed.push_back(val);
         }));
         std::vector<std::complex<long double> > expected { { 33, 3e3 }, { 660, -66 }, { -9999, 0 } };
@@ -160,7 +160,7 @@ TEST(ParserComplex, QuitEarly) {
     parser.scan_preamble();
 
     std::vector<std::complex<double> > observed;
-    EXPECT_FALSE(parser.scan_complex([&](size_t, size_t, std::complex<double> val) -> bool {
+    EXPECT_FALSE(parser.scan_complex([&](eminem::Index, eminem::Index, std::complex<double> val) -> bool {
         observed.push_back(val);
         return val.real() > 0 && val.imag() > 0;
     }));
@@ -170,14 +170,14 @@ TEST(ParserComplex, QuitEarly) {
 
 static void test_equal_vectors(const std::vector<std::complex<double> >& observed, const std::vector<std::complex<double> >& expected) {
     ASSERT_EQ(observed.size(), expected.size());
-    for (size_t i = 0; i < observed.size(); ++i) {
+    for (decltype(observed.size()) i = 0, end = observed.size(); i < end; ++i) {
         EXPECT_TRUE(std::abs(observed[i].real() - expected[i].real()) <= 0.00000001);
         EXPECT_TRUE(std::abs(observed[i].imag() - expected[i].imag()) <= 0.00000001);
     }
 }
 
 TEST(ParserComplex, SimulatedCoordinateMatrix) {
-    size_t NR = 65, NC = 58;
+    std::size_t NR = 65, NC = 58;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_complex(coords.first.size());
 
@@ -195,7 +195,7 @@ TEST(ParserComplex, SimulatedCoordinateMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<std::complex<double> > out_vals;
-    bool success = parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
+    bool success = parser.scan_complex([&](eminem::Index r, eminem::Index c, std::complex<double> v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -208,7 +208,7 @@ TEST(ParserComplex, SimulatedCoordinateMatrix) {
 }
 
 TEST(ParserComplex, SimulatedCoordinateVector) {
-    size_t N = 6558;
+    std::size_t N = 6558;
     auto coords = simulate_coordinate(N, 0.05);
     auto values = simulate_complex(coords.size());
 
@@ -227,7 +227,7 @@ TEST(ParserComplex, SimulatedCoordinateVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<std::complex<double> > out_vals;
-    bool success = parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
+    bool success = parser.scan_complex([&](eminem::Index r, eminem::Index c, std::complex<double> v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -240,7 +240,7 @@ TEST(ParserComplex, SimulatedCoordinateVector) {
 }
 
 TEST(ParserComplex, SimulatedArrayMatrix) {
-    size_t NR = 93, NC = 85;
+    std::size_t NR = 93, NC = 85;
     auto values = simulate_complex(NR * NC);
 
     std::stringstream stored;
@@ -257,7 +257,7 @@ TEST(ParserComplex, SimulatedArrayMatrix) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<std::complex<double> > out_vals;
-    bool success = parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
+    bool success = parser.scan_complex([&](eminem::Index r, eminem::Index c, std::complex<double> v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -266,8 +266,8 @@ TEST(ParserComplex, SimulatedArrayMatrix) {
     EXPECT_TRUE(success);
 
     std::vector<int> expected_rows, expected_cols;
-    for (size_t c = 0; c < NC; ++c) {
-        for (size_t r = 0; r < NR; ++r) {
+    for (std::size_t c = 0; c < NC; ++c) {
+        for (std::size_t r = 0; r < NR; ++r) {
             expected_rows.push_back(r);
             expected_cols.push_back(c);
         }
@@ -279,7 +279,7 @@ TEST(ParserComplex, SimulatedArrayMatrix) {
 }
 
 TEST(ParserComplex, SimulatedArrayVector) {
-    size_t N = 632;
+    std::size_t N = 632;
     auto values = simulate_complex(N);
 
     std::stringstream stored;
@@ -296,7 +296,7 @@ TEST(ParserComplex, SimulatedArrayVector) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<std::complex<double> > out_vals;
-    bool success = parser.scan_complex([&](size_t r, size_t c, std::complex<double> v) -> void {
+    bool success = parser.scan_complex([&](eminem::Index r, eminem::Index c, std::complex<double> v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);

@@ -36,7 +36,7 @@ TEST_P(ParserIntegerTest, Success) {
     EXPECT_EQ(parser.get_nlines(), expected.size());
 
     std::vector<int> observed;
-    EXPECT_TRUE(parser.scan_integer([&](size_t, size_t, int val) {
+    EXPECT_TRUE(parser.scan_integer([&](eminem::Index, eminem::Index, int val) {
         observed.push_back(val);
     }));
     EXPECT_EQ(observed, expected);
@@ -60,7 +60,7 @@ static void test_error(const std::string& input, std::string msg) {
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
-            parser.scan_integer([&](size_t, size_t, int){});
+            parser.scan_integer([&](eminem::Index, eminem::Index, int){});
         } catch (std::exception& e) {
             EXPECT_THAT(e.what(), ::testing::HasSubstr(msg));
             throw;
@@ -83,7 +83,7 @@ TEST(ParserInteger, Error) {
         eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         EXPECT_ANY_THROW({
             try {
-                parser.scan_integer([&](size_t, size_t, int){});
+                parser.scan_integer([&](eminem::Index, eminem::Index, int){});
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
                 throw;
@@ -99,7 +99,7 @@ TEST(ParserInteger, OtherType) {
     parser.scan_preamble();
 
     std::vector<uint16_t> observed;
-    EXPECT_TRUE(parser.template scan_integer<uint16_t>([&](size_t, size_t, uint16_t val) {
+    EXPECT_TRUE(parser.template scan_integer<uint16_t>([&](eminem::Index, eminem::Index, uint16_t val) {
         observed.push_back(val);
     }));
     std::vector<uint16_t> expected { 33, 666, 9 };
@@ -113,7 +113,7 @@ TEST(ParserInteger, QuitEarly) {
     parser.scan_preamble();
 
     std::vector<int> observed;
-    EXPECT_FALSE(parser.scan_integer([&](size_t, size_t, int val) -> bool {
+    EXPECT_FALSE(parser.scan_integer([&](eminem::Index, eminem::Index, int val) -> bool {
         observed.push_back(val);
         return val < 100;
     }));
@@ -122,7 +122,7 @@ TEST(ParserInteger, QuitEarly) {
 }
 
 TEST(ParserInteger, CoordinateMatrix) {
-    size_t NR = 82, NC = 32;
+    std::size_t NR = 82, NC = 32;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_integer(coords.first.size(), -999, 999);
 
@@ -139,7 +139,7 @@ TEST(ParserInteger, CoordinateMatrix) {
     EXPECT_EQ(parser.get_nlines(), values.size());
 
     std::vector<int> out_rows, out_cols, out_vals;
-    bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    bool success = parser.scan_integer([&](eminem::Index r, eminem::Index c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -152,7 +152,7 @@ TEST(ParserInteger, CoordinateMatrix) {
 }
 
 TEST(ParserInteger, CoordinateVector) {
-    size_t N = 1392;
+    std::size_t N = 1392;
     auto coords = simulate_coordinate(N, 0.2);
     auto values = simulate_integer(coords.size(), -999, 999);
 
@@ -168,7 +168,7 @@ TEST(ParserInteger, CoordinateVector) {
     EXPECT_EQ(parser.get_nlines(), values.size());
 
     std::vector<int> out_rows, out_cols, out_vals;
-    bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    bool success = parser.scan_integer([&](eminem::Index r, eminem::Index c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
@@ -181,7 +181,7 @@ TEST(ParserInteger, CoordinateVector) {
 }
 
 TEST(ParserInteger, ArrayMatrix) {
-    size_t NR = 53, NC = 42;
+    std::size_t NR = 53, NC = 42;
     auto values = simulate_integer(NR * NC, -999, 999);
 
     std::stringstream stored;
@@ -197,15 +197,15 @@ TEST(ParserInteger, ArrayMatrix) {
     EXPECT_EQ(parser.get_nlines(), NR * NC);
 
     std::vector<int> out_rows, out_cols, out_vals;
-    bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    bool success = parser.scan_integer([&](eminem::Index r, eminem::Index c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);
     });
 
     std::vector<int> expected_rows, expected_cols;
-    for (size_t c = 0; c < NC; ++c) {
-        for (size_t r = 0; r < NR; ++r) {
+    for (std::size_t c = 0; c < NC; ++c) {
+        for (std::size_t r = 0; r < NR; ++r) {
             expected_rows.push_back(r);
             expected_cols.push_back(c);
         }
@@ -218,7 +218,7 @@ TEST(ParserInteger, ArrayMatrix) {
 }
 
 TEST(ParserInteger, ArrayVector) {
-    size_t N = 1442;
+    std::size_t N = 1442;
     auto values = simulate_integer(N, -999, 999);
 
     std::stringstream stored;
@@ -234,7 +234,7 @@ TEST(ParserInteger, ArrayVector) {
     EXPECT_EQ(parser.get_nlines(), N);
 
     std::vector<int> out_rows, out_cols, out_vals;
-    bool success = parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    bool success = parser.scan_integer([&](eminem::Index r, eminem::Index c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);

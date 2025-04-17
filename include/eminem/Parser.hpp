@@ -18,6 +18,12 @@
 
 namespace eminem {
 
+/**
+ * Integer type for the row/column indices and line counts.
+ * We use an `unsigned long long` by default to guarantee at least 64 bits of storage.
+ */
+typedef unsigned long long Index;
+
 /* GENERAL COMMENTS:
  * - This sticks to the specification described at https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz
  * - We will allow both tabs and whitespaces when considering a 'blank' character.
@@ -39,7 +45,7 @@ public:
 
 private:
     std::unique_ptr<Input_> my_input;
-    size_t my_current_line = 0;
+    unsigned long long my_current_line = 0; // avoid problems
     MatrixDetails my_details;
 
     bool chomp() {
@@ -122,13 +128,13 @@ private:
         return ExpectedMatch(false, true, true);
     }
 
-    ExpectedMatch is_expected_string(const char* ptr, size_t len, size_t start) {
+    ExpectedMatch is_expected_string(const char* ptr, std::size_t len, std::size_t start) {
         // It is assumed that the first 'start' characters of 'ptr' where
         // already checked and matched before entering this function, and that
         // 'my_input' is currently positioned at the start-th character, i.e.,
         // 'ptr[start-1]' (and thus requires an advance() call before we can
         // compare against 'ptr[start]').
-        for (size_t i = start; i < len; ++i) {
+        for (std::size_t i = start; i < len; ++i) {
             if (!my_input->advance()) {
                 return ExpectedMatch(false, false, false);
             }
@@ -139,7 +145,7 @@ private:
         return advance_past_expected_string();
     }
 
-    ExpectedMatch is_expected_string(const char* ptr, size_t len) {
+    ExpectedMatch is_expected_string(const char* ptr, std::size_t len) {
         // Using a default start of 1, assuming that we've already compared
         // the first character before entering this function.
         return is_expected_string(ptr, len, 1);
@@ -333,11 +339,11 @@ private:
     // Only calls with 'last_ = true' need to know if there are any remaining bytes after the newline.
     // This is because all non-last calls with no remaining bytes must have thrown.
     struct NotLastSizeInfo {
-        size_t index = 0;
+        Index index = 0;
     };
 
     struct LastSizeInfo {
-        size_t index = 0;
+        Index index = 0;
         bool remaining = false;
     };
 
@@ -422,7 +428,7 @@ private:
 
 private:
     bool my_passed_size = false;
-    size_t my_nrows = 0, my_ncols = 0, my_nlines = 0;
+    Index my_nrows = 0, my_ncols = 0, my_nlines = 0;
 
     void scan_size() {
         if (!(my_input->valid())) {
@@ -484,7 +490,7 @@ public:
      *
      * @return Number of rows.
      */
-    size_t get_nrows() const {
+    Index get_nrows() const {
         if (!my_passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
         }
@@ -498,7 +504,7 @@ public:
      *
      * @return Number of columns.
      */
-    size_t get_ncols() const {
+    Index get_ncols() const {
         if (!my_passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
         }
@@ -512,7 +518,7 @@ public:
      *
      * @return Number of non-zero lines. 
      */
-    size_t get_nlines() const {
+    Index get_nlines() const {
         if (!my_passed_size) {
             throw std::runtime_error("size line has not yet been scanned");
         }
@@ -531,7 +537,7 @@ public:
     }
 
 private:
-    void check_matrix_coordinate_line(size_t current_data_line, size_t currow, size_t curcol) {
+    void check_matrix_coordinate_line(Index current_data_line, Index currow, Index curcol) {
         if (current_data_line >= my_nlines) {
             throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
@@ -560,7 +566,7 @@ private:
             throw std::runtime_error("banner or size lines have not yet been parsed");
         }
 
-        size_t current_data_line = 0;
+        Index current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
@@ -594,7 +600,7 @@ private:
 
     template<class PatternStore_>
     bool scan_matrix_coordinate_pattern(PatternStore_ pstore) {
-        size_t current_data_line = 0;
+        Index current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
@@ -627,7 +633,7 @@ private:
     }
 
 private:
-    void check_vector_coordinate_line(size_t current_data_line, size_t currow) {
+    void check_vector_coordinate_line(Index current_data_line, Index currow) {
         if (current_data_line >= my_nlines) {
             throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
@@ -641,7 +647,7 @@ private:
 
     template<class Store_>
     bool scan_vector_coordinate_non_pattern(Store_ store) {
-        size_t current_data_line = 0;
+        Index current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
@@ -674,7 +680,7 @@ private:
 
     template<class PatternStore_>
     bool scan_vector_coordinate_pattern(PatternStore_ pstore) {
-        size_t current_data_line = 0;
+        Index current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
@@ -708,8 +714,8 @@ private:
 private:
     template<class Store_>
     bool scan_matrix_array(Store_ store) {
-        size_t current_data_line = 0;
-        size_t currow = 1, curcol = 1;
+        Index current_data_line = 0;
+        Index currow = 1, curcol = 1;
         bool valid = my_input->valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
@@ -746,7 +752,7 @@ private:
 
     template<class Store_>
     bool scan_vector_array(Store_ store) {
-        size_t current_data_line = 0;
+        Index current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
@@ -780,7 +786,7 @@ private:
     template<typename Type_>
     Type_ convert_to_real(const std::string& temporary) const {
         Type_ output;
-        size_t n = 0;
+        std::size_t n = 0;
 
         try {
             if constexpr(std::is_same<Type_, float>::value) {
@@ -808,7 +814,7 @@ public:
      * @tparam Type_ Type to represent the integer.
      * @tparam Store_ Function to process each line.
      *
-     * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
+     * @param store Function with the signature `void(Index row, Index column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
@@ -821,7 +827,7 @@ public:
             throw std::runtime_error("banner or size lines have not yet been parsed");
         }
 
-        auto store_int = [&](size_t r, size_t c) -> StoreInfo {
+        auto store_int = [&](Index r, Index c) -> StoreInfo {
             bool negative = (my_input->get() == '-');
             if (negative) {
                 if (!(my_input->advance())) {
@@ -837,7 +843,7 @@ public:
                 if (negative) {
                     val *= -1;
                 }
-                if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, Type_>::type, bool>::value) {
+                if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, Type_>::type, bool>::value) {
                     output.quit_early = !store(r, c, val);
                 } else {
                     store(r, c, val);
@@ -904,7 +910,7 @@ public:
      * @tparam Type_ Type to represent the real value.
      * @tparam Store_ Function to process each line.
      *
-     * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
+     * @param store Function with the signature `void(Index row, Index column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
@@ -918,7 +924,7 @@ public:
         }
 
         std::string temporary;
-        auto store_real = [&](size_t r, size_t c) -> StoreInfo {
+        auto store_real = [&](Index r, Index c) -> StoreInfo {
             StoreInfo output;
             output.remaining = true;
 
@@ -956,7 +962,7 @@ public:
 
             auto converted = convert_to_real<Type_>(temporary);
 
-            if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, Type_>::type, bool>::value) {
+            if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, Type_>::type, bool>::value) {
                 output.quit_early = !store(r, c, converted);
             } else {
                 store(r, c, converted);
@@ -986,7 +992,7 @@ public:
      * @tparam Type_ Type to represent the double-precision value.
      * @tparam Store_ Function to process each line.
      *
-     * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
+     * @param store Function with the signature `void(Index row, Index column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
@@ -1004,7 +1010,7 @@ public:
      * @tparam Type_ Type to represent the real and imaginary parts of the complex value.
      * @tparam Store_ Function to process each line.
      *
-     * @param store Function with the signature `void(size_t row, size_t column, std::complex<Type_> value)`,
+     * @param store Function with the signature `void(Index row, Index column, std::complex<Type_> value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
@@ -1018,7 +1024,7 @@ public:
         }
 
         std::string temporary;
-        auto store_comp = [&](size_t r, size_t c) -> StoreInfo {
+        auto store_comp = [&](Index r, Index c) -> StoreInfo {
             StoreInfo output;
             output.remaining = true;
             std::complex<Type_> holding;
@@ -1090,7 +1096,7 @@ public:
             }
             holding.imag(convert_to_real<Type_>(temporary));
 
-            if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, decltype(holding)>::type, bool>::value) {
+            if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, decltype(holding)>::type, bool>::value) {
                 output.quit_early = !store(r, c, holding);
             } else {
                 store(r, c, holding);
@@ -1120,7 +1126,7 @@ public:
      * @tparam Type_ Type to represent the presence of a non-zero entry.
      * @tparam Store_ Function to process each line.
      *
-     * @param store Function with the signature `void(size_t row, size_t column, Type_ value)`,
+     * @param store Function with the signature `void(Index row, Index column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      * `value` will always be `true` and can be ignored; it is only required here for consistency with the other methods.
@@ -1137,8 +1143,8 @@ public:
             throw std::runtime_error("'array' format for 'pattern' field is not supported");
         }
 
-        auto store_pat = [&](size_t r, size_t c) -> bool {
-            if constexpr(std::is_same<typename std::invoke_result<Store_, size_t, size_t, bool>::type, bool>::value) {
+        auto store_pat = [&](Index r, Index c) -> bool {
+            if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, bool>::type, bool>::value) {
                 return !store(r, c, true);
             } else {
                 store(r, c, true);

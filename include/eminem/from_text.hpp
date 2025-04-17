@@ -1,11 +1,13 @@
 #ifndef EMINEM_FROM_TEXT_HPP
 #define EMINEM_FROM_TEXT_HPP
 
+#include <memory>
+#include <cstddef>
+
 #include "Parser.hpp"
 #include "byteme/PerByte.hpp"
 #include "byteme/RawFileReader.hpp"
 #include "byteme/RawBufferReader.hpp"
-#include <memory>
 
 /**
  * @file from_text.hpp
@@ -21,7 +23,7 @@ struct ParseTextFileOptions {
     /**
      * Buffer size to use for reading and decompression.
      */
-    size_t buffer_size = 65536;
+    std::size_t buffer_size = 65536;
 
     /**
      * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
@@ -65,7 +67,7 @@ struct ParseTextBufferOptions {
  * @param len Length of the array referenced by `buffer`.
  * @param options Further options.
  */
-inline Parser<byteme::PerByteInterface<char> > parse_text_buffer(const unsigned char* buffer, size_t len, const ParseTextBufferOptions& options) {
+inline Parser<byteme::PerByteInterface<char> > parse_text_buffer(const unsigned char* buffer, std::size_t len, const ParseTextBufferOptions& options) {
     return Parser<byteme::PerByteInterface<char> >(
         [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
             auto reader = std::make_unique<byteme::RawBufferReader>(buffer, len);

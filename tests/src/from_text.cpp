@@ -14,7 +14,7 @@
 #include <random>
 
 TEST(FromText, File) {
-    size_t NR = 192, NC = 132;
+    std::size_t NR = 192, NC = 132;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_integer(coords.first.size(), -999, 999);
 
@@ -35,7 +35,7 @@ TEST(FromText, File) {
         EXPECT_EQ(parser.get_nlines(), values.size());
 
         std::vector<int> out_rows, out_cols, out_vals;
-        parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+        parser.scan_integer([&](eminem::Index r, eminem::Index c, int v) -> void {
             out_rows.push_back(r - 1);
             out_cols.push_back(c - 1);
             out_vals.push_back(v);
@@ -56,7 +56,7 @@ TEST(FromText, File) {
         EXPECT_EQ(parser.get_nlines(), values.size());
 
         std::vector<int> out_rows, out_cols, out_vals;
-        parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+        parser.scan_integer([&](eminem::Index r, eminem::Index c, int v) -> void {
             out_rows.push_back(r - 1);
             out_cols.push_back(c - 1);
             out_vals.push_back(v);
@@ -69,7 +69,7 @@ TEST(FromText, File) {
 }
 
 TEST(FromText, Buffer) {
-    size_t NR = 112, NC = 152;
+    std::size_t NR = 112, NC = 152;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_integer(coords.first.size(), -999, 999);
 
@@ -87,7 +87,7 @@ TEST(FromText, Buffer) {
     EXPECT_EQ(parser.get_nlines(), values.size());
 
     std::vector<int> out_rows, out_cols, out_vals;
-    parser.scan_integer([&](size_t r, size_t c, int v) -> void {
+    parser.scan_integer([&](eminem::Index r, eminem::Index c, int v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);

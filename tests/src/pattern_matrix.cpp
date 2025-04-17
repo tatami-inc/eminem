@@ -36,7 +36,7 @@ TEST_P(ParserPatternMatrixTest, Success) {
     EXPECT_EQ(parser.get_nlines(), expected_r.size());
 
     std::vector<int> observed_r, observed_c;
-    EXPECT_TRUE(parser.scan_pattern([&](size_t r, size_t c, bool val) -> void {
+    EXPECT_TRUE(parser.scan_pattern([&](eminem::Index r, eminem::Index c, bool val) -> void {
         observed_r.push_back(r);
         observed_c.push_back(c);
         EXPECT_TRUE(val);
@@ -100,7 +100,7 @@ static void test_error(const std::string& input, std::string msg) {
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
-            parser.scan_pattern([&](size_t, size_t, int){});
+            parser.scan_pattern([&](eminem::Index, eminem::Index, int){});
         } catch (std::exception& e) {
             EXPECT_THAT(e.what(), ::testing::HasSubstr(msg));
             throw;
@@ -130,7 +130,7 @@ TEST(ParserPatternMatrix, Errors) {
         eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
         EXPECT_ANY_THROW({
             try {
-                parser.scan_pattern([&](size_t, size_t, int) -> void {});
+                parser.scan_pattern([&](eminem::Index, eminem::Index, int) -> void {});
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
                 throw;
@@ -145,7 +145,7 @@ TEST(ParserPatternMatrix, Errors) {
         parser.scan_preamble();
         EXPECT_ANY_THROW({
             try {
-                parser.scan_pattern([&](size_t, size_t, bool) -> void {});
+                parser.scan_pattern([&](eminem::Index, eminem::Index, bool) -> void {});
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("not supported"));
                 throw;
@@ -163,7 +163,7 @@ TEST(ParserPatternMatrix, QuitEarly) {
         parser.scan_preamble();
 
         std::vector<int> observed_r, observed_c;
-        EXPECT_FALSE(parser.scan_pattern([&](size_t r, size_t c, bool) -> bool {
+        EXPECT_FALSE(parser.scan_pattern([&](eminem::Index r, eminem::Index c, bool) -> bool {
             observed_r.push_back(r);
             observed_c.push_back(c);
             return false;
@@ -179,7 +179,7 @@ TEST(ParserPatternMatrix, QuitEarly) {
         parser.scan_preamble();
 
         std::vector<int> observed_r, observed_c;
-        EXPECT_TRUE(parser.scan_pattern([&](size_t r, size_t c, bool) -> bool {
+        EXPECT_TRUE(parser.scan_pattern([&](eminem::Index r, eminem::Index c, bool) -> bool {
             observed_r.push_back(r);
             observed_c.push_back(c);
             return true;
@@ -208,14 +208,14 @@ TEST(ParserPatternMatrix, Empty) {
     EXPECT_EQ(parser.get_nlines(), 0);
 
     std::vector<char> observed;
-    EXPECT_TRUE(parser.scan_pattern([&](size_t, size_t, bool val) -> void {
+    EXPECT_TRUE(parser.scan_pattern([&](eminem::Index, eminem::Index, bool val) -> void {
         observed.push_back(val);
     }));
     EXPECT_TRUE(observed.empty());
 }
 
 TEST(ParserPatternMatrix, Simulated) {
-    size_t NR = 163, NC = 218;
+    std::size_t NR = 163, NC = 218;
     auto coords = simulate_coordinate(NR, NC, 0.1);
 
     std::stringstream stored;
@@ -232,7 +232,7 @@ TEST(ParserPatternMatrix, Simulated) {
 
     std::vector<int> out_rows, out_cols;
     std::vector<char> out_vals;
-    bool success = parser.scan_pattern([&](size_t r, size_t c, bool v) -> void {
+    bool success = parser.scan_pattern([&](eminem::Index r, eminem::Index c, bool v) -> void {
         out_rows.push_back(r - 1);
         out_cols.push_back(c - 1);
         out_vals.push_back(v);

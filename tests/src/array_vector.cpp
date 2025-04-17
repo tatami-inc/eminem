@@ -33,7 +33,7 @@ TEST_P(ParserArrayVectorTest, Success) {
     EXPECT_EQ(parser.get_nlines(), expected_v.size());
 
     std::vector<int> observed_r, observed_v;
-    EXPECT_TRUE(parser.scan_integer([&](size_t r, size_t c, int val) {
+    EXPECT_TRUE(parser.scan_integer([&](eminem::Index r, eminem::Index c, int val) {
         observed_r.push_back(r);
         EXPECT_EQ(c, 1);
         observed_v.push_back(val);
@@ -90,7 +90,7 @@ static void test_error(const std::string& input, std::string msg) {
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
-            parser.scan_integer([&](size_t, size_t, int){});
+            parser.scan_integer([&](eminem::Index, eminem::Index, int){});
         } catch (std::exception& e) {
             EXPECT_THAT(e.what(), ::testing::HasSubstr(msg));
             throw;
@@ -123,7 +123,7 @@ TEST(ParserArrayVector, Types) {
 
         std::vector<int> observed_r;
         std::vector<double> observed_v;
-        EXPECT_TRUE(parser.scan_real([&](size_t r, size_t c, double val) {
+        EXPECT_TRUE(parser.scan_real([&](eminem::Index r, eminem::Index c, double val) {
             observed_r.push_back(r);
             EXPECT_EQ(c, 1);
             observed_v.push_back(val);
@@ -133,7 +133,7 @@ TEST(ParserArrayVector, Types) {
         EXPECT_EQ(observed_r, expected_r);
         std::vector<double> expected_v { 1, 1.2e-4, 5.1, -12.34, 2.2, std::numeric_limits<double>::infinity() };
         ASSERT_EQ(observed_v.size(), expected_v.size());
-        for (size_t i = 0; i < observed_v.size(); ++i) {
+        for (decltype(observed_v.size()) i = 0, end = observed_v.size(); i < end; ++i) {
             EXPECT_DOUBLE_EQ(observed_v[i], expected_v[i]);
         }
     }
@@ -156,7 +156,7 @@ TEST(ParserArrayVector, Types) {
 
         std::vector<int> observed_r;
         std::vector<std::complex<double> > observed_v;
-        EXPECT_TRUE(parser.scan_complex([&](size_t r, size_t c, std::complex<double> val) {
+        EXPECT_TRUE(parser.scan_complex([&](eminem::Index r, eminem::Index c, std::complex<double> val) {
             observed_r.push_back(r);
             EXPECT_EQ(c, 1);
             observed_v.push_back(val);
@@ -166,7 +166,7 @@ TEST(ParserArrayVector, Types) {
         EXPECT_EQ(observed_r, expected_r);
         std::vector<std::complex<double> > expected_v { { 1, 5 }, { 78, 1.2e-4 }, { 5, 1 }, { 12.34, -9.9 }, { 2, 2 }, { std::numeric_limits<double>::infinity(), 10 } };
         ASSERT_EQ(observed_v.size(), expected_v.size());
-        for (size_t i = 0; i < observed_v.size(); ++i) {
+        for (decltype(observed_v.size()) i = 0, end = observed_v.size(); i < end; ++i) {
             EXPECT_DOUBLE_EQ(observed_v[i].real(), expected_v[i].real());
             EXPECT_DOUBLE_EQ(observed_v[i].imag(), expected_v[i].imag());
         }
@@ -182,7 +182,7 @@ TEST(ParserArrayVector, QuitEarly) {
         parser.scan_preamble();
 
         std::vector<int> observed;
-        EXPECT_FALSE(parser.scan_integer([&](size_t, size_t, int val) -> bool {
+        EXPECT_FALSE(parser.scan_integer([&](eminem::Index, eminem::Index, int val) -> bool {
             observed.push_back(val);
             return false;
         }));
@@ -196,7 +196,7 @@ TEST(ParserArrayVector, QuitEarly) {
         parser.scan_preamble();
 
         std::vector<int> observed;
-        EXPECT_TRUE(parser.scan_integer([&](size_t, size_t, int val) -> bool {
+        EXPECT_TRUE(parser.scan_integer([&](eminem::Index, eminem::Index, int val) -> bool {
             observed.push_back(val);
             return true;
         }));
@@ -223,7 +223,7 @@ TEST(ParserArrayVector, Empty) {
     EXPECT_EQ(parser.get_nlines(), 0);
 
     std::vector<int> observed;
-    EXPECT_TRUE(parser.scan_integer([&](size_t, size_t, int val) {
+    EXPECT_TRUE(parser.scan_integer([&](eminem::Index, eminem::Index, int val) {
         observed.push_back(val);
     }));
     EXPECT_TRUE(observed.empty());
