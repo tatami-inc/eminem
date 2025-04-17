@@ -74,10 +74,10 @@
     <name>eminem::ParseGzipFileOptions</name>
     <filename>structeminem_1_1ParseGzipFileOptions.html</filename>
     <member kind="variable">
-      <type>size_t</type>
+      <type>std::size_t</type>
       <name>buffer_size</name>
       <anchorfile>structeminem_1_1ParseGzipFileOptions.html</anchorfile>
-      <anchor>ad3ac0ca625077d560fd369b51381ac63</anchor>
+      <anchor>ab19247ab480aefa44c72df865f69f75b</anchor>
       <arglist></arglist>
     </member>
     <member kind="variable">
@@ -107,24 +107,24 @@
       <arglist>() const</arglist>
     </member>
     <member kind="function">
-      <type>size_t</type>
+      <type>Index</type>
       <name>get_nrows</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a2fb5d944ad6f7fbdbe26d36a1b0591f0</anchor>
+      <anchor>aab9cec4211cc545e2c8550267fa648f1</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
-      <type>size_t</type>
+      <type>Index</type>
       <name>get_ncols</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>abfdd99ce184cd206937891cea07344d0</anchor>
+      <anchor>a1d5fe77163613f3538e0466fdf38f8a2</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
-      <type>size_t</type>
+      <type>Index</type>
       <name>get_nlines</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>aa806e61d8947cd672d5ceadab654e429</anchor>
+      <anchor>aac1969c401b04521698edd6b75d03c5a</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
@@ -174,10 +174,10 @@
     <name>eminem::ParseSomeBufferOptions</name>
     <filename>structeminem_1_1ParseSomeBufferOptions.html</filename>
     <member kind="variable">
-      <type>size_t</type>
+      <type>std::size_t</type>
       <name>buffer_size</name>
       <anchorfile>structeminem_1_1ParseSomeBufferOptions.html</anchorfile>
-      <anchor>ae12073ca76cdaffcb6ab6565a9f0e414</anchor>
+      <anchor>a75882536a96f5c821b1861adb4cc5d5a</anchor>
       <arglist></arglist>
     </member>
     <member kind="variable">
@@ -192,10 +192,10 @@
     <name>eminem::ParseSomeFileOptions</name>
     <filename>structeminem_1_1ParseSomeFileOptions.html</filename>
     <member kind="variable">
-      <type>size_t</type>
+      <type>std::size_t</type>
       <name>buffer_size</name>
       <anchorfile>structeminem_1_1ParseSomeFileOptions.html</anchorfile>
-      <anchor>a0c622c52958811eb13ca00f50f70ce1c</anchor>
+      <anchor>aacb59a4c82085bf81406660a18deba31</anchor>
       <arglist></arglist>
     </member>
     <member kind="variable">
@@ -221,10 +221,10 @@
     <name>eminem::ParseTextFileOptions</name>
     <filename>structeminem_1_1ParseTextFileOptions.html</filename>
     <member kind="variable">
-      <type>size_t</type>
+      <type>std::size_t</type>
       <name>buffer_size</name>
       <anchorfile>structeminem_1_1ParseTextFileOptions.html</anchorfile>
-      <anchor>a4bc5a71dc719aabc630498d26f2d0e01</anchor>
+      <anchor>af5501621fa557e59b430f46f59186eb0</anchor>
       <arglist></arglist>
     </member>
     <member kind="variable">
@@ -239,10 +239,10 @@
     <name>eminem::ParseZlibBufferOptions</name>
     <filename>structeminem_1_1ParseZlibBufferOptions.html</filename>
     <member kind="variable">
-      <type>size_t</type>
+      <type>std::size_t</type>
       <name>buffer_size</name>
       <anchorfile>structeminem_1_1ParseZlibBufferOptions.html</anchorfile>
-      <anchor>aa9c55b7b37ccd166dc5dded267c905a4</anchor>
+      <anchor>a1e5d98e401e06702b79a140aab928bbf</anchor>
       <arglist></arglist>
     </member>
     <member kind="variable">
@@ -271,6 +271,13 @@
     <class kind="struct">eminem::ParseTextBufferOptions</class>
     <class kind="struct">eminem::ParseTextFileOptions</class>
     <class kind="struct">eminem::ParseZlibBufferOptions</class>
+    <member kind="typedef">
+      <type>unsigned long long</type>
+      <name>Index</name>
+      <anchorfile>namespaceeminem.html</anchorfile>
+      <anchor>a1b89d92edc9a5418b920487f16b2d11b</anchor>
+      <arglist></arglist>
+    </member>
     <member kind="enumeration">
       <type></type>
       <name>Object</name>
@@ -323,8 +330,8 @@
       <type>Parser&lt; byteme::PerByteInterface&lt; char &gt; &gt;</type>
       <name>parse_zlib_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>a9927282e95d65a42bab0dd5fe8e8a3d0</anchor>
-      <arglist>(const unsigned char *buffer, size_t len, const ParseZlibBufferOptions &amp;options)</arglist>
+      <anchor>a67592287d45d69690fb1f92dc33fbe00</anchor>
+      <arglist>(const unsigned char *buffer, std::size_t len, const ParseZlibBufferOptions &amp;options)</arglist>
     </member>
     <member kind="function">
       <type>Parser&lt; byteme::PerByteInterface&lt; char &gt; &gt;</type>
@@ -337,8 +344,8 @@
       <type>Parser&lt; byteme::PerByteInterface&lt; char &gt; &gt;</type>
       <name>parse_some_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>ac2c7c271fc3be1acfc1b21c3454fb938</anchor>
-      <arglist>(const unsigned char *buffer, size_t len, const ParseSomeBufferOptions &amp;options)</arglist>
+      <anchor>a8f2c47f36720d41fa54eb450135e577b</anchor>
+      <arglist>(const unsigned char *buffer, std::size_t len, const ParseSomeBufferOptions &amp;options)</arglist>
     </member>
     <member kind="function">
       <type>Parser&lt; byteme::PerByteInterface&lt; char &gt; &gt;</type>
@@ -351,8 +358,8 @@
       <type>Parser&lt; byteme::PerByteInterface&lt; char &gt; &gt;</type>
       <name>parse_text_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>acd3767fac96098ca75c8f290714aec46</anchor>
-      <arglist>(const unsigned char *buffer, size_t len, const ParseTextBufferOptions &amp;options)</arglist>
+      <anchor>af22bebcce31f5162d7fbaf1e4545e86b</anchor>
+      <arglist>(const unsigned char *buffer, std::size_t len, const ParseTextBufferOptions &amp;options)</arglist>
     </member>
   </compound>
   <compound kind="page">
