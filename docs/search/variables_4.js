@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['mode_0',['mode',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1ZlibBufferReaderOptions.html#a4b41fdc7bbf4749d4dd3c70c783dc32b',1,'byteme::ZlibBufferReaderOptions::mode'],['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1ZlibBufferWriterOptions.html#a58534c4abd7686ce1c7ae7a0c32c140c',1,'byteme::ZlibBufferWriterOptions::mode'],['../structeminem_1_1ParseZlibBufferOptions.html#a5df289411df6f70d84ef3a9e47e2e2bc',1,'eminem::ParseZlibBufferOptions::mode']]]
+  ['gzbuffer_5fsize_0',['gzbuffer_size',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileReaderOptions.html#a2b0db9ad5b08145bb99cab97d94bc716',1,'byteme::GzipFileReaderOptions::gzbuffer_size'],['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileWriterOptions.html#ad3ae50598f977a1063e4cd9b438d2dcc',1,'byteme::GzipFileWriterOptions::gzbuffer_size']]]
 ];
