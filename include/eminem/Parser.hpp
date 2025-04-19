@@ -45,7 +45,7 @@ public:
 
 private:
     std::unique_ptr<Input_> my_input;
-    unsigned long long my_current_line = 0; // avoid problems
+    Index my_current_line = 0;
     MatrixDetails my_details;
 
     bool chomp() {
