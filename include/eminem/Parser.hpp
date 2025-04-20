@@ -7,6 +7,9 @@
 #include <complex>
 #include <type_traits>
 #include <memory>
+#include <thread>
+#include <mutex>
+#include <condition_variable>
 
 #include "utils.hpp"
 
@@ -23,6 +26,158 @@ namespace eminem {
  * We use an `unsigned long long` by default to guarantee at least 64 bits of storage.
  */
 typedef unsigned long long Index;
+
+/**
+ * @cond
+ */
+template<typename Workspace_>
+class ThreadPool {
+public:
+    template<typename RunJob_>
+    ThreadPool(RunJob_ run_job, int num_threads) : my_helpers(num_threads) {
+        my_threads.reserve(num_threads);
+        for (int t = 0; t < num_threads; ++t) {
+            // Copy lambda as it will be gone once this constructor finishes.
+            my_threads.emplace_back([run_job,this](int thread) -> void { 
+                auto& env = my_helpers[thread];
+                while (1) {
+                    std::unique_lock lck(env.mut);
+                    env.cv.wait(lck, [&]() -> bool { return env.input_ready; });
+                    if (env.terminated) {
+                        return;
+                    }
+                    env.input_ready = false;
+
+                    try {
+                        run_job(env.work);
+                    } catch (...) {
+                        std::lock_guard elck(my_error_mut);
+                        if (!my_error) {
+                            my_error = std::current_exception();
+                        }
+                    }
+
+                    env.has_output = true;
+                    env.available = true;
+                    env.cv.notify_one();
+                }
+            }, t);
+        }
+    }
+
+    ~ThreadPool() {
+        for (auto& env : my_helpers) {
+            {
+                std::lock_guard lck(env.mut);
+                env.terminated = true;
+                env.input_ready = true;
+            }
+            env.cv.notify_one();
+        }
+        for (auto& thread : my_threads) {
+            thread.join();
+        }
+    }
+
+private:
+    std::vector<std::thread> my_threads;
+
+    struct Helper {
+        std::mutex mut;
+        std::condition_variable cv;
+        bool input_ready = false;
+        bool available = true;
+        bool has_output = false;
+        bool terminated = false;
+        Workspace_ work;
+    };
+    std::vector<Helper> my_helpers;
+
+    std::mutex my_error_mut;
+    std::exception_ptr my_error;
+
+public:
+    template<typename CreateJob_, typename MergeJob_>
+    void run(CreateJob_ create_job, MergeJob_ merge_job) {
+        auto num_threads = my_threads.size();
+        bool finished = false;
+        decltype(num_threads) thread = 0, finished_count = 0;
+
+        // We submit jobs by cycling through all threads, then we merge their results in order of submission.
+        // This is a less efficient worksharing scheme but it guarantees the same order of merges.
+        while (1) {
+            auto& env = my_helpers[thread];
+            std::unique_lock lck(env.mut);
+            env.cv.wait(lck, [&]() -> bool { return env.available; });
+
+            {
+                std::lock_guard elck(my_error_mut);
+                if (my_error) {
+                    std::rethrow_exception(my_error);
+                }
+            }
+            env.available = false;
+
+            if (env.has_output) {
+                // If the user requests an early quit from the merge job,
+                // there's no point processing the later merge jobs from 
+                // other threads, so we just break out at this point.
+                if (!merge_job(env.work)) {
+                    break;
+                }
+                env.has_output = false;
+            }
+
+            if (finished) {
+                // Go through all threads one last time, making sure all results are merged.
+                ++finished_count;
+                if (finished_count == num_threads) {
+                    break;
+                }
+            } else {
+                finished = !create_job(env.work);
+                env.input_ready = true;
+                lck.unlock();
+                env.cv.notify_one();
+            }
+
+            ++thread;
+            if (thread == num_threads) {
+                thread = 0;
+            }
+        }
+    }
+};
+
+template<class Input_>
+bool fill_to_next_newline(Input2_& input, std::vector<char>& buffer, std::size_t block_size) {
+    buffer.resize(block_size);
+    auto done = input.extract(block_size, reinterpret_cast<const unsigned char*>(buffer.data()));
+    buffer.resize(done.first);
+    if (!done.second || buffer.empty()) {
+        return false;
+    }
+    char last = buffer.back();
+    while (last != '\n') {
+        last = input.get();
+        buffer.push_back(last);
+        if (!input.advance()) {
+            return false;
+        }
+    }
+    return true;
+}
+
+inline std::size_t count_newlines(const std::vector<char>& buffer) {
+    std::size_t n = 0;
+    for (auto x : buffer) {
+        n += (x == '\n');
+    }
+    return x;
+}
+/**
+ * @endcond
+ */
 
 /* GENERAL COMMENTS:
  * - This sticks to the specification described at https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz
@@ -48,46 +203,49 @@ private:
     Index my_current_line = 0;
     MatrixDetails my_details;
 
-    bool chomp() {
+    template<typename Input2_>
+    static bool chomp(Input2_& input) {
         while (1) {
-            char x = my_input->get();
+            char x = input.get();
             if (x != ' ' && x != '\t') {
                 return true;
             }
-            if (!(my_input->advance())) {
+            if (!(input.advance())) {
                 break;
             }
         }
         return false;
     }
 
-    bool advance_and_chomp() {
+    template<typename Input2_>
+    static bool advance_and_chomp(Input2_& input) {
         // When the input is currently on a whitespace, we advance first so we
         // avoid a redundant iteration where the comparison is always true.
-        if (!(my_input->advance())) {
+        if (!(input.advance())) {
             return false;
         }
-        return chomp();
+        return chomp(input);
     }
 
-    // Skip comments and empty lines.
-    bool skip_lines() {
+    template<typename Input2_>
+    static bool skip_lines(Input2_& input, Index& current_line) {
+        // Skip comments and empty lines.
         while (1) {
-            char x = my_input->get();
+            char x = input.get();
             if (x == '%') {
                 do {
-                    if (!(my_input->advance())) {
+                    if (!(input.advance())) {
                         return false;
                     }
-                } while (my_input->get() != '\n');
+                } while (input.get() != '\n');
             } else if (x != '\n') {
                 break;
             }
 
-            if (!my_input->advance()) { // move past the newline.
+            if (!input.advance()) { // move past the newline.
                 return false;
             }
-            ++my_current_line;
+            ++current_line;
         }
         return true;
     }
@@ -110,7 +268,7 @@ private:
 
         char next = my_input->get();
         if (next == ' ' || next == '\t') {
-            if (!advance_and_chomp()) { // gobble up all of the remaining horizontal space.
+            if (!advance_and_chomp(*my_input)) { // gobble up all of the remaining horizontal space.
                 return ExpectedMatch(true, false, false);
             }
             if (my_input->get() == '\n') {
@@ -350,8 +508,8 @@ private:
     template<bool last_>
     using SizeInfo = typename std::conditional<last_, LastSizeInfo, NotLastSizeInfo>::type;
 
-    template<bool last_>
-    SizeInfo<last_> scan_integer_field(bool size) {
+    template<bool last_, class Input2_>
+    SizeInfo<last_> scan_integer_field(bool size, Input2_& input) {
         SizeInfo<last_> output;
         bool found = false;
 
@@ -364,7 +522,7 @@ private:
         };
 
         while (1) {
-            char x = my_input->get();
+            char x = input.get();
             switch(x) {
                 case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
                     found = true;
@@ -381,12 +539,12 @@ private:
                         throw std::runtime_error("empty " + what() + " field on line " + std::to_string(my_current_line + 1));
                     }
                     if constexpr(last_) {
-                        output.remaining = my_input->advance(); // advance past the newline.
+                        output.remaining = input.advance(); // advance past the newline.
                         return output;
                     }
                     throw std::runtime_error("unexpected newline when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
                 case ' ': case '\t':
-                    if (!advance_and_chomp()) { // skipping the current and subsequent blanks.
+                    if (!advance_and_chomp(input)) { // skipping the current and subsequent blanks.
                         if constexpr(last_) {
                             return output;
                         } else {
@@ -394,17 +552,17 @@ private:
                         }
                     }
                     if constexpr(last_) {
-                        if (my_input->get() != '\n') {
+                        if (input.get() != '\n') {
                             throw std::runtime_error("expected newline after the last " + what() + " field on line " + std::to_string(my_current_line + 1));
                         }
-                        output.remaining = my_input->advance(); // advance past the newline.
+                        output.remaining = input.advance(); // advance past the newline.
                     }
                     return output;
                 default:
                     throw std::runtime_error("unexpected character when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
             }
 
-            if (!(my_input->advance())) { // moving past the current digit.
+            if (!(input.advance())) { // moving past the current digit.
                 if constexpr(last_) {
                     break;
                 } else {
@@ -416,14 +574,14 @@ private:
         return output;
     }
 
-    template<bool last_>
-    SizeInfo<last_> scan_size_field() {
-        return scan_integer_field<last_>(true);
+    template<bool last_, class Input2_>
+    SizeInfo<last_> scan_size_field(Input2_& input) {
+        return scan_integer_field<last_>(true, input);
     }
 
-    template<bool last_>
-    SizeInfo<last_> scan_index_field() {
-        return scan_integer_field<last_>(false);
+    template<bool last_, class Input2_>
+    SizeInfo<last_> scan_index_field(Input2_& input) {
+        return scan_integer_field<last_>(false, input);
     }
 
 private:
@@ -436,43 +594,43 @@ private:
         }
 
         // Handling stray comments, empty lines, and leading whitespace.
-        if (!skip_lines()) {
+        if (!skip_lines(*my_input)) {
             throw std::runtime_error("failed to find size line before end of file");
         }
-        if (!chomp()) {
+        if (!chomp(*my_input)) {
             throw std::runtime_error("expected at least one size field on line " + std::to_string(my_current_line + 1));
         }
 
         if (my_details.object == Object::MATRIX) {
             if (my_details.format == Format::COORDINATE) {
-                auto first_field = scan_size_field<false>();
+                auto first_field = scan_size_field<false>(*my_input);
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<false>();
+                auto second_field = scan_size_field<false>(*my_input);
                 my_ncols = second_field.index;
 
-                auto third_field = scan_size_field<true>();
+                auto third_field = scan_size_field<true>(*my_input);
                 my_nlines = third_field.index;
 
             } else { // i.e., my_details.format == Format::ARRAY
-                auto first_field = scan_size_field<false>();
+                auto first_field = scan_size_field<false>(*my_input);
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<true>();
+                auto second_field = scan_size_field<true>(*my_input);
                 my_ncols = second_field.index;
                 my_nlines = my_nrows * my_ncols;
             }
 
         } else {
             if (my_details.format == Format::COORDINATE) {
-                auto first_field = scan_size_field<false>();
+                auto first_field = scan_size_field<false>(*my_input);
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<true>();
+                auto second_field = scan_size_field<true>(*my_input);
                 my_nlines = second_field.index;
 
             } else { // i.e., my_details.format == Format::ARRAY
-                auto first_field = scan_size_field<true>();
+                auto first_field = scan_size_field<true>(*my_input);
                 my_nlines = first_field.index;
                 my_nrows = my_nlines;
             }
@@ -537,7 +695,23 @@ public:
     }
 
 private:
-    void check_matrix_coordinate_line(Index current_data_line, Index currow, Index curcol) {
+    typename<typename Type_>
+    struct ProcessInfo {
+        Type_ value;
+        bool remaining = false;
+    };
+
+    typename<typename Workspace_>
+    bool configure_parallel_workspace(Workspace_& work) {
+        bool available = fill_to_next_newline(*my_input, work.buffer);
+        work.contents.clear();
+        work.overall_line = my_current_line;
+        my_current_line += count_newlines(work.buffer);
+        return available;
+    }
+
+private:
+    void check_matrix_coordinate_line(Index currow, Index curcol) const {
         if (current_data_line >= my_nlines) {
             throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
@@ -555,51 +729,107 @@ private:
         }
     }
 
-    struct StoreInfo {
-        bool quit_early = false;
-        bool remaining = false;
-    };
+    template<typename Type_, class Parse_, class WrappedStore_>
+    bool scan_matrix_coordinate_non_pattern_base(Parse_ parse, WrappedStore_ wstore, Input2_& input, Index& overall_line_count) const {
+        Index current_data_line = 0;
+        bool valid = input.valid();
+        while (valid) {
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines(input)) {
+                break;
+            }
+            if (!chomp(input)) {
+                throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
+            }
 
-    template<class Store_>
-    bool scan_matrix_coordinate_non_pattern(Store_ store) {
+            auto first_field = scan_index_field<false>(input);
+            auto second_field = scan_index_field<false>(input);
+
+            // 'parse' should leave 'input' at the start of the next line, if any exists.
+            ProcessInfo<Type_> res = parse(input);
+            bool keep_going = wstore(first_field.index, second_field.index, res.value);
+            if (!keep_going) {
+                return false;
+            }
+            ++overall_line_count;
+            valid = res.remaining;
+        }
+
+        return true;
+    }
+
+    template<typename Type_, class Parse_, class Store_>
+    bool scan_matrix_coordinate_non_pattern(Parse_ parse, Store_ store) {
         if (!my_passed_banner || !my_passed_size) {
             throw std::runtime_error("banner or size lines have not yet been parsed");
         }
 
+        bool finished = false;
         Index current_data_line = 0;
-        bool valid = my_input->valid();
-        while (valid) {
-            // Handling stray comments, empty lines, and leading spaces.
-            if (!skip_lines()) {
-                break;
-            }
-            if (!chomp()) {
-                throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
-            }
+        if (my_nthreads == 1) {
+            finished = scan_matrix_coordinate_non_pattern_base(
+                std::move(parse),
+                [&](Index r, Index c, Type_ value) -> bool {
+                    check_matrix_coordinate_line(current_data_line, r, c);
+                    ++current_data_line;
+                    return store(r, c, value);
+                },
+                *my_input,
+                my_current_line
+            );
 
-            auto first_field = scan_index_field<false>();
-            auto second_field = scan_index_field<false>();
-            check_matrix_coordinate_line(current_data_line, first_field.index, second_field.index);
+        } else {
+            struct Workspace {
+                std::vector<char> buffer;
+                std::vector<std::tuple<Index, Index, Type_> > contents;
+                Index overall_line;
+            };
 
-            // 'store' should leave 'my_input' at the start of the next line, if any exists.
-            auto res = store(first_field.index, second_field.index);
-            if (res.quit_early) {
-                return false;
-            }
-            ++current_data_line;
-            ++my_current_line;
-            valid = res.remaining;
+            ThreadPool<Workspace> tp(
+                [&](Workspace& work) -> bool {
+                    RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.size());
+                    PerByteSerial<char> pb(&reader);
+                    return scan_matrix_coordinate_non_pattern_base(
+                        parse,
+                        [&](Index r, Index c, Type_ value) -> bool {
+                            contents.emplace_back(r, c, value);
+                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
+                        },
+                        pb,
+                        work.overall_line
+                    );
+                },
+                my_nthreads
+            );
+
+            finished = tp.run(
+                [&](Workspace& work) -> bool {
+                    return configure_parallel_workspace(work);
+                },
+                [&](Workspace& work) -> bool {
+                    for (const auto& con : work.contents) {
+                        auto r = std::get<0>(con);
+                        auto c = std::get<1>(con);
+                        check_matrix_coordinate_line(current_data_line, r, c);
+                        if (!store(r, c, std::get<2>(con))) {
+                            return false;
+                        }
+                        ++current_data_line;
+                    }
+                    return true;
+                }
+            );
         }
 
         if (current_data_line != my_nlines) {
             // Must be fewer, otherwise we would have triggered the error in check_*.
             throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
-        return true;
+        return finished;
     }
 
-    template<class PatternStore_>
-    bool scan_matrix_coordinate_pattern(PatternStore_ pstore) {
+    template<class WrappedStore_>
+    bool scan_matrix_coordinate_pattern_base(WrappedStore_ wstore) {
         Index current_data_line = 0;
         bool valid = my_input->valid();
         while (valid) {
@@ -613,11 +843,10 @@ private:
 
             auto first_field = scan_index_field<false>();
             auto second_field = scan_index_field<true>();
-            check_matrix_coordinate_line(current_data_line, first_field.index, second_field.index);
 
-            // 'pstore' returns boolean indicating whether to quit early;
+            // 'wstore' returns boolean indicating whether to keep going;
             // it doesn't modify 'my_input' at all.
-            if (pstore(first_field.index, second_field.index)) {
+            if (!wstore(first_field.index, second_field.index)) {
                 return false;
             }
             ++current_data_line;
@@ -625,11 +854,77 @@ private:
             valid = second_field.remaining;
         }
 
+        return true;
+    }
+
+    template<class Store_>
+    bool scan_matrix_coordinate_pattern(Store_ pstore) {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+
+        bool finished = false;
+        Index current_data_line = 0;
+        if (my_nthreads == 1) {
+            finished = scan_matrix_coordinate_pattern_base(
+                std::move(parse),
+                [&](Index r, Index c) -> bool {
+                    check_matrix_coordinate_line(current_data_line, r, c);
+                    ++current_data_line;
+                    return store(r, c);
+                },
+                *my_input,
+                my_current_line
+            );
+
+        } else {
+            struct Workspace {
+                std::vector<char> buffer;
+                std::vector<std::tuple<Index, Index> > contents;
+                Index overall_line;
+            };
+
+            ThreadPool<Workspace> tp(
+                [&](Workspace& work) -> bool {
+                    RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.size());
+                    PerByteSerial<char> pb(&reader);
+                    return scan_matrix_coordinate_pattern_base(
+                        parse,
+                        [&](Index r, Index c) -> bool {
+                            contents.emplace_back(r, c);
+                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
+                        },
+                        pb,
+                        work.overall_line
+                    );
+                },
+                my_nthreads
+            );
+
+            finished = tp.run(
+                [&](Workspace& work) -> bool {
+                    return configure_parallel_workspace(work);
+                },
+                [&](Workspace& work) -> bool {
+                    for (const auto& con : work.contents) {
+                        auto r = std::get<0>(con);
+                        auto c = std::get<1>(con);
+                        check_matrix_coordinate_line(current_data_line, r, c);
+                        if (!store(r, c)) {
+                            return false;
+                        }
+                        ++current_data_line;
+                    }
+                    return true;
+                }
+            );
+        }
+
         if (current_data_line != my_nlines) {
             // Must be fewer, otherwise we would have triggered the error in check_*.
             throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
         }
-        return true;
+        return finished;
     }
 
 private:
