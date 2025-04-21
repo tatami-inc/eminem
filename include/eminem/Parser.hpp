@@ -787,7 +787,7 @@ private:
             auto second_field = scan_index_field<false>(input, overall_line_count);
             check_matrix_coordinate_line(first_field.index, second_field.index, overall_line_count);
 
-            // 'parse' should leave 'input' at the start of the next line, if any exists.
+            // 'fparser' should leave 'input' at the start of the next line, if any exists.
             ParseInfo<Type_> res = fparser(input, overall_line_count);
             if (!wstore(first_field.index, second_field.index, res.value)) {
                 return false;
@@ -975,7 +975,7 @@ private:
             auto first_field = scan_index_field<false>(input, overall_line_count);
             check_vector_coordinate_line(first_field.index, overall_line_count);
 
-            // 'parse' should leave 'input' at the start of the next line, if any exists.
+            // 'fparser' should leave 'input' at the start of the next line, if any exists.
             ParseInfo<Type_> res = fparser(input, overall_line_count);
             if (!wstore(first_field.index, res.value)) {
                 return false;
@@ -1150,7 +1150,7 @@ private:
                 throw std::runtime_error("expected at least one field for an array matrix on line " + std::to_string(overall_line_count + 1));
             }
 
-            // 'parse' should leave 'input' at the start of the next line, if any exists.
+            // 'fparser' should leave 'input' at the start of the next line, if any exists.
             ParseInfo<Type_> res = fparser(input, overall_line_count);
             if (!wstore(res.value)) {
                 return false;
@@ -1253,10 +1253,9 @@ private:
                 throw std::runtime_error("expected at least one field for an array vector on line " + std::to_string(overall_line_count + 1));
             }
 
-            // 'store' should leave 'input' at the start of the next line, if any exists.
+            // 'fparser' should leave 'input' at the start of the next line, if any exists.
             ParseInfo<Type_> res = fparser(input, overall_line_count);
-            bool keep_going = store(res.value);
-            if (!keep_going) {
+            if (!wstore(res.value)) {
                 return false;
             }
             ++overall_line_count;
@@ -1272,7 +1271,7 @@ private:
         Index current_data_line = 0;
         if (my_nthreads == 1) {
             FieldParser_ fparser;
-            finished = scan_matrix_array_base<Type_>(
+            finished = scan_vector_array_base<Type_>(
                 *my_input,
                 my_current_line,
                 fparser,
@@ -1295,7 +1294,7 @@ private:
                 [&](Workspace& work) -> bool {
                     byteme::RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.buffer.size());
                     byteme::PerByteSerial<char, byteme::RawBufferReader*> pb(&reader);
-                    return scan_matrix_array_base<Type_>(
+                    return scan_vector_array_base<Type_>(
                         pb,
                         work.overall_line,
                         work.fparser,
