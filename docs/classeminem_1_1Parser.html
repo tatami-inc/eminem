@@ -104,8 +104,8 @@ $(function(){ initResizable(false); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a52c38157836f359c75fa89e35265ed8a" id="r_a52c38157836f359c75fa89e35265ed8a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a52c38157836f359c75fa89e35265ed8a">Parser</a> (std::unique_ptr&lt; Input_ &gt; input)</td></tr>
-<tr class="separator:a52c38157836f359c75fa89e35265ed8a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9dde0158f2dcc903c71d1800923effad" id="r_a9dde0158f2dcc903c71d1800923effad"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9dde0158f2dcc903c71d1800923effad">Parser</a> (std::unique_ptr&lt; Input_ &gt; input, const <a class="el" href="structeminem_1_1ParserOptions.html">ParserOptions</a> &amp;options)</td></tr>
+<tr class="separator:a9dde0158f2dcc903c71d1800923effad"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4326ef24eddeca2ff45e00bbfba9f851" id="r_a4326ef24eddeca2ff45e00bbfba9f851"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structeminem_1_1MatrixDetails.html">MatrixDetails</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4326ef24eddeca2ff45e00bbfba9f851">get_banner</a> () const</td></tr>
 <tr class="separator:a4326ef24eddeca2ff45e00bbfba9f851"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aab9cec4211cc545e2c8550267fa648f1" id="r_aab9cec4211cc545e2c8550267fa648f1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceeminem.html#a1b89d92edc9a5418b920487f16b2d11b">Index</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aab9cec4211cc545e2c8550267fa648f1">get_nrows</a> () const</td></tr>
@@ -142,8 +142,8 @@ class eminem::Parser&lt; Input_ &gt;</div><p>Parse a matrix from a Matrix Market
   </dd>
 </dl>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a52c38157836f359c75fa89e35265ed8a" name="a52c38157836f359c75fa89e35265ed8a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a52c38157836f359c75fa89e35265ed8a">&#9670;&#160;</a></span>Parser()</h2>
+<a id="a9dde0158f2dcc903c71d1800923effad" name="a9dde0158f2dcc903c71d1800923effad"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9dde0158f2dcc903c71d1800923effad">&#9670;&#160;</a></span>Parser()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -156,8 +156,12 @@ template&lt;class Input_ &gt; </div>
         <tr>
           <td class="memname"><a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_ &gt;::Parser </td>
           <td>(</td>
-          <td class="paramtype">std::unique_ptr&lt; Input_ &gt;</td>          <td class="paramname"><span class="paramname"><em>input</em></span></td><td>)</td>
+          <td class="paramtype">std::unique_ptr&lt; Input_ &gt;</td>          <td class="paramname"><span class="paramname"><em>input</em></span>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
           <td></td>
+          <td class="paramtype">const <a class="el" href="structeminem_1_1ParserOptions.html">ParserOptions</a> &amp;</td>          <td class="paramname"><span class="paramname"><em>options</em></span>&#160;)</td>
         </tr>
       </table>
   </td>
@@ -169,6 +173,7 @@ template&lt;class Input_ &gt; </div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">input</td><td>Source of input bytes, typically a <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html">byteme::PerByteInterface</a></code> instance. </td></tr>
+    <tr><td class="paramname">options</td><td>Further options. </td></tr>
   </table>
   </dd>
 </dl>
@@ -400,7 +405,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(Index row, Index column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(Index row, Index column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this function may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>
@@ -444,7 +449,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(Index row, Index column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(Index row, Index column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this function may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>
@@ -488,7 +493,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(Index row, Index column, std::complex&lt;Type_&gt; value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(Index row, Index column, std::complex&lt;Type_&gt; value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. Alternatively, this function may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>
@@ -532,7 +537,7 @@ template&lt;typename Type_  = bool, class Store_ &gt; </div>
 </dl>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">store</td><td>Function with the signature <code>void(Index row, Index column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. <code>value</code> will always be <code>true</code> and can be ignored; it is only required here for consistency with the other methods. Alternatively, this may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
+    <tr><td class="paramname">store</td><td>Function with the signature <code>void(Index row, Index column, Type_ value)</code>, which is passed the corresponding values at each line. Both <code>row</code> and <code>column</code> will be 1-based indices; for <code>Object::VECTOR</code>, <code>column</code> will be set to 1. <code>value</code> will always be <code>true</code> and can be ignored; it is only required here for consistency with the other methods. Alternatively, this function may return <code>bool</code>, where a <code>false</code> indicates that the scanning should terminate early and a <code>true</code> indicates that the scanning should continue.</td></tr>
   </table>
   </dd>
 </dl>

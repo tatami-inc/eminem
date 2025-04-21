@@ -97,7 +97,7 @@ $(function(){ initResizable(false); });
 </div><!--header-->
 <div class="contents">
 
-<p>Options for <code><a class="el" href="namespaceeminem.html#ac799ce84829321eab0017b0aafda6095">parse_gzip_file()</a></code>.  
+<p>Options for <code><a class="el" href="namespaceeminem.html#ab373ea32fda997435cd73b1663525cbe">parse_gzip_file()</a></code>.  
  <a href="#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="from__gzip_8hpp_source.html">from_gzip.hpp</a>&gt;</code></p>
@@ -106,11 +106,13 @@ $(function(){ initResizable(false); });
 Public Attributes</h2></td></tr>
 <tr class="memitem:ab19247ab480aefa44c72df865f69f75b" id="r_ab19247ab480aefa44c72df865f69f75b"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ab19247ab480aefa44c72df865f69f75b">buffer_size</a> = 65536</td></tr>
 <tr class="separator:ab19247ab480aefa44c72df865f69f75b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2aa94d23c5c6bf47ada89b9ef7aefc22" id="r_a2aa94d23c5c6bf47ada89b9ef7aefc22"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a2aa94d23c5c6bf47ada89b9ef7aefc22">parallel</a> = false</td></tr>
-<tr class="separator:a2aa94d23c5c6bf47ada89b9ef7aefc22"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac314e31ba48d5b343fec3e5de3057e69" id="r_ac314e31ba48d5b343fec3e5de3057e69"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac314e31ba48d5b343fec3e5de3057e69">num_threads</a> = 1</td></tr>
+<tr class="separator:ac314e31ba48d5b343fec3e5de3057e69"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa96e64cd7f20c7621976a2667fb34612" id="r_aa96e64cd7f20c7621976a2667fb34612"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa96e64cd7f20c7621976a2667fb34612">block_size</a> = 65536</td></tr>
+<tr class="separator:aa96e64cd7f20c7621976a2667fb34612"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Options for <code><a class="el" href="namespaceeminem.html#ac799ce84829321eab0017b0aafda6095">parse_gzip_file()</a></code>. </p>
+<div class="textblock"><p>Options for <code><a class="el" href="namespaceeminem.html#ab373ea32fda997435cd73b1663525cbe">parse_gzip_file()</a></code>. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
 <a id="ab19247ab480aefa44c72df865f69f75b" name="ab19247ab480aefa44c72df865f69f75b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ab19247ab480aefa44c72df865f69f75b">&#9670;&#160;</a></span>buffer_size</h2>
@@ -127,18 +129,33 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
-<a id="a2aa94d23c5c6bf47ada89b9ef7aefc22" name="a2aa94d23c5c6bf47ada89b9ef7aefc22"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a2aa94d23c5c6bf47ada89b9ef7aefc22">&#9670;&#160;</a></span>parallel</h2>
+<a id="ac314e31ba48d5b343fec3e5de3057e69" name="ac314e31ba48d5b343fec3e5de3057e69"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac314e31ba48d5b343fec3e5de3057e69">&#9670;&#160;</a></span>num_threads</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool eminem::ParseGzipFileOptions::parallel = false</td>
+          <td class="memname">int eminem::ParseGzipFileOptions::num_threads = 1</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Whether to parallelize the reading/parsing with <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteParallel.html">byteme::PerByteParallel</a></code>. </p>
+<p>Number of threads to use to parallelize the parsing. </p>
+
+</div>
+</div>
+<a id="aa96e64cd7f20c7621976a2667fb34612" name="aa96e64cd7f20c7621976a2667fb34612"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aa96e64cd7f20c7621976a2667fb34612">&#9670;&#160;</a></span>block_size</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::size_t eminem::ParseGzipFileOptions::block_size = 65536</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Block size (in bytes) to define the work for each thread. Only relevant when <code>num_threads &gt; 1</code>. </p>
 
 </div>
 </div>

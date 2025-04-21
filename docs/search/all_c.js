@@ -1,17 +1,18 @@
 var searchData=
 [
-  ['scan_5fcomplex_0',['scan_complex',['../classeminem_1_1Parser.html#a67a0424acaeb50b22474dfd77010c2be',1,'eminem::Parser']]],
-  ['scan_5fdouble_1',['scan_double',['../classeminem_1_1Parser.html#a9136c73b661df9587a36e79d52b995eb',1,'eminem::Parser']]],
-  ['scan_5finteger_2',['scan_integer',['../classeminem_1_1Parser.html#a3e5320df82912206164d5fcafb7f1f4e',1,'eminem::Parser']]],
-  ['scan_5fpattern_3',['scan_pattern',['../classeminem_1_1Parser.html#a65285363373e976d790a2ff764621f86',1,'eminem::Parser']]],
-  ['scan_5fpreamble_4',['scan_preamble',['../classeminem_1_1Parser.html#a91d2ea36cd1962b19675eac852b77d54',1,'eminem::Parser']]],
-  ['scan_5freal_5',['scan_real',['../classeminem_1_1Parser.html#a90d0c99c93cd42aad1d455693cacbde4',1,'eminem::Parser']]],
-  ['somebufferreader_6',['SomeBufferReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SomeBufferReader.html',1,'byteme::SomeBufferReader'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SomeBufferReader.html#a42b6d367e5f83e2b59eba87f29f4000f',1,'byteme::SomeBufferReader::SomeBufferReader()']]],
-  ['somebufferreader_2ehpp_7',['SomeBufferReader.hpp',['https://ltla.github.io/byteme/byteme.tag/SomeBufferReader_8hpp.html',1,'']]],
-  ['somebufferreaderoptions_8',['SomeBufferReaderOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1SomeBufferReaderOptions.html',1,'byteme']]],
-  ['somefilereader_9',['SomeFileReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SomeFileReader.html',1,'byteme::SomeFileReader'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SomeFileReader.html#a68b58b4cdeb04b1747db643b69880787',1,'byteme::SomeFileReader::SomeFileReader()']]],
-  ['somefilereader_2ehpp_10',['SomeFileReader.hpp',['https://ltla.github.io/byteme/byteme.tag/SomeFileReader_8hpp.html',1,'']]],
-  ['somefilereaderoptions_11',['SomeFileReaderOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1SomeFileReaderOptions.html',1,'byteme']]],
-  ['symmetry_12',['Symmetry',['../namespaceeminem.html#a3222df29bae0a3f6387230b58f36e920',1,'eminem']]],
-  ['symmetry_13',['symmetry',['../structeminem_1_1MatrixDetails.html#a55f737773c4168999e7f9ae118db7cce',1,'eminem::MatrixDetails']]]
+  ['rawbufferreader_0',['RawBufferReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawBufferReader.html',1,'byteme::RawBufferReader'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawBufferReader.html#a80988c695311f5ebd52680bf93f92847',1,'byteme::RawBufferReader::RawBufferReader()']]],
+  ['rawbufferreader_2ehpp_1',['RawBufferReader.hpp',['https://ltla.github.io/byteme/byteme.tag/RawBufferReader_8hpp.html',1,'']]],
+  ['rawbufferwriter_2',['RawBufferWriter',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawBufferWriter.html',1,'byteme::RawBufferWriter'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawBufferWriter.html#a2536f89eb9c6a58a68269abfa907f3bd',1,'byteme::RawBufferWriter::RawBufferWriter()']]],
+  ['rawbufferwriter_2ehpp_3',['RawBufferWriter.hpp',['https://ltla.github.io/byteme/byteme.tag/RawBufferWriter_8hpp.html',1,'']]],
+  ['rawbufferwriteroptions_4',['RawBufferWriterOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1RawBufferWriterOptions.html',1,'byteme']]],
+  ['rawfilereader_5',['RawFileReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawFileReader.html',1,'byteme::RawFileReader'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawFileReader.html#a8408ecd4c0c0d0c03d84b205f941f8d2',1,'byteme::RawFileReader::RawFileReader()']]],
+  ['rawfilereader_2ehpp_6',['RawFileReader.hpp',['https://ltla.github.io/byteme/byteme.tag/RawFileReader_8hpp.html',1,'']]],
+  ['rawfilereaderoptions_7',['RawFileReaderOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1RawFileReaderOptions.html',1,'byteme']]],
+  ['rawfilewriter_8',['RawFileWriter',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawFileWriter.html',1,'byteme::RawFileWriter'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawFileWriter.html#a85b813251f5ce733364d3b02914ad209',1,'byteme::RawFileWriter::RawFileWriter()']]],
+  ['rawfilewriter_2ehpp_9',['RawFileWriter.hpp',['https://ltla.github.io/byteme/byteme.tag/RawFileWriter_8hpp.html',1,'']]],
+  ['rawfilewriteroptions_10',['RawFileWriterOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1RawFileWriterOptions.html',1,'byteme']]],
+  ['reader_11',['Reader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1Reader.html',1,'byteme']]],
+  ['reader_2ehpp_12',['Reader.hpp',['https://ltla.github.io/byteme/byteme.tag/Reader_8hpp.html',1,'']]],
+  ['refill_13',['refill',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html#a8cb67ac7c5517d17adb6fe88b803516d',1,'byteme::PerByteInterface::refill()'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteParallel.html#aa7e9be70da45b85254a16e5e1c47e036',1,'byteme::PerByteParallel::refill()'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteSerial.html#ae6424f8d002deb991f21f2812b103705',1,'byteme::PerByteSerial::refill()']]],
+  ['reserve_14',['reserve',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1RawBufferWriterOptions.html#ace854857d6b1b607ff4fedca07d05e1b',1,'byteme::RawBufferWriterOptions']]]
 ];

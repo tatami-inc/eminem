@@ -97,31 +97,48 @@ $(function(){ initResizable(false); });
 </div><!--header-->
 <div class="contents">
 
-<p>Options for <code><a class="el" href="namespaceeminem.html#af22bebcce31f5162d7fbaf1e4545e86b">parse_text_buffer()</a></code>.  
+<p>Options for <code><a class="el" href="namespaceeminem.html#a6c1f249ff1fe330012bd2706553eb483">parse_text_buffer()</a></code>.  
  <a href="#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="from__text_8hpp_source.html">from_text.hpp</a>&gt;</code></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-attribs" name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
-<tr class="memitem:a4561d8fe6dc7e046a02f9a1107a7ba82" id="r_a4561d8fe6dc7e046a02f9a1107a7ba82"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4561d8fe6dc7e046a02f9a1107a7ba82">parallel</a> = false</td></tr>
-<tr class="separator:a4561d8fe6dc7e046a02f9a1107a7ba82"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f8aabd2263c17a7386de4af1680068b" id="r_a9f8aabd2263c17a7386de4af1680068b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9f8aabd2263c17a7386de4af1680068b">num_threads</a> = 1</td></tr>
+<tr class="separator:a9f8aabd2263c17a7386de4af1680068b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac300ca7e16017eb13285b74e41194948" id="r_ac300ca7e16017eb13285b74e41194948"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ac300ca7e16017eb13285b74e41194948">block_size</a> = 65536</td></tr>
+<tr class="separator:ac300ca7e16017eb13285b74e41194948"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Options for <code><a class="el" href="namespaceeminem.html#af22bebcce31f5162d7fbaf1e4545e86b">parse_text_buffer()</a></code>. </p>
+<div class="textblock"><p>Options for <code><a class="el" href="namespaceeminem.html#a6c1f249ff1fe330012bd2706553eb483">parse_text_buffer()</a></code>. </p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
-<a id="a4561d8fe6dc7e046a02f9a1107a7ba82" name="a4561d8fe6dc7e046a02f9a1107a7ba82"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4561d8fe6dc7e046a02f9a1107a7ba82">&#9670;&#160;</a></span>parallel</h2>
+<a id="a9f8aabd2263c17a7386de4af1680068b" name="a9f8aabd2263c17a7386de4af1680068b"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a9f8aabd2263c17a7386de4af1680068b">&#9670;&#160;</a></span>num_threads</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">bool eminem::ParseTextBufferOptions::parallel = false</td>
+          <td class="memname">int eminem::ParseTextBufferOptions::num_threads = 1</td>
         </tr>
       </table>
 </div><div class="memdoc">
-<p>Whether to parallelize the reading/parsing with <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteParallel.html">byteme::PerByteParallel</a></code>. </p>
+<p>Number of threads to use to parallelize the parsing. </p>
+
+</div>
+</div>
+<a id="ac300ca7e16017eb13285b74e41194948" name="ac300ca7e16017eb13285b74e41194948"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac300ca7e16017eb13285b74e41194948">&#9670;&#160;</a></span>block_size</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">std::size_t eminem::ParseTextBufferOptions::block_size = 65536</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+<p>Block size (in bytes) to define the work for each thread. Only relevant when <code>num_threads &gt; 1</code>. </p>
 
 </div>
 </div>
