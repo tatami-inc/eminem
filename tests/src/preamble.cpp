@@ -213,6 +213,7 @@ TEST(ParserPreamble, SizeErrors) {
     test_error("%%MatrixMarket matrix coordinate integer general\n5 2 1 3\n", "expected newline after");
     test_error("%%MatrixMarket matrix coordinate integer general\n\n", "failed to find size line");
     test_error("%%MatrixMarket matrix coordinate integer general\n \n", "empty size field");
+    test_error("%%MatrixMarket matrix coordinate integer general\n   ", "expected at least one");
 
     test_error("%%MatrixMarket vector coordinate integer general\n5 1 3\n", "expected newline after");
     test_error("%%MatrixMarket vector coordinate integer general\n5\n", "unexpected newline");
