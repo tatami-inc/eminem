@@ -64,12 +64,12 @@ If you're using CMake, you just need to add something like this to your `CMakeLi
 include(FetchContent)
 
 FetchContent_Declare(
-  tatami
+  eminem
   GIT_REPOSITORY https://github.com/tatami-inc/eminem
   GIT_TAG master # or any version of interest
 )
 
-FetchContent_MakeAvailable(tatami)
+FetchContent_MakeAvailable(eminem)
 ```
 
 Then you can link to **tatami** to make the headers available during compilation:
