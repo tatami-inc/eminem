@@ -13,7 +13,9 @@
 #include <vector>
 #include <random>
 
-TEST(FromGzip, File) {
+class FromGzipTest : public ::testing::TestWithParam<std::tuple<int, int> > {};
+
+TEST_P(FromGzipTest, File) {
     std::size_t NR = 192, NC = 132;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_integer(coords.first.size(), -999, 999);
@@ -30,9 +32,17 @@ TEST(FromGzip, File) {
         gzclose(ohandle);
     }
 
+    auto param = GetParam();
+    auto nthreads = std::get<0>(param);
+    auto blocksize = std::get<1>(param);
+
     // Works with the Gzip parser.
     {
-        auto parser = eminem::parse_gzip_file(path.c_str(), {});
+        eminem::ParseGzipFileOptions opt;
+        opt.num_threads = nthreads;
+        opt.buffer_size = blocksize;
+        opt.block_size = blocksize;
+        auto parser = eminem::parse_gzip_file(path.c_str(), opt);
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -53,7 +63,11 @@ TEST(FromGzip, File) {
 
     // Works with the Some* parser.
     {
-        auto parser = eminem::parse_some_file(path.c_str(), {});
+        eminem::ParseSomeFileOptions opt;
+        opt.num_threads = nthreads;
+        opt.buffer_size = blocksize;
+        opt.block_size = blocksize;
+        auto parser = eminem::parse_some_file(path.c_str(), opt);
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -73,7 +87,7 @@ TEST(FromGzip, File) {
     }
 }
 
-TEST(FromGzip, Buffer) {
+TEST_P(FromGzipTest, Buffer) {
     std::size_t NR = 112, NC = 152;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_integer(coords.first.size(), -999, 999);
@@ -95,9 +109,17 @@ TEST(FromGzip, Buffer) {
         gzcontents.insert(gzcontents.end(), std::istream_iterator<unsigned char>{handle}, std::istream_iterator<unsigned char>());
     }
 
+    auto param = GetParam();
+    auto nthreads = std::get<0>(param);
+    auto blocksize = std::get<1>(param);
+
     // Works with the Zlib parser.
     {
-        auto parser = eminem::parse_zlib_buffer(gzcontents.data(), gzcontents.size(), {});
+        eminem::ParseZlibBufferOptions opt;
+        opt.num_threads = nthreads;
+        opt.buffer_size = blocksize;
+        opt.block_size = blocksize;
+        auto parser = eminem::parse_zlib_buffer(gzcontents.data(), gzcontents.size(), opt);
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -118,7 +140,11 @@ TEST(FromGzip, Buffer) {
 
     // Works with the Some* parser.
     {
-        auto parser = eminem::parse_some_buffer(gzcontents.data(), gzcontents.size(), {});
+        eminem::ParseSomeBufferOptions opt;
+        opt.num_threads = nthreads;
+        opt.buffer_size = blocksize;
+        opt.block_size = blocksize;
+        auto parser = eminem::parse_some_buffer(gzcontents.data(), gzcontents.size(), opt);
 
         parser.scan_preamble();
         EXPECT_EQ(parser.get_nrows(), NR);
@@ -137,3 +163,13 @@ TEST(FromGzip, Buffer) {
         EXPECT_EQ(out_vals, values);
     }
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    FromGzip,
+    FromGzipTest,
+    ::testing::Values(
+        std::tuple<int, int>(1, 10000),
+        std::tuple<int, int>(2, 5000),
+        std::tuple<int, int>(3, 1000)
+    )
+);

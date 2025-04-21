@@ -28,9 +28,15 @@ struct ParseGzipFileOptions {
     std::size_t buffer_size = 65536;
 
     /**
-     * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+     * Number of threads to use to parallelize the parsing.
      */
-    bool parallel = false;
+    int num_threads = 1;
+
+    /**
+     * Block size (in bytes) to define the work for each thread.
+     * Only relevant when `num_threads > 1`.
+     */
+    std::size_t block_size = 65536;
 };
 
 /**
@@ -38,19 +44,16 @@ struct ParseGzipFileOptions {
  * @param path Pointer to a string containing a path to a Gzip-compressed Matrix Market file.
  * @param options Further options.
  */
-inline Parser<byteme::PerByteInterface<char> > parse_gzip_file(const char* path, const ParseGzipFileOptions& options) {
-    return Parser<byteme::PerByteInterface<char> >(
-        [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
-            byteme::GzipFileReaderOptions gopt;
-            gopt.buffer_size = options.buffer_size;
-            auto reader = std::make_unique<byteme::GzipFileReader>(path, gopt);
-            if (options.parallel) {
-                return std::make_unique<byteme::PerByteParallel<char> >(std::move(reader));
-            } else {
-                return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-            }
-        }()
-    );
+inline Parser<byteme::PerByteSerial<char> > parse_gzip_file(const char* path, const ParseGzipFileOptions& options) {
+    ParserOptions popt;
+    popt.num_threads = options.num_threads;
+    popt.block_size = options.block_size;
+
+    byteme::GzipFileReaderOptions gopt;
+    gopt.buffer_size = options.buffer_size;
+    auto reader = std::make_unique<byteme::GzipFileReader>(path, gopt);
+    auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
+    return Parser<byteme::PerByteSerial<char> >(std::move(pb), popt);
 }
 
 /**
@@ -63,9 +66,15 @@ struct ParseZlibBufferOptions {
     std::size_t buffer_size = 65536;
 
     /**
-     * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+     * Number of threads to use to parallelize the parsing.
      */
-    bool parallel = false;
+    int num_threads = 1;
+
+    /**
+     * Block size (in bytes) to define the work for each thread.
+     * Only relevant when `num_threads > 1`.
+     */
+    std::size_t block_size = 65536;
 
     /**
      * Compression of the stream, i.e., DEFLATE, zlib or gzip.
@@ -80,20 +89,17 @@ struct ParseZlibBufferOptions {
  * @param len Length of the array referenced by `buffer`.
  * @param options Further options.
  */
-inline Parser<byteme::PerByteInterface<char> > parse_zlib_buffer(const unsigned char* buffer, std::size_t len, const ParseZlibBufferOptions& options) {
-    return Parser<byteme::PerByteInterface<char> >(
-        [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
-            byteme::ZlibBufferReaderOptions zopt;
-            zopt.buffer_size = options.buffer_size;
-            zopt.mode = options.mode;
-            auto reader = std::make_unique<byteme::ZlibBufferReader>(buffer, len, zopt);
-            if (options.parallel) {
-                return std::make_unique<byteme::PerByteParallel<char> >(std::move(reader));
-            } else {
-                return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-            }
-        }()
-    );
+inline Parser<byteme::PerByteSerial<char> > parse_zlib_buffer(const unsigned char* buffer, std::size_t len, const ParseZlibBufferOptions& options) {
+    ParserOptions popt;
+    popt.num_threads = options.num_threads;
+    popt.block_size = options.block_size;
+
+    byteme::ZlibBufferReaderOptions zopt;
+    zopt.buffer_size = options.buffer_size;
+    zopt.mode = options.mode;
+    auto reader = std::make_unique<byteme::ZlibBufferReader>(buffer, len, zopt);
+    auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
+    return Parser<byteme::PerByteSerial<char> >(std::move(pb), popt);
 }
 
 /**
@@ -106,9 +112,15 @@ struct ParseSomeFileOptions {
     std::size_t buffer_size = 65536;
 
     /**
-     * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+     * Number of threads to use to parallelize the parsing.
      */
-    bool parallel = false;
+    int num_threads = 1;
+
+    /**
+     * Block size (in bytes) to define the work for each thread.
+     * Only relevant when `num_threads > 1`.
+     */
+    std::size_t block_size = 65536;
 };
 
 /**
@@ -116,19 +128,17 @@ struct ParseSomeFileOptions {
  * @param path Pointer to a string containing a path to a possibly-compressed Matrix Market file.
  * @param options Further options.
  */
-inline Parser<byteme::PerByteInterface<char> > parse_some_file(const char* path, const ParseSomeFileOptions& options) {
-    return Parser<byteme::PerByteInterface<char> >(
-        [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
-            byteme::SomeFileReaderOptions sopt;
-            sopt.buffer_size = options.buffer_size;
-            auto reader = std::make_unique<byteme::SomeFileReader>(path, sopt);
-            if (options.parallel) {
-                return std::make_unique<byteme::PerByteParallel<char> >(std::move(reader));
-            } else {
-                return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-            }
-        }()
-    );
+inline Parser<byteme::PerByteSerial<char> > parse_some_file(const char* path, const ParseSomeFileOptions& options) {
+    ParserOptions popt;
+    popt.num_threads = options.num_threads;
+    popt.block_size = options.block_size;
+
+    byteme::SomeFileReaderOptions sopt;
+    sopt.buffer_size = options.buffer_size;
+    auto reader = std::make_unique<byteme::SomeFileReader>(path, sopt);
+    auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
+
+    return Parser<byteme::PerByteSerial<char> >(std::move(pb), popt);
 }
 
 /**
@@ -141,9 +151,15 @@ struct ParseSomeBufferOptions {
     std::size_t buffer_size = 65536;
 
     /**
-     * Whether to parallelize the reading/parsing with `byteme::PerByteParallel`.
+     * Number of threads to use to parallelize the parsing.
      */
-    bool parallel = false;
+    int num_threads = 1;
+
+    /**
+     * Block size (in bytes) to define the work for each thread.
+     * Only relevant when `num_threads > 1`.
+     */
+    std::size_t block_size = 65536;
 };
 
 /**
@@ -152,19 +168,16 @@ struct ParseSomeBufferOptions {
  * @param len Length of the array referenced by `buffer`.
  * @param options Further options.
  */
-inline Parser<byteme::PerByteInterface<char> > parse_some_buffer(const unsigned char* buffer, std::size_t len, const ParseSomeBufferOptions& options) {
-    return Parser<byteme::PerByteInterface<char> >(
-        [&]() -> std::unique_ptr<byteme::PerByteInterface<char> > {
-            byteme::SomeBufferReaderOptions sopt;
-            sopt.buffer_size = options.buffer_size;
-            auto reader = std::make_unique<byteme::SomeBufferReader>(buffer, len, sopt);
-            if (options.parallel) {
-                return std::make_unique<byteme::PerByteParallel<char> >(std::move(reader));
-            } else {
-                return std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-            }
-        }()
-    );
+inline Parser<byteme::PerByteSerial<char> > parse_some_buffer(const unsigned char* buffer, std::size_t len, const ParseSomeBufferOptions& options) {
+    ParserOptions popt;
+    popt.num_threads = options.num_threads;
+    popt.block_size = options.block_size;
+
+    byteme::SomeBufferReaderOptions sopt;
+    sopt.buffer_size = options.buffer_size;
+    auto reader = std::make_unique<byteme::SomeBufferReader>(buffer, len, sopt);
+    auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
+    return Parser<byteme::PerByteSerial<char> >(std::move(pb), popt);
 }
 
 }

@@ -44,7 +44,7 @@ struct ParserOptions {
      * This is rounded up to the nearest newline before parallel processing.
      * Only relevant when `num_threads > 1`.
      */
-    std::size_t block_size = 65535;
+    std::size_t block_size = 65536;
 };
 
 /**
