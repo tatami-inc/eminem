@@ -9,17 +9,23 @@
 #include <cstdint>
 #include <limits>
 
-class ParserArrayVectorTest : public ::testing::TestWithParam<std::tuple<std::string, int, std::vector<int> > > {};
+class ParserArrayVectorScenarioTest : public ::testing::TestWithParam<std::tuple<std::tuple<std::string, int, std::vector<int> >, int> > {};
 
-TEST_P(ParserArrayVectorTest, Success) {
+TEST_P(ParserArrayVectorScenarioTest, Success) {
     auto param = GetParam();
-    const std::string& content = std::get<0>(param);
-    int nr = std::get<1>(param);
-    const auto& expected_v = std::get<2>(param);
+
+    auto tparam = std::get<0>(param);
+    const std::string& content = std::get<0>(tparam);
+    int nr = std::get<1>(tparam);
+    const auto& expected_v = std::get<2>(tparam);
+
+    eminem::ParserOptions parse_opt;
+    parse_opt.num_threads = std::get<1>(param);
+    parse_opt.block_size = 1; // guarantee that each thread gets at least some work.
 
     std::string input = "%%MatrixMarket vector array integer general\n" + std::to_string(nr) + "\n" + content;
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -49,44 +55,58 @@ TEST_P(ParserArrayVectorTest, Success) {
 
 INSTANTIATE_TEST_SUITE_P(
     ParserArrayVector,
-    ParserArrayVectorTest,
-    ::testing::Values(
-        std::make_tuple<std::string, int, std::vector<int> >(
-            "111\n0\n22\n3333\n4\n5\n66\n7\n888\n9\n0\n1\n",
-            12,
-            { 111, 0, 22, 3333, 4, 5, 66, 7, 888, 9, 0, 1 }
+    ParserArrayVectorScenarioTest,
+    ::testing::Combine(
+        ::testing::Values(
+            std::make_tuple<std::string, int, std::vector<int> >(
+                "111\n0\n22\n3333\n4\n5\n66\n7\n888\n9\n0\n1\n",
+                12,
+                { 111, 0, 22, 3333, 4, 5, 66, 7, 888, 9, 0, 1 }
+            ),
+            std::make_tuple<std::string, int, std::vector<int> >(
+                "1\n19\n10\n29\n122\n230\n39\n33\n4560", // no trailing newline
+                9,
+                { 1, 19, 10, 29, 122, 230, 39, 33, 4560 }
+            ),
+            std::make_tuple<std::string, int, std::vector<int> >(
+                "191\n121\n7\n422\n102\n8  ", // trailing blank but no trailing newline
+                6,
+                { 191, 121, 7, 422, 102, 8 }
+            ),
+            std::make_tuple<std::string, int, std::vector<int> >(
+                "   1 \n11\n 12   \n\t22\n \t2  \n 345\t\n3\t\t\n333  \n   67  \n444 \n 4\n  890\n", // variable numbers of blanks
+                12,
+                { 1, 11, 12, 22, 2, 345, 3, 333, 67, 444, 4, 890 }
+            ),
+            std::make_tuple<std::string, int, std::vector<int> >(
+                "\n\n19\n29\n9\n%iamacomment\n28\n3\n13\n%another comment\n\n65\n44\n43\n98\n7\n5\n\n%morecommentary\n\n981\n12\n77\n", // comments, newlines and crap. 
+                15,
+                { 19, 29, 9, 28, 3, 13, 65, 44, 43, 98, 7, 5, 981, 12, 77 }
+            ),
+            std::make_tuple<std::string, int, std::vector<int> >(
+                "19\n29\n9\n28\n3\n13\n65\n44\n43\n%this is the end", // ends on a comment
+                9,
+                { 19, 29, 9, 28, 3, 13, 65, 44, 43 }
+            )
         ),
-        std::make_tuple<std::string, int, std::vector<int> >(
-            "1\n19\n10\n29\n122\n230\n39\n33\n4560", // no trailing newline
-            9,
-            { 1, 19, 10, 29, 122, 230, 39, 33, 4560 }
-        ),
-        std::make_tuple<std::string, int, std::vector<int> >(
-            "191\n121\n7\n422\n102\n8  ", // trailing blank but no trailing newline
-            6,
-            { 191, 121, 7, 422, 102, 8 }
-        ),
-        std::make_tuple<std::string, int, std::vector<int> >(
-            "   1 \n11\n 12   \n\t22\n \t2  \n 345\t\n3\t\t\n333  \n   67  \n444 \n 4\n  890\n", // variable numbers of blanks
-            12,
-            { 1, 11, 12, 22, 2, 345, 3, 333, 67, 444, 4, 890 }
-        ),
-        std::make_tuple<std::string, int, std::vector<int> >(
-            "\n\n19\n29\n9\n%iamacomment\n28\n3\n13\n%another comment\n\n65\n44\n43\n98\n7\n5\n\n%morecommentary\n\n981\n12\n77\n", // comments, newlines and crap. 
-            15,
-            { 19, 29, 9, 28, 3, 13, 65, 44, 43, 98, 7, 5, 981, 12, 77 }
-        ),
-        std::make_tuple<std::string, int, std::vector<int> >(
-            "19\n29\n9\n28\n3\n13\n65\n44\n43\n%this is the end", // ends on a comment
-            9,
-            { 19, 29, 9, 28, 3, 13, 65, 44, 43 }
-        )
+        ::testing::Values(1, 2, 3)
     )
 );
 
-static void test_error(const std::string& input, std::string msg) {
+class ParserArrayVectorMiscTest : public ::testing::TestWithParam<int> {
+protected:
+    eminem::ParserOptions parse_opt;
+
+    void SetUp() {
+        parse_opt.num_threads = GetParam();
+        parse_opt.block_size = 1; // ensure that each thread gets some work to do. 
+    }
+};
+
+template<typename ... Args_>
+static void test_error(const std::string& input, std::string msg, Args_&&... args) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), std::forward<Args_>(args)...);
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
@@ -98,17 +118,17 @@ static void test_error(const std::string& input, std::string msg) {
     });
 }
 
-TEST(ParserArrayVector, Errors) {
-    test_error("%%MatrixMarket vector array integer general\n1\n ", "expected at least one field");
-    test_error("%%MatrixMarket vector array integer general\n1\n1\n2", "more lines present");
-    test_error("%%MatrixMarket vector array integer general\n2\n1\n", "fewer lines present");
+TEST_P(ParserArrayVectorMiscTest, Errors) {
+    test_error("%%MatrixMarket vector array integer general\n1\n ", "expected at least one field", parse_opt);
+    test_error("%%MatrixMarket vector array integer general\n1\n1\n2", "more lines present", parse_opt);
+    test_error("%%MatrixMarket vector array integer general\n2\n1\n", "fewer lines present", parse_opt);
 }
 
-TEST(ParserArrayVector, Types) {
+TEST_P(ParserArrayVectorMiscTest, Types) {
     { // Checking it works with real.
         std::string input = "%%MatrixMarket vector array real general\n6\n1\n1.2e-4\n5.1\n-12.34\n2.2\ninf\n";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -141,7 +161,7 @@ TEST(ParserArrayVector, Types) {
     { // Checking it works with complex.
         std::string input = "%%MatrixMarket vector array complex general\n6\n1 5\n78 1.2e-4\n5 1\n12.34 -9.9\n2 2\ninf 10\n";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -173,12 +193,12 @@ TEST(ParserArrayVector, Types) {
     }
 }
 
-TEST(ParserArrayVector, QuitEarly) {
+TEST_P(ParserArrayVectorMiscTest, QuitEarly) {
     std::string input = "%%MatrixMarket vector array integer general\n3\n1233\n45666\n7890\n";
 
     { // quits immediately.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
         parser.scan_preamble();
 
         std::vector<int> observed;
@@ -192,7 +212,7 @@ TEST(ParserArrayVector, QuitEarly) {
 
     { // never quits but the function still returns a value.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
         parser.scan_preamble();
 
         std::vector<int> observed;
@@ -205,11 +225,10 @@ TEST(ParserArrayVector, QuitEarly) {
     }
 }
 
-TEST(ParserArrayVector, Empty) {
+TEST_P(ParserArrayVectorMiscTest, Empty) {
     std::string input = "%%MatrixMarket vector array integer general\n0";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
     eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
-
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -228,3 +247,9 @@ TEST(ParserArrayVector, Empty) {
     }));
     EXPECT_TRUE(observed.empty());
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    ParserArrayVector,
+    ParserArrayVectorMiscTest,
+    ::testing::Values(1, 2, 3)
+);

@@ -168,6 +168,17 @@ TEST(ParserComplex, QuitEarly) {
     EXPECT_EQ(observed, expected);
 }
 
+class ParserComplexSimulatedTest : public ::testing::TestWithParam<std::tuple<int, int> > {
+protected:
+    eminem::ParserOptions parse_opt;
+
+    void SetUp() {
+        auto params = GetParam();
+        parse_opt.num_threads = std::get<0>(params);
+        parse_opt.block_size = std::get<1>(params);
+    }
+};
+
 static void test_equal_vectors(const std::vector<std::complex<double> >& observed, const std::vector<std::complex<double> >& expected) {
     ASSERT_EQ(observed.size(), expected.size());
     for (decltype(observed.size()) i = 0, end = observed.size(); i < end; ++i) {
@@ -176,7 +187,7 @@ static void test_equal_vectors(const std::vector<std::complex<double> >& observe
     }
 }
 
-TEST(ParserComplex, SimulatedCoordinateMatrix) {
+TEST_P(ParserComplexSimulatedTest, CoordinateMatrix) {
     std::size_t NR = 65, NC = 58;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_complex(coords.first.size());
@@ -186,7 +197,7 @@ TEST(ParserComplex, SimulatedCoordinateMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -207,7 +218,7 @@ TEST(ParserComplex, SimulatedCoordinateMatrix) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserComplex, SimulatedCoordinateVector) {
+TEST_P(ParserComplexSimulatedTest, CoordinateVector) {
     std::size_t N = 6558;
     auto coords = simulate_coordinate(N, 0.05);
     auto values = simulate_complex(coords.size());
@@ -218,7 +229,7 @@ TEST(ParserComplex, SimulatedCoordinateVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -239,7 +250,7 @@ TEST(ParserComplex, SimulatedCoordinateVector) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserComplex, SimulatedArrayMatrix) {
+TEST_P(ParserComplexSimulatedTest, ArrayMatrix) {
     std::size_t NR = 93, NC = 85;
     auto values = simulate_complex(NR * NC);
 
@@ -248,7 +259,7 @@ TEST(ParserComplex, SimulatedArrayMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -278,7 +289,7 @@ TEST(ParserComplex, SimulatedArrayMatrix) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserComplex, SimulatedArrayVector) {
+TEST_P(ParserComplexSimulatedTest, ArrayVector) {
     std::size_t N = 632;
     auto values = simulate_complex(N);
 
@@ -287,7 +298,7 @@ TEST(ParserComplex, SimulatedArrayVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -311,3 +322,13 @@ TEST(ParserComplex, SimulatedArrayVector) {
     test_equal_vectors(out_vals, values);
 }
 
+INSTANTIATE_TEST_SUITE_P(
+    ParserComplex,
+    ParserComplexSimulatedTest,
+    ::testing::Values(
+        std::tuple<int, int>(1, 1),
+        std::tuple<int, int>(2, 100),
+        std::tuple<int, int>(3, 100),
+        std::tuple<int, int>(3, 1000)
+    )
+);

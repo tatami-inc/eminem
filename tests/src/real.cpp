@@ -158,6 +158,17 @@ TEST(ParserReal, QuitEarly) {
     EXPECT_EQ(observed, expected);
 }
 
+class ParserRealSimulatedTest : public ::testing::TestWithParam<std::tuple<int, int> > {
+protected:
+    eminem::ParserOptions parse_opt;
+
+    void SetUp() {
+        auto params = GetParam();
+        parse_opt.num_threads = std::get<0>(params);
+        parse_opt.block_size = std::get<1>(params);
+    }
+};
+
 static void test_equal_vectors(const std::vector<double>& left, const std::vector<double>& right) {
     // using a more generous tolerance to account for loss of precision when saving to text.
     ASSERT_EQ(left.size(), right.size());
@@ -166,7 +177,7 @@ static void test_equal_vectors(const std::vector<double>& left, const std::vecto
     }
 }
 
-TEST(ParserReal, SimulatedCoordinateMatrix) {
+TEST_P(ParserRealSimulatedTest, CoordinateMatrix) {
     std::size_t NR = 65, NC = 58;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_real(coords.first.size());
@@ -176,7 +187,7 @@ TEST(ParserReal, SimulatedCoordinateMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -197,7 +208,7 @@ TEST(ParserReal, SimulatedCoordinateMatrix) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserReal, SimulatedCoordinateVector) {
+TEST_P(ParserRealSimulatedTest, CoordinateVector) {
     std::size_t N = 6558;
     auto coords = simulate_coordinate(N, 0.05);
     auto values = simulate_real(coords.size());
@@ -207,7 +218,7 @@ TEST(ParserReal, SimulatedCoordinateVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -228,7 +239,7 @@ TEST(ParserReal, SimulatedCoordinateVector) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserReal, SimulatedArrayMatrix) {
+TEST_P(ParserRealSimulatedTest, ArrayMatrix) {
     std::size_t NR = 93, NC = 85;
     auto values = simulate_real(NR * NC);
 
@@ -237,7 +248,7 @@ TEST(ParserReal, SimulatedArrayMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -267,7 +278,7 @@ TEST(ParserReal, SimulatedArrayMatrix) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserReal, SimulatedArrayVector) {
+TEST_P(ParserRealSimulatedTest, ArrayVector) {
     std::size_t N = 632;
     auto values = simulate_real(N);
 
@@ -276,7 +287,7 @@ TEST(ParserReal, SimulatedArrayVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -299,3 +310,14 @@ TEST(ParserReal, SimulatedArrayVector) {
     EXPECT_EQ(out_cols, std::vector<int>(N));
     test_equal_vectors(out_vals, values);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    ParserReal,
+    ParserRealSimulatedTest,
+    ::testing::Values(
+        std::tuple<int, int>(1, 1),
+        std::tuple<int, int>(2, 100),
+        std::tuple<int, int>(3, 100),
+        std::tuple<int, int>(3, 1000)
+    )
+);

@@ -31,6 +31,23 @@ namespace eminem {
 typedef unsigned long long Index;
 
 /**
+ * @brief Options for the `Parser` constructor.
+ */
+struct ParserOptions {
+    /**
+     * Number of threads to use for parsing.
+     */
+    int num_threads = 1;
+
+    /**
+     * Approximate size of the block (in bytes) to be processed by each thread.
+     * This is rounded up to the nearest newline before parallel processing.
+     * Only relevant when `num_threads > 1`.
+     */
+    std::size_t block_size = 65535;
+};
+
+/**
  * @cond
  */
 template<typename Workspace_>
@@ -200,13 +217,26 @@ class Parser {
 public:
     /**
      * @param input Source of input bytes, typically a `byteme::PerByteInterface` instance.
+     * @param options Further options.
      */
-    Parser(std::unique_ptr<Input_> input) : my_input(std::move(input)) {}
+    Parser(std::unique_ptr<Input_> input, const ParserOptions& options) : 
+        my_input(std::move(input)),
+        my_nthreads(options.num_threads),
+        my_block_size(options.block_size)
+    {}
+
+    /**
+     * @cond
+     */
+    Parser(std::unique_ptr<Input_> input) : Parser(std::move(input), {}) {}
+    /**
+     * @endcond
+     */
 
 private:
     std::unique_ptr<Input_> my_input;
-    std::size_t my_block_size = 100000;
-    int my_nthreads = 1;
+    int my_nthreads;
+    std::size_t my_block_size;
 
     Index my_current_line = 0;
     MatrixDetails my_details;
@@ -1293,10 +1323,10 @@ private:
                 [&](Workspace& work) -> bool {
                     for (const auto& val : work.contents) {
                         check_num_lines_loop(current_data_line);
+                        ++current_data_line;
                         if (!store(current_data_line, 1, val)) {
                             return false;
                         }
-                        ++current_data_line;
                     }
                     return true;
                 }
