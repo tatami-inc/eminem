@@ -113,10 +113,9 @@ protected:
     }
 };
 
-template<typename ... Args_>
-static void test_error(const std::string& input, std::string msg, Args_&&... args) {
+static void test_error(const std::string& input, std::string msg, const eminem::ParserOptions& opt) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), std::forward<Args_>(args)...);
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), opt);
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {

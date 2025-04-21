@@ -21,7 +21,7 @@ TEST_P(ParserRealTest, Success) {
 
     std::string input = "%%MatrixMarket matrix coordinate real general\n" + std::to_string(nr) + " " + std::to_string(nc) + " " + std::to_string(expected.size()) + "\n" + content;
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -57,7 +57,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 static void test_error(const std::string& input, std::string msg) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
@@ -81,7 +81,7 @@ TEST(ParserReal, Error) {
     {
         std::string input = "%%MatrixMarket vector coordinate real general\n1 1 1\n1 1 1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
         EXPECT_ANY_THROW({
             try {
                 parser.scan_integer([&](eminem::Index, eminem::Index, int){});
@@ -99,7 +99,7 @@ TEST(ParserReal, OtherTypes) {
     // Single-precision.
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
         parser.scan_preamble();
 
         std::vector<float> observed;
@@ -113,7 +113,7 @@ TEST(ParserReal, OtherTypes) {
     // Super long-precision.
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
         parser.scan_preamble();
 
         std::vector<long double> observed;
@@ -129,7 +129,7 @@ TEST(ParserReal, Specials) {
     std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 4\n1 2 inf\n4 5 -INF\n7 8 nan\n9 10 -NaN\n";
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
 
     std::vector<double> observed;
@@ -146,7 +146,7 @@ TEST(ParserReal, Specials) {
 TEST(ParserReal, QuitEarly) {
     std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 3\n1 2 33\n4 5 666\n7 8 9\n";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
 
     std::vector<double> observed;

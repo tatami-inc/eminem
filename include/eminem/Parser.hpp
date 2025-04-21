@@ -225,14 +225,6 @@ public:
         my_block_size(options.block_size)
     {}
 
-    /**
-     * @cond
-     */
-    Parser(std::unique_ptr<Input_> input) : Parser(std::move(input), {}) {}
-    /**
-     * @endcond
-     */
-
 private:
     std::unique_ptr<Input_> my_input;
     int my_nthreads;
