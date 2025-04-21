@@ -10,19 +10,25 @@
 #include "simulate.h"
 #include "format.h"
 
-class ParserPatternMatrixTest : public ::testing::TestWithParam<std::tuple<std::string, int, int, std::vector<int>, std::vector<int> > > {};
+class ParserPatternMatrixScenarioTest : public ::testing::TestWithParam<std::tuple<std::tuple<std::string, int, int, std::vector<int>, std::vector<int> >, int> > {};
 
-TEST_P(ParserPatternMatrixTest, Success) {
+TEST_P(ParserPatternMatrixScenarioTest, Success) {
     auto param = GetParam();
-    const std::string& content = std::get<0>(param);
-    int nr = std::get<1>(param);
-    int nc = std::get<2>(param);
-    const auto& expected_r = std::get<3>(param);
-    const auto& expected_c = std::get<4>(param);
+
+    auto tparam = std::get<0>(param);
+    const std::string& content = std::get<0>(tparam);
+    int nr = std::get<1>(tparam);
+    int nc = std::get<2>(tparam);
+    const auto& expected_r = std::get<3>(tparam);
+    const auto& expected_c = std::get<4>(tparam);
+
+    eminem::ParserOptions parse_opt;
+    parse_opt.num_threads = std::get<1>(param);
+    parse_opt.block_size = 1; // guarantee that each thread gets at least some work.
 
     std::string input = "%%MatrixMarket matrix coordinate pattern general\n" + std::to_string(nr) + " " + std::to_string(nc) + " " + std::to_string(expected_r.size()) + "\n" + content;
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -47,56 +53,69 @@ TEST_P(ParserPatternMatrixTest, Success) {
 
 INSTANTIATE_TEST_SUITE_P(
     ParserPatternMatrix,
-    ParserPatternMatrixTest,
-    ::testing::Values(
-        std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
-            "1 11\n22 2\n3 333\n444 4\n", // trailing newline
-            500,
-            500,
-            { 1, 22, 3, 444 },
-            { 11, 2, 333, 4 }
+    ParserPatternMatrixScenarioTest,
+    ::testing::Combine(
+        ::testing::Values(
+            std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
+                "1 11\n22 2\n3 333\n444 4\n", // trailing newline
+                500,
+                500,
+                { 1, 22, 3, 444 },
+                { 11, 2, 333, 4 }
+            ),
+            std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
+                "81 19\n29 122\n39 37\n494 96", // no trailing newline
+                500,
+                500,
+                { 81, 29, 39, 494 },
+                { 19, 122, 37, 96 }
+            ),
+            std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
+                "191 121\n422 102\n73 33\n484 46   ", // trailing blank but no trailing newline
+                500,
+                500,
+                { 191, 422, 73, 484 },
+                { 121, 102, 33, 46 }
+            ),
+            std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
+                "   1 11   \n\t22 \t2   \t\n3\t\t333     \n444  4   \n", // variable numbers of blanks
+                500,
+                500,
+                { 1, 22, 3, 444 },
+                { 11, 2, 333, 4 }
+            ),
+            std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
+                "\n\n19 29\n%iamacomment\n28 3\n%another comment\n\n65 44\n98 7\n", // comments, newlines and crap. 
+                500,
+                500,
+                { 19, 28, 65, 98 },
+                { 29, 3, 44, 7}
+            ),
+            std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
+                "19 29\n28 3\n65 44\n98 7\n%this is the end", // ends on a comment
+                100,
+                100,
+                { 19, 28, 65, 98 },
+                { 29, 3, 44, 7}
+            )
         ),
-        std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
-            "81 19\n29 122\n39 37\n494 96", // no trailing newline
-            500,
-            500,
-            { 81, 29, 39, 494 },
-            { 19, 122, 37, 96 }
-        ),
-        std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
-            "191 121\n422 102\n73 33\n484 46   ", // trailing blank but no trailing newline
-            500,
-            500,
-            { 191, 422, 73, 484 },
-            { 121, 102, 33, 46 }
-        ),
-        std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
-            "   1 11   \n\t22 \t2   \t\n3\t\t333     \n444  4   \n", // variable numbers of blanks
-            500,
-            500,
-            { 1, 22, 3, 444 },
-            { 11, 2, 333, 4 }
-        ),
-        std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
-            "\n\n19 29\n%iamacomment\n28 3\n%another comment\n\n65 44\n98 7\n", // comments, newlines and crap. 
-            500,
-            500,
-            { 19, 28, 65, 98 },
-            { 29, 3, 44, 7}
-        ),
-        std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
-            "19 29\n28 3\n65 44\n98 7\n%this is the end", // ends on a comment
-            100,
-            100,
-            { 19, 28, 65, 98 },
-            { 29, 3, 44, 7}
-        )
+        ::testing::Values(1, 2, 3)
     )
 );
 
-static void test_error(const std::string& input, std::string msg) {
+class ParserPatternMatrixMiscTest : public ::testing::TestWithParam<int> {
+protected:
+    eminem::ParserOptions parse_opt;
+
+    void SetUp() {
+        parse_opt.num_threads = GetParam();
+        parse_opt.block_size = 1; // guarantee that each thread gets at least some work.
+    }
+};
+
+static void test_error(const std::string& input, std::string msg, const eminem::ParserOptions& opt) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), opt);
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
@@ -108,26 +127,26 @@ static void test_error(const std::string& input, std::string msg) {
     });
 }
 
-TEST(ParserPatternMatrix, Errors) {
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n ", "expected two fields");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1", "unexpected end of file");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 ", "unexpected end of file");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1\n", "unexpected newline");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 \n", "empty index field");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 1 1\n", "expected newline");
+TEST_P(ParserPatternMatrixMiscTest, Errors) {
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n ", "expected two fields", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1", "unexpected end of file", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 ", "unexpected end of file", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1\n", "unexpected newline", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 \n", "empty index field", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 1 1\n", "expected newline", parse_opt);
 
-    test_error("%%MatrixMarket matrix coordinate pattern general\n2 2 1\n1 1\n2 2", "more lines present");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n0 1", "row index must be positive");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n2 1", "row index out of range");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 0", "column index must be positive");
-    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 2", "column index out of range");
+    test_error("%%MatrixMarket matrix coordinate pattern general\n2 2 1\n1 1\n2 2", "more lines present", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n0 1", "row index must be positive", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n2 1", "row index out of range", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 0", "column index must be positive", parse_opt);
+    test_error("%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 2", "column index out of range", parse_opt);
 
-    test_error("%%MatrixMarket matrix coordinate pattern general\n2 2 2\n1 1\n", "fewer lines present");
+    test_error("%%MatrixMarket matrix coordinate pattern general\n2 2 2\n1 1\n", "fewer lines present", parse_opt);
 
     {
         std::string input = "%%MatrixMarket matrix coordinate pattern general\n1 1 1\n1 1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
         EXPECT_ANY_THROW({
             try {
                 parser.scan_pattern([&](eminem::Index, eminem::Index, int) -> void {});
@@ -141,7 +160,7 @@ TEST(ParserPatternMatrix, Errors) {
     {
         std::string input = "%%MatrixMarket matrix array pattern general\n1 1\n1 1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
         parser.scan_preamble();
         EXPECT_ANY_THROW({
             try {
@@ -154,12 +173,12 @@ TEST(ParserPatternMatrix, Errors) {
     }
 }
 
-TEST(ParserPatternMatrix, QuitEarly) {
+TEST_P(ParserPatternMatrixMiscTest, QuitEarly) {
     std::string input = "%%MatrixMarket matrix coordinate pattern general\n10 10 3\n1 2\n4 5\n7 8\n";
 
     { // quits immediately.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
         parser.scan_preamble();
 
         std::vector<int> observed_r, observed_c;
@@ -175,7 +194,7 @@ TEST(ParserPatternMatrix, QuitEarly) {
 
     { // never quits but function still returns a value.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
         parser.scan_preamble();
 
         std::vector<int> observed_r, observed_c;
@@ -190,10 +209,10 @@ TEST(ParserPatternMatrix, QuitEarly) {
     }
 }
 
-TEST(ParserPatternMatrix, Empty) {
+TEST_P(ParserPatternMatrixMiscTest, Empty) {
     std::string input = "%%MatrixMarket matrix coordinate pattern general\n0 0 0";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
 
     parser.scan_preamble();
 
@@ -214,7 +233,24 @@ TEST(ParserPatternMatrix, Empty) {
     EXPECT_TRUE(observed.empty());
 }
 
-TEST(ParserPatternMatrix, Simulated) {
+INSTANTIATE_TEST_SUITE_P(
+    ParserPatternMatrix,
+    ParserPatternMatrixMiscTest,
+    ::testing::Values(1, 2, 3)
+);
+
+class ParserPatternMatrixSimulatedTest : public ::testing::TestWithParam<std::tuple<int, int> > {
+protected:
+    eminem::ParserOptions parse_opt;
+
+    void SetUp() {
+        auto param = GetParam();
+        parse_opt.num_threads = std::get<0>(param);
+        parse_opt.block_size = std::get<1>(param);
+    }
+};
+
+TEST_P(ParserPatternMatrixSimulatedTest, CoordinateMatrix) {
     std::size_t NR = 163, NC = 218;
     auto coords = simulate_coordinate(NR, NC, 0.1);
 
@@ -223,7 +259,7 @@ TEST(ParserPatternMatrix, Simulated) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -245,3 +281,13 @@ TEST(ParserPatternMatrix, Simulated) {
     EXPECT_EQ(out_vals, std::vector<char>(coords.first.size(), 1));
 }
 
+INSTANTIATE_TEST_SUITE_P(
+    ParserPatternMatrix,
+    ParserPatternMatrixSimulatedTest,
+    ::testing::Values(
+        std::tuple<int, int>(1, 1),
+        std::tuple<int, int>(2, 100),
+        std::tuple<int, int>(3, 100),
+        std::tuple<int, int>(3, 1000)
+    )
+);

@@ -21,7 +21,7 @@ TEST_P(ParserRealTest, Success) {
 
     std::string input = "%%MatrixMarket matrix coordinate real general\n" + std::to_string(nr) + " " + std::to_string(nc) + " " + std::to_string(expected.size()) + "\n" + content;
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -57,7 +57,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 static void test_error(const std::string& input, std::string msg) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
@@ -81,7 +81,7 @@ TEST(ParserReal, Error) {
     {
         std::string input = "%%MatrixMarket vector coordinate real general\n1 1 1\n1 1 1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
         EXPECT_ANY_THROW({
             try {
                 parser.scan_integer([&](eminem::Index, eminem::Index, int){});
@@ -99,7 +99,7 @@ TEST(ParserReal, OtherTypes) {
     // Single-precision.
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
         parser.scan_preamble();
 
         std::vector<float> observed;
@@ -113,7 +113,7 @@ TEST(ParserReal, OtherTypes) {
     // Super long-precision.
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
         parser.scan_preamble();
 
         std::vector<long double> observed;
@@ -129,7 +129,7 @@ TEST(ParserReal, Specials) {
     std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 4\n1 2 inf\n4 5 -INF\n7 8 nan\n9 10 -NaN\n";
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
 
     std::vector<double> observed;
@@ -146,7 +146,7 @@ TEST(ParserReal, Specials) {
 TEST(ParserReal, QuitEarly) {
     std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 3\n1 2 33\n4 5 666\n7 8 9\n";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
 
     std::vector<double> observed;
@@ -158,6 +158,17 @@ TEST(ParserReal, QuitEarly) {
     EXPECT_EQ(observed, expected);
 }
 
+class ParserRealSimulatedTest : public ::testing::TestWithParam<std::tuple<int, int> > {
+protected:
+    eminem::ParserOptions parse_opt;
+
+    void SetUp() {
+        auto params = GetParam();
+        parse_opt.num_threads = std::get<0>(params);
+        parse_opt.block_size = std::get<1>(params);
+    }
+};
+
 static void test_equal_vectors(const std::vector<double>& left, const std::vector<double>& right) {
     // using a more generous tolerance to account for loss of precision when saving to text.
     ASSERT_EQ(left.size(), right.size());
@@ -166,7 +177,7 @@ static void test_equal_vectors(const std::vector<double>& left, const std::vecto
     }
 }
 
-TEST(ParserReal, SimulatedCoordinateMatrix) {
+TEST_P(ParserRealSimulatedTest, CoordinateMatrix) {
     std::size_t NR = 65, NC = 58;
     auto coords = simulate_coordinate(NR, NC, 0.1);
     auto values = simulate_real(coords.first.size());
@@ -176,7 +187,7 @@ TEST(ParserReal, SimulatedCoordinateMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -197,7 +208,7 @@ TEST(ParserReal, SimulatedCoordinateMatrix) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserReal, SimulatedCoordinateVector) {
+TEST_P(ParserRealSimulatedTest, CoordinateVector) {
     std::size_t N = 6558;
     auto coords = simulate_coordinate(N, 0.05);
     auto values = simulate_real(coords.size());
@@ -207,7 +218,7 @@ TEST(ParserReal, SimulatedCoordinateVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -228,7 +239,7 @@ TEST(ParserReal, SimulatedCoordinateVector) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserReal, SimulatedArrayMatrix) {
+TEST_P(ParserRealSimulatedTest, ArrayMatrix) {
     std::size_t NR = 93, NC = 85;
     auto values = simulate_real(NR * NC);
 
@@ -237,7 +248,7 @@ TEST(ParserReal, SimulatedArrayMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -267,7 +278,7 @@ TEST(ParserReal, SimulatedArrayMatrix) {
     test_equal_vectors(out_vals, values);
 }
 
-TEST(ParserReal, SimulatedArrayVector) {
+TEST_P(ParserRealSimulatedTest, ArrayVector) {
     std::size_t N = 632;
     auto values = simulate_real(N);
 
@@ -276,7 +287,7 @@ TEST(ParserReal, SimulatedArrayVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)));
+    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -299,3 +310,14 @@ TEST(ParserReal, SimulatedArrayVector) {
     EXPECT_EQ(out_cols, std::vector<int>(N));
     test_equal_vectors(out_vals, values);
 }
+
+INSTANTIATE_TEST_SUITE_P(
+    ParserReal,
+    ParserRealSimulatedTest,
+    ::testing::Values(
+        std::tuple<int, int>(1, 1),
+        std::tuple<int, int>(2, 100),
+        std::tuple<int, int>(3, 100),
+        std::tuple<int, int>(3, 1000)
+    )
+);
