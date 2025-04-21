@@ -11,6 +11,9 @@
 #include <mutex>
 #include <condition_variable>
 
+#include "byteme/RawBufferReader.hpp"
+#include "byteme/PerByte.hpp"
+
 #include "utils.hpp"
 
 /**
@@ -98,7 +101,7 @@ private:
 
 public:
     template<typename CreateJob_, typename MergeJob_>
-    void run(CreateJob_ create_job, MergeJob_ merge_job) {
+    bool run(CreateJob_ create_job, MergeJob_ merge_job) {
         auto num_threads = my_threads.size();
         bool finished = false;
         decltype(num_threads) thread = 0, finished_count = 0;
@@ -123,7 +126,7 @@ public:
                 // there's no point processing the later merge jobs from 
                 // other threads, so we just break out at this point.
                 if (!merge_job(env.work)) {
-                    break;
+                    return false;
                 }
                 env.has_output = false;
             }
@@ -146,13 +149,15 @@ public:
                 thread = 0;
             }
         }
+
+        return true;
     }
 };
 
 template<class Input_>
-bool fill_to_next_newline(Input2_& input, std::vector<char>& buffer, std::size_t block_size) {
+bool fill_to_next_newline(Input_& input, std::vector<char>& buffer, std::size_t block_size) {
     buffer.resize(block_size);
-    auto done = input.extract(block_size, reinterpret_cast<const unsigned char*>(buffer.data()));
+    auto done = input.extract(block_size, buffer.data());
     buffer.resize(done.first);
     if (!done.second || buffer.empty()) {
         return false;
@@ -173,7 +178,7 @@ inline std::size_t count_newlines(const std::vector<char>& buffer) {
     for (auto x : buffer) {
         n += (x == '\n');
     }
-    return x;
+    return n;
 }
 /**
  * @endcond
@@ -200,6 +205,9 @@ public:
 
 private:
     std::unique_ptr<Input_> my_input;
+    std::size_t my_block_size = 100000;
+    int my_nthreads = 1;
+
     Index my_current_line = 0;
     MatrixDetails my_details;
 
@@ -509,7 +517,7 @@ private:
     using SizeInfo = typename std::conditional<last_, LastSizeInfo, NotLastSizeInfo>::type;
 
     template<bool last_, class Input2_>
-    SizeInfo<last_> scan_integer_field(bool size, Input2_& input) {
+    static SizeInfo<last_> scan_integer_field(bool size, Input2_& input, Index overall_line_count) {
         SizeInfo<last_> output;
         bool found = false;
 
@@ -536,37 +544,37 @@ private:
                     // - a non-newline non-digit, in case we throw.
                     // - a newline, in which case we arrive here.
                     if (!found) {
-                        throw std::runtime_error("empty " + what() + " field on line " + std::to_string(my_current_line + 1));
+                        throw std::runtime_error("empty " + what() + " field on line " + std::to_string(overall_line_count + 1));
                     }
                     if constexpr(last_) {
                         output.remaining = input.advance(); // advance past the newline.
                         return output;
                     }
-                    throw std::runtime_error("unexpected newline when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
+                    throw std::runtime_error("unexpected newline when parsing " + what() + " field on line " + std::to_string(overall_line_count + 1));
                 case ' ': case '\t':
                     if (!advance_and_chomp(input)) { // skipping the current and subsequent blanks.
                         if constexpr(last_) {
                             return output;
                         } else {
-                            throw std::runtime_error("unexpected end of file when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
+                            throw std::runtime_error("unexpected end of file when parsing " + what() + " field on line " + std::to_string(overall_line_count + 1));
                         }
                     }
                     if constexpr(last_) {
                         if (input.get() != '\n') {
-                            throw std::runtime_error("expected newline after the last " + what() + " field on line " + std::to_string(my_current_line + 1));
+                            throw std::runtime_error("expected newline after the last " + what() + " field on line " + std::to_string(overall_line_count + 1));
                         }
                         output.remaining = input.advance(); // advance past the newline.
                     }
                     return output;
                 default:
-                    throw std::runtime_error("unexpected character when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
+                    throw std::runtime_error("unexpected character when parsing " + what() + " field on line " + std::to_string(overall_line_count + 1));
             }
 
             if (!(input.advance())) { // moving past the current digit.
                 if constexpr(last_) {
                     break;
                 } else {
-                    throw std::runtime_error("unexpected end of file when parsing " + what() + " field on line " + std::to_string(my_current_line + 1));
+                    throw std::runtime_error("unexpected end of file when parsing " + what() + " field on line " + std::to_string(overall_line_count + 1));
                 }
             }
         }
@@ -575,13 +583,13 @@ private:
     }
 
     template<bool last_, class Input2_>
-    SizeInfo<last_> scan_size_field(Input2_& input) {
-        return scan_integer_field<last_>(true, input);
+    static SizeInfo<last_> scan_size_field(Input2_& input, Index overall_line_count) {
+        return scan_integer_field<last_>(true, input, overall_line_count);
     }
 
     template<bool last_, class Input2_>
-    SizeInfo<last_> scan_index_field(Input2_& input) {
-        return scan_integer_field<last_>(false, input);
+    static SizeInfo<last_> scan_index_field(Input2_& input, Index overall_line_count) {
+        return scan_integer_field<last_>(false, input, overall_line_count);
     }
 
 private:
@@ -594,7 +602,7 @@ private:
         }
 
         // Handling stray comments, empty lines, and leading whitespace.
-        if (!skip_lines(*my_input)) {
+        if (!skip_lines(*my_input, my_current_line)) {
             throw std::runtime_error("failed to find size line before end of file");
         }
         if (!chomp(*my_input)) {
@@ -603,34 +611,34 @@ private:
 
         if (my_details.object == Object::MATRIX) {
             if (my_details.format == Format::COORDINATE) {
-                auto first_field = scan_size_field<false>(*my_input);
+                auto first_field = scan_size_field<false>(*my_input, my_current_line);
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<false>(*my_input);
+                auto second_field = scan_size_field<false>(*my_input, my_current_line);
                 my_ncols = second_field.index;
 
-                auto third_field = scan_size_field<true>(*my_input);
+                auto third_field = scan_size_field<true>(*my_input, my_current_line);
                 my_nlines = third_field.index;
 
             } else { // i.e., my_details.format == Format::ARRAY
-                auto first_field = scan_size_field<false>(*my_input);
+                auto first_field = scan_size_field<false>(*my_input, my_current_line);
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<true>(*my_input);
+                auto second_field = scan_size_field<true>(*my_input, my_current_line);
                 my_ncols = second_field.index;
                 my_nlines = my_nrows * my_ncols;
             }
 
         } else {
             if (my_details.format == Format::COORDINATE) {
-                auto first_field = scan_size_field<false>(*my_input);
+                auto first_field = scan_size_field<false>(*my_input, my_current_line);
                 my_nrows = first_field.index;
 
-                auto second_field = scan_size_field<true>(*my_input);
+                auto second_field = scan_size_field<true>(*my_input, my_current_line);
                 my_nlines = second_field.index;
 
             } else { // i.e., my_details.format == Format::ARRAY
-                auto first_field = scan_size_field<true>(*my_input);
+                auto first_field = scan_size_field<true>(*my_input, my_current_line);
                 my_nlines = first_field.index;
                 my_nrows = my_nlines;
             }
@@ -695,60 +703,71 @@ public:
     }
 
 private:
-    typename<typename Type_>
-    struct ProcessInfo {
+    template<typename Type_>
+    struct ParseInfo {
         Type_ value;
-        bool remaining = false;
+        bool remaining;
     };
 
-    typename<typename Workspace_>
+    template<typename Workspace_>
     bool configure_parallel_workspace(Workspace_& work) {
-        bool available = fill_to_next_newline(*my_input, work.buffer);
+        bool available = fill_to_next_newline(*my_input, work.buffer, my_block_size);
         work.contents.clear();
         work.overall_line = my_current_line;
         my_current_line += count_newlines(work.buffer);
         return available;
     }
 
-private:
-    void check_matrix_coordinate_line(Index currow, Index curcol) const {
-        if (current_data_line >= my_nlines) {
-            throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
-        }
-        if (!currow) {
-            throw std::runtime_error("row index must be positive on line " + std::to_string(my_current_line + 1));
-        }
-        if (currow > my_nrows) {
-            throw std::runtime_error("row index out of range on line " + std::to_string(my_current_line + 1));
-        }
-        if (!curcol) {
-            throw std::runtime_error("column index must be positive on line " + std::to_string(my_current_line + 1));
-        }
-        if (curcol > my_ncols) {
-            throw std::runtime_error("column index out of range on line " + std::to_string(my_current_line + 1));
+    void check_num_lines_loop(Index data_line_count) const {
+        if (data_line_count >= my_nlines) {
+            throw std::runtime_error("more lines present than specified in the header (" + std::to_string(data_line_count) + " versus " + std::to_string(my_nlines) + ")");
         }
     }
 
-    template<typename Type_, class Parse_, class WrappedStore_>
-    bool scan_matrix_coordinate_non_pattern_base(Parse_ parse, WrappedStore_ wstore, Input2_& input, Index& overall_line_count) const {
-        Index current_data_line = 0;
+    void check_num_lines_final(bool finished, Index data_line_count) const {
+        if (finished) {
+            if (data_line_count != my_nlines) {
+                // Must be fewer, otherwise we would have triggered the error in check_num_lines_loop() during iteration.
+                throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(data_line_count) + " versus " + std::to_string(my_nlines) + ")");
+            }
+        }
+    }
+
+private:
+    void check_matrix_coordinate_line(Index currow, Index curcol, Index overall_line_count) const {
+        if (!currow) {
+            throw std::runtime_error("row index must be positive on line " + std::to_string(overall_line_count + 1));
+        }
+        if (currow > my_nrows) {
+            throw std::runtime_error("row index out of range on line " + std::to_string(overall_line_count + 1));
+        }
+        if (!curcol) {
+            throw std::runtime_error("column index must be positive on line " + std::to_string(overall_line_count + 1));
+        }
+        if (curcol > my_ncols) {
+            throw std::runtime_error("column index out of range on line " + std::to_string(overall_line_count + 1));
+        }
+    }
+
+    template<typename Type_, class Input2_, typename FieldParser_, class WrappedStore_>
+    bool scan_matrix_coordinate_non_pattern_base(Input2_& input, Index& overall_line_count, FieldParser_& fparser, WrappedStore_ wstore) const {
         bool valid = input.valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
-            if (!skip_lines(input)) {
+            if (!skip_lines(input, overall_line_count)) {
                 break;
             }
             if (!chomp(input)) {
-                throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(my_current_line + 1));
+                throw std::runtime_error("expected at least three fields for a coordinate matrix on line " + std::to_string(overall_line_count + 1));
             }
 
-            auto first_field = scan_index_field<false>(input);
-            auto second_field = scan_index_field<false>(input);
+            auto first_field = scan_index_field<false>(input, overall_line_count);
+            auto second_field = scan_index_field<false>(input, overall_line_count);
+            check_matrix_coordinate_line(first_field.index, second_field.index, overall_line_count);
 
             // 'parse' should leave 'input' at the start of the next line, if any exists.
-            ProcessInfo<Type_> res = parse(input);
-            bool keep_going = wstore(first_field.index, second_field.index, res.value);
-            if (!keep_going) {
+            ParseInfo<Type_> res = fparser(input, overall_line_count);
+            if (!wstore(first_field.index, second_field.index, res.value)) {
                 return false;
             }
             ++overall_line_count;
@@ -758,45 +777,44 @@ private:
         return true;
     }
 
-    template<typename Type_, class Parse_, class Store_>
-    bool scan_matrix_coordinate_non_pattern(Parse_ parse, Store_ store) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
-
+    template<typename Type_, class FieldParser_, class Store_>
+    bool scan_matrix_coordinate_non_pattern(Store_ store) {
         bool finished = false;
         Index current_data_line = 0;
+
         if (my_nthreads == 1) {
-            finished = scan_matrix_coordinate_non_pattern_base(
-                std::move(parse),
+            FieldParser_ fparser;
+            finished = scan_matrix_coordinate_non_pattern_base<Type_>(
+                *my_input,
+                my_current_line,
+                fparser,
                 [&](Index r, Index c, Type_ value) -> bool {
-                    check_matrix_coordinate_line(current_data_line, r, c);
+                    check_num_lines_loop(current_data_line);
                     ++current_data_line;
                     return store(r, c, value);
-                },
-                *my_input,
-                my_current_line
+                }
             );
 
         } else {
             struct Workspace {
                 std::vector<char> buffer;
+                FieldParser_ fparser;
                 std::vector<std::tuple<Index, Index, Type_> > contents;
                 Index overall_line;
             };
 
             ThreadPool<Workspace> tp(
                 [&](Workspace& work) -> bool {
-                    RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.size());
-                    PerByteSerial<char> pb(&reader);
-                    return scan_matrix_coordinate_non_pattern_base(
-                        parse,
-                        [&](Index r, Index c, Type_ value) -> bool {
-                            contents.emplace_back(r, c, value);
-                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
-                        },
+                    byteme::RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.buffer.size());
+                    byteme::PerByteSerial<char, byteme::RawBufferReader*> pb(&reader);
+                    return scan_matrix_coordinate_non_pattern_base<Type_>(
                         pb,
-                        work.overall_line
+                        work.overall_line,
+                        work.fparser,
+                        [&](Index r, Index c, Type_ value) -> bool {
+                            work.contents.emplace_back(r, c, value);
+                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
+                        }
                     );
                 },
                 my_nthreads
@@ -808,10 +826,8 @@ private:
                 },
                 [&](Workspace& work) -> bool {
                     for (const auto& con : work.contents) {
-                        auto r = std::get<0>(con);
-                        auto c = std::get<1>(con);
-                        check_matrix_coordinate_line(current_data_line, r, c);
-                        if (!store(r, c, std::get<2>(con))) {
+                        check_num_lines_loop(current_data_line); // defer check here for the correctly sync'd value of current_data_line.
+                        if (!store(std::get<0>(con), std::get<1>(con), std::get<2>(con))) {
                             return false;
                         }
                         ++current_data_line;
@@ -821,36 +837,31 @@ private:
             );
         }
 
-        if (current_data_line != my_nlines) {
-            // Must be fewer, otherwise we would have triggered the error in check_*.
-            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
-        }
+        check_num_lines_final(finished, current_data_line);
         return finished;
     }
 
-    template<class WrappedStore_>
-    bool scan_matrix_coordinate_pattern_base(WrappedStore_ wstore) {
-        Index current_data_line = 0;
-        bool valid = my_input->valid();
+private:
+    template<class Input2_, class WrappedStore_>
+    bool scan_matrix_coordinate_pattern_base(Input2_& input, Index& overall_line_count, WrappedStore_ wstore) const {
+        bool valid = input.valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
-            if (!skip_lines()) {
+            if (!skip_lines(input, overall_line_count)) {
                 break;
             }
-            if (!chomp()) {
-                throw std::runtime_error("expected two fields for a pattern matrix on line " + std::to_string(my_current_line + 1));
+            if (!chomp(input)) {
+                throw std::runtime_error("expected two fields for a pattern matrix on line " + std::to_string(overall_line_count + 1));
             }
 
-            auto first_field = scan_index_field<false>();
-            auto second_field = scan_index_field<true>();
+            auto first_field = scan_index_field<false>(input, overall_line_count);
+            auto second_field = scan_index_field<true>(input, overall_line_count);
+            check_matrix_coordinate_line(first_field.index, second_field.index, overall_line_count);
 
-            // 'wstore' returns boolean indicating whether to keep going;
-            // it doesn't modify 'my_input' at all.
             if (!wstore(first_field.index, second_field.index)) {
                 return false;
             }
-            ++current_data_line;
-            ++my_current_line;
+            ++overall_line_count;
             valid = second_field.remaining;
         }
 
@@ -858,23 +869,19 @@ private:
     }
 
     template<class Store_>
-    bool scan_matrix_coordinate_pattern(Store_ pstore) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
-
+    bool scan_matrix_coordinate_pattern(Store_ store) {
         bool finished = false;
         Index current_data_line = 0;
+
         if (my_nthreads == 1) {
             finished = scan_matrix_coordinate_pattern_base(
-                std::move(parse),
+                *my_input,
+                my_current_line,
                 [&](Index r, Index c) -> bool {
-                    check_matrix_coordinate_line(current_data_line, r, c);
+                    check_num_lines_loop(current_data_line);
                     ++current_data_line;
                     return store(r, c);
-                },
-                *my_input,
-                my_current_line
+                }
             );
 
         } else {
@@ -886,16 +893,15 @@ private:
 
             ThreadPool<Workspace> tp(
                 [&](Workspace& work) -> bool {
-                    RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.size());
-                    PerByteSerial<char> pb(&reader);
+                    byteme::RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.buffer.size());
+                    byteme::PerByteSerial<char, byteme::RawBufferReader*> pb(&reader);
                     return scan_matrix_coordinate_pattern_base(
-                        parse,
-                        [&](Index r, Index c) -> bool {
-                            contents.emplace_back(r, c);
-                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
-                        },
                         pb,
-                        work.overall_line
+                        work.overall_line,
+                        [&](Index r, Index c) -> bool {
+                            work.contents.emplace_back(r, c);
+                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
+                        }
                     );
                 },
                 my_nthreads
@@ -907,10 +913,8 @@ private:
                 },
                 [&](Workspace& work) -> bool {
                     for (const auto& con : work.contents) {
-                        auto r = std::get<0>(con);
-                        auto c = std::get<1>(con);
-                        check_matrix_coordinate_line(current_data_line, r, c);
-                        if (!store(r, c)) {
+                        check_num_lines_loop(current_data_line);
+                        if (!store(std::get<0>(con), std::get<1>(con))) {
                             return false;
                         }
                         ++current_data_line;
@@ -920,187 +924,458 @@ private:
             );
         }
 
-        if (current_data_line != my_nlines) {
-            // Must be fewer, otherwise we would have triggered the error in check_*.
-            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
-        }
+        check_num_lines_final(finished, current_data_line);
         return finished;
     }
 
 private:
-    void check_vector_coordinate_line(Index current_data_line, Index currow) {
-        if (current_data_line >= my_nlines) {
-            throw std::runtime_error("more lines present than specified in the header (" + std::to_string(my_nlines) + ")");
-        }
+    void check_vector_coordinate_line(Index currow, Index overall_line_count) const {
         if (!currow) {
-            throw std::runtime_error("row index must be positive on line " + std::to_string(my_current_line + 1));
+            throw std::runtime_error("row index must be positive on line " + std::to_string(overall_line_count + 1));
         }
         if (currow > my_nrows) {
-            throw std::runtime_error("row index out of range on line " + std::to_string(my_current_line + 1));
+            throw std::runtime_error("row index out of range on line " + std::to_string(overall_line_count + 1));
         }
     }
 
-    template<class Store_>
-    bool scan_vector_coordinate_non_pattern(Store_ store) {
-        Index current_data_line = 0;
-        bool valid = my_input->valid();
+    template<typename Type_, class Input2_, class FieldParser_, class WrappedStore_>
+    bool scan_vector_coordinate_non_pattern_base(Input2_& input, Index& overall_line_count, FieldParser_& fparser, WrappedStore_ wstore) const {
+        bool valid = input.valid();
         while (valid) {
-            // Handling stray comments, empty lines, and leading spaces.
-            if (!skip_lines()) {
+            // handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines(input, overall_line_count)) {
                 break;
             }
-            if (!chomp()) {
-                throw std::runtime_error("expected at least two fields for a coordinate vector on line " + std::to_string(my_current_line + 1));
+            if (!chomp(input)) {
+                throw std::runtime_error("expected at least two fields for a coordinate vector on line " + std::to_string(overall_line_count + 1));
             }
 
-            auto first_field = scan_index_field<false>();
-            check_vector_coordinate_line(current_data_line, first_field.index);
+            auto first_field = scan_index_field<false>(input, overall_line_count);
+            check_vector_coordinate_line(first_field.index, overall_line_count);
 
-            // 'store' should leave 'my_input' at the start of the next line, if any exists.
-            auto res = store(first_field.index, 1);
-            if (res.quit_early) {
+            // 'parse' should leave 'input' at the start of the next line, if any exists.
+            ParseInfo<Type_> res = fparser(input, overall_line_count);
+            if (!wstore(first_field.index, res.value)) {
                 return false;
             }
-            ++current_data_line;
-            ++my_current_line;
+            ++overall_line_count;
             valid = res.remaining;
         }
 
-        if (current_data_line != my_nlines) {
-            // Must be fewer, otherwise we would have triggered the error in check_*.
-            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
-        }
         return true;
     }
 
-    template<class PatternStore_>
-    bool scan_vector_coordinate_pattern(PatternStore_ pstore) {
+    template<typename Type_, class FieldParser_, class Store_>
+    bool scan_vector_coordinate_non_pattern(Store_ store) {
+        bool finished = false;
         Index current_data_line = 0;
-        bool valid = my_input->valid();
-        while (valid) {
-            // Handling stray comments, empty lines, and leading spaces.
-            if (!skip_lines()) {
-                break;
-            }
-            if (!chomp()) {
-                throw std::runtime_error("expected one field for a coordinate vector on line " + std::to_string(my_current_line + 1));
-            }
 
-            auto first_field = scan_index_field<true>();
-            check_vector_coordinate_line(current_data_line, first_field.index);
+        if (my_nthreads == 1) {
+            FieldParser_ fparser;
+            finished = scan_vector_coordinate_non_pattern_base<Type_>(
+                *my_input,
+                my_current_line,
+                fparser,
+                [&](Index r, Type_ value) -> bool {
+                    check_num_lines_loop(current_data_line);
+                    ++current_data_line;
+                    return store(r, 1, value);
+                }
+            );
 
-            // 'pstore' returns boolean indicating whether to quit early;
-            // it doesn't modify 'my_input' at all.
-            if (pstore(first_field.index, 1)) {
-                return false;
-            }
-            ++current_data_line;
-            ++my_current_line;
-            valid = first_field.remaining;
+        } else {
+            struct Workspace {
+                std::vector<char> buffer;
+                FieldParser_ fparser;
+                std::vector<std::tuple<Index, Type_> > contents;
+                Index overall_line;
+            };
+
+            ThreadPool<Workspace> tp(
+                [&](Workspace& work) -> bool {
+                    byteme::RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.buffer.size());
+                    byteme::PerByteSerial<char, byteme::RawBufferReader*> pb(&reader);
+                    return scan_vector_coordinate_non_pattern_base<Type_>(
+                        pb,
+                        work.overall_line,
+                        work.fparser,
+                        [&](Index r, Type_ value) -> bool {
+                            work.contents.emplace_back(r, value);
+                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
+                        }
+                    );
+                },
+                my_nthreads
+            );
+
+            finished = tp.run(
+                [&](Workspace& work) -> bool {
+                    return configure_parallel_workspace(work);
+                },
+                [&](Workspace& work) -> bool {
+                    for (const auto& con : work.contents) {
+                        check_num_lines_loop(current_data_line);
+                        if (!store(std::get<0>(con), 1, std::get<1>(con))) {
+                            return false;
+                        }
+                        ++current_data_line;
+                    }
+                    return true;
+                }
+            );
         }
 
-        if (current_data_line != my_nlines) {
-            // Must be fewer, otherwise we would have triggered the error in check_*.
-            throw std::runtime_error("fewer lines present than specified in the header (" + std::to_string(my_nlines) + ")");
-        }
-        return true;
+        check_num_lines_final(finished, current_data_line);
+        return finished;
     }
 
 private:
-    template<class Store_>
-    bool scan_matrix_array(Store_ store) {
-        Index current_data_line = 0;
-        Index currow = 1, curcol = 1;
-        bool valid = my_input->valid();
+    template<class Input2_, class WrappedStore_>
+    bool scan_vector_coordinate_pattern_base(Input2_& input, Index& overall_line_count, WrappedStore_ wstore) const {
+        bool valid = input.valid();
         while (valid) {
             // Handling stray comments, empty lines, and leading spaces.
-            if (!skip_lines()) {
+            if (!skip_lines(input, overall_line_count)) {
                 break;
             }
-            if (!chomp()) {
-                throw std::runtime_error("expected at least one field for an array matrix on line " + std::to_string(my_current_line + 1));
+            if (!chomp(input)) {
+                throw std::runtime_error("expected one field for a coordinate vector on line " + std::to_string(overall_line_count + 1));
             }
 
-            if (current_data_line >= my_nlines) {
-                throw std::runtime_error("more lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
-            }
+            auto first_field = scan_index_field<true>(input, overall_line_count);
+            check_vector_coordinate_line(first_field.index, overall_line_count);
 
-            // 'store' should leave 'my_input' at the start of the next line, if any exists.
-            auto res = store(currow, curcol);
-            if (res.quit_early) {
+            if (!wstore(first_field.index)) {
                 return false;
             }
-            ++current_data_line;
+            ++overall_line_count;
+            valid = first_field.remaining;
+        }
+
+        return true;
+    }
+
+    template<class Store_>
+    bool scan_vector_coordinate_pattern(Store_ store) {
+        bool finished = false;
+        Index current_data_line = 0;
+
+        if (my_nthreads == 1) {
+            finished = scan_vector_coordinate_pattern_base(
+                *my_input,
+                my_current_line,
+                [&](Index r) -> bool {
+                    check_num_lines_loop(current_data_line);
+                    ++current_data_line;
+                    return store(r, 1);
+                }
+            );
+
+        } else {
+            struct Workspace {
+                std::vector<char> buffer;
+                std::vector<Index> contents;
+                Index overall_line;
+            };
+
+            ThreadPool<Workspace> tp(
+                [&](Workspace& work) -> bool {
+                    byteme::RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.buffer.size());
+                    byteme::PerByteSerial<char, byteme::RawBufferReader*> pb(&reader);
+                    return scan_vector_coordinate_pattern_base(
+                        pb,
+                        work.overall_line,
+                        [&](Index r) -> bool {
+                            work.contents.emplace_back(r);
+                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
+                        }
+                    );
+                },
+                my_nthreads
+            );
+
+            finished = tp.run(
+                [&](Workspace& work) -> bool {
+                    return configure_parallel_workspace(work);
+                },
+                [&](Workspace& work) -> bool {
+                    for (const auto& r : work.contents) {
+                        check_num_lines_loop(current_data_line);
+                        if (!store(r, 1)) {
+                            return false;
+                        }
+                        ++current_data_line;
+                    }
+                    return true;
+                }
+            );
+        }
+
+        check_num_lines_final(finished, current_data_line);
+        return finished;
+    }
+
+private:
+    template<typename Type_, class Input2_, class FieldParser_, class WrappedStore_>
+    bool scan_matrix_array_base(Input2_& input, Index& overall_line_count, FieldParser_& fparser, WrappedStore_ wstore) const {
+        bool valid = input.valid();
+        while (valid) {
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines(input, overall_line_count)) {
+                break;
+            }
+            if (!chomp(input)) {
+                throw std::runtime_error("expected at least one field for an array matrix on line " + std::to_string(overall_line_count + 1));
+            }
+
+            // 'parse' should leave 'input' at the start of the next line, if any exists.
+            ParseInfo<Type_> res = fparser(input, overall_line_count);
+            if (!wstore(res.value)) {
+                return false;
+            }
+            ++overall_line_count;
+            valid = res.remaining;
+        }
+
+        return true;
+    }
+
+    template<typename Type_, class FieldParser_, class Store_>
+    bool scan_matrix_array(Store_ store) {
+        bool finished = false;
+        Index current_data_line = 0;
+
+        Index currow = 1, curcol = 1;
+        auto increment = [&]() {
             ++currow;
             if (currow > my_nrows) {
                 ++curcol;
                 currow = 1;
             }
-            valid = res.remaining;
+        };
+
+        if (my_nthreads == 1) {
+            FieldParser_ fparser;
+            finished = scan_matrix_array_base<Type_>(
+                *my_input,
+                my_current_line,
+                fparser,
+                [&](Type_ value) -> bool {
+                    check_num_lines_loop(current_data_line);
+                    if (!store(currow, curcol, value)) {
+                        return false;
+                    }
+                    ++current_data_line;
+                    increment();
+                    return true;
+                }
+            );
+
+        } else {
+            struct Workspace {
+                std::vector<char> buffer;
+                FieldParser_ fparser;
+                std::vector<Type_> contents;
+                Index overall_line;
+            };
+
+            ThreadPool<Workspace> tp(
+                [&](Workspace& work) -> bool {
+                    byteme::RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.buffer.size());
+                    byteme::PerByteSerial<char, byteme::RawBufferReader*> pb(&reader);
+                    return scan_matrix_array_base<Type_>(
+                        pb,
+                        work.overall_line,
+                        work.fparser,
+                        [&](Type_ value) -> bool {
+                            work.contents.emplace_back(value);
+                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
+                        }
+                    );
+                },
+                my_nthreads
+            );
+
+            finished = tp.run(
+                [&](Workspace& work) -> bool {
+                    return configure_parallel_workspace(work);
+                },
+                [&](Workspace& work) -> bool {
+                    for (const auto& val : work.contents) {
+                        check_num_lines_loop(current_data_line);
+                        if (!store(currow, curcol, val)) {
+                            return false;
+                        }
+                        ++current_data_line;
+                        increment();
+                    }
+                    return true;
+                }
+            );
         }
 
-        if (current_data_line != my_nlines) {
-            throw std::runtime_error("fewer lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
-        }
-        return true;
-    }
-
-    template<class Store_>
-    bool scan_vector_array(Store_ store) {
-        Index current_data_line = 0;
-        bool valid = my_input->valid();
-        while (valid) {
-            // Handling stray comments, empty lines, and leading spaces.
-            if (!skip_lines()) {
-                break;
-            }
-            if (!chomp()) {
-                throw std::runtime_error("expected at least one field for an array vector on line " + std::to_string(my_current_line + 1));
-            }
-
-            if (current_data_line >= my_nlines) {
-                throw std::runtime_error("more lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
-            }
-
-            // 'store' should leave 'my_input' at the start of the next line, if any exists.
-            auto res = store(current_data_line + 1, 1);
-            if (res.quit_early) {
-                return false;
-            }
-            ++current_data_line;
-            valid = res.remaining;
-        }
-
-        if (current_data_line != my_nlines) {
-            throw std::runtime_error("fewer lines present than expected for an array format (" + std::to_string(my_nlines) + ")");
-        }
-        return true;
+        check_num_lines_final(finished, current_data_line);
+        return finished;
     }
 
 private:
-    template<typename Type_>
-    Type_ convert_to_real(const std::string& temporary) const {
-        Type_ output;
-        std::size_t n = 0;
-
-        try {
-            if constexpr(std::is_same<Type_, float>::value) {
-                output = std::stof(temporary, &n);
-            } else if constexpr(std::is_same<Type_, long double>::value) {
-                output = std::stold(temporary, &n);
-            } else {
-                output = std::stod(temporary, &n);
+    template<typename Type_, class Input2_, class FieldParser_, class WrappedStore_>
+    bool scan_vector_array_base(Input2_& input, Index& overall_line_count, FieldParser_& fparser, WrappedStore_ wstore) const {
+        bool valid = input.valid();
+        while (valid) {
+            // Handling stray comments, empty lines, and leading spaces.
+            if (!skip_lines(input, overall_line_count)) {
+                break;
             }
-        } catch (std::invalid_argument& e) {
-            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(my_current_line + 1));
+            if (!chomp(input)) {
+                throw std::runtime_error("expected at least one field for an array vector on line " + std::to_string(overall_line_count + 1));
+            }
+
+            // 'store' should leave 'input' at the start of the next line, if any exists.
+            ParseInfo<Type_> res = fparser(input, overall_line_count);
+            bool keep_going = store(res.value);
+            if (!keep_going) {
+                return false;
+            }
+            ++overall_line_count;
+            valid = res.remaining;
         }
 
-        if (n != temporary.size()) {
-            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(my_current_line + 1));
-        }
-
-        return output;
+        return true;
     }
+
+    template<typename Type_, class FieldParser_, class Store_>
+    bool scan_vector_array(Store_ store) {
+        bool finished = false;
+        Index current_data_line = 0;
+        if (my_nthreads == 1) {
+            FieldParser_ fparser;
+            finished = scan_matrix_array_base<Type_>(
+                *my_input,
+                my_current_line,
+                fparser,
+                [&](Type_ value) -> bool {
+                    check_num_lines_loop(current_data_line);
+                    ++current_data_line;
+                    return store(current_data_line, 1, value);
+                }
+            );
+
+        } else {
+            struct Workspace {
+                std::vector<char> buffer;
+                FieldParser_ fparser;
+                std::vector<Type_> contents;
+                Index overall_line;
+            };
+
+            ThreadPool<Workspace> tp(
+                [&](Workspace& work) -> bool {
+                    byteme::RawBufferReader reader(reinterpret_cast<const unsigned char*>(work.buffer.data()), work.buffer.size());
+                    byteme::PerByteSerial<char, byteme::RawBufferReader*> pb(&reader);
+                    return scan_matrix_array_base<Type_>(
+                        pb,
+                        work.overall_line,
+                        work.fparser,
+                        [&](Type_ value) -> bool {
+                            work.contents.emplace_back(value);
+                            return true; // threads cannot quit early in their parallel sections; this (and thus scan_*_base) must always return true.
+                        }
+                    );
+                },
+                my_nthreads
+            );
+
+            finished = tp.run(
+                [&](Workspace& work) -> bool {
+                    return configure_parallel_workspace(work);
+                },
+                [&](Workspace& work) -> bool {
+                    for (const auto& val : work.contents) {
+                        check_num_lines_loop(current_data_line);
+                        if (!store(current_data_line, 1, val)) {
+                            return false;
+                        }
+                        ++current_data_line;
+                    }
+                    return true;
+                }
+            );
+        }
+
+        check_num_lines_final(finished, current_data_line);
+        return finished;
+    }
+
+private:
+    void check_preamble() const {
+        if (!my_passed_banner || !my_passed_size) {
+            throw std::runtime_error("banner or size lines have not yet been parsed");
+        }
+    }
+
+    template<typename Type_>
+    class IntegerFieldParser {
+    public:
+        template<class Input2_>
+        ParseInfo<Type_> operator()(Input2_& input, Index overall_line_count) {
+            bool negative = (input.get() == '-');
+            if (negative) {
+                if (!(input.advance())) {
+                    throw std::runtime_error("premature termination of an integer on line " + std::to_string(overall_line_count + 1));
+                }
+            }
+
+            Type_ val = 0;
+            auto finish = [&](bool valid) -> ParseInfo<Type_> {
+                ParseInfo<Type_> output;
+                output.remaining = valid;
+                if (negative) {
+                    val *= -1;
+                }
+                output.value = val;
+                return output;
+            };
+
+            bool found = false;
+            while (1) {
+                char x = input.get();
+                switch (x) {
+                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                        val *= 10;
+                        val += x - '0';
+                        found = true;
+                        break;
+                    case ' ': case '\t':
+                        if (!advance_and_chomp(input)) { // skipping past the current position before chomping.
+                            return finish(false);
+                        }
+                        if (input.get() != '\n') {
+                            throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
+                        }
+                        return finish(input.advance()); // move past the newline.
+                    case '\n':
+                        // This check only needs to be put here, as all blanks should be chomped before calling
+                        // this function; so we must start on a non-blank character. This starting character is either:
+                        // - a digit, in which case found = true and this check is unnecessary.
+                        // - a non-newline non-digit, in case we throw.
+                        // - a newline, in which case we arrive here.
+                        if (!found) {
+                            throw std::runtime_error("empty integer field on line " + std::to_string(overall_line_count + 1));
+                        }
+                        return finish(input.advance()); // move past the newline.
+                    default:
+                        throw std::runtime_error("expected an integer value on line " + std::to_string(overall_line_count + 1));
+                }
+
+                if (!(input.advance())) {
+                    break;
+                }
+            }
+
+            return finish(false);
+        }
+    };
 
 public:
     /**
@@ -1118,87 +1393,106 @@ public:
      */
     template<typename Type_ = int, class Store_>
     bool scan_integer(Store_ store) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
+        check_preamble();
 
-        auto store_int = [&](Index r, Index c) -> StoreInfo {
-            bool negative = (my_input->get() == '-');
-            if (negative) {
-                if (!(my_input->advance())) {
-                    throw std::runtime_error("premature termination of an integer on line " + std::to_string(my_current_line + 1));
-                }
+        auto wrapped_store = [&](Index r, Index c, Type_ val) -> bool {
+            if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, Type_>::type, bool>::value) {
+                return store(r, c, val);
+            } else {
+                store(r, c, val);
+                return true;
             }
-
-            Type_ val = 0;
-            bool found = false;
-            auto finish = [&](bool valid) -> StoreInfo {
-                StoreInfo output;
-                output.remaining = valid;
-                if (negative) {
-                    val *= -1;
-                }
-                if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, Type_>::type, bool>::value) {
-                    output.quit_early = !store(r, c, val);
-                } else {
-                    store(r, c, val);
-                }
-                return output;
-            };
-
-            while (1) {
-                char x = my_input->get();
-                switch (x) {
-                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                        val *= 10;
-                        val += x - '0';
-                        found = true;
-                        break;
-                    case ' ': case '\t':
-                        if (!advance_and_chomp()) { // skipping past the current position before chomping.
-                            return finish(false);
-                        }
-                        if (my_input->get() != '\n') {
-                            throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
-                        }
-                        return finish(my_input->advance()); // move past the newline.
-                    case '\n':
-                        // This check only needs to be put here, as all blanks should be chomped before calling
-                        // this function; so we must start on a non-blank character. This starting character is either:
-                        // - a digit, in which case found = true and this check is unnecessary.
-                        // - a non-newline non-digit, in case we throw.
-                        // - a newline, in which case we arrive here.
-                        if (!found) {
-                            throw std::runtime_error("empty integer field on line " + std::to_string(my_current_line + 1));
-                        }
-                        return finish(my_input->advance()); // move past the newline.
-                    default:
-                        throw std::runtime_error("expected an integer value on line " + std::to_string(my_current_line + 1));
-                }
-
-                if (!(my_input->advance())) {
-                    break;
-                }
-            }
-
-            return finish(false);
         };
 
         if (my_details.format == Format::COORDINATE) {
             if (my_details.object == Object::MATRIX) {
-                return scan_matrix_coordinate_non_pattern(std::move(store_int));
+                return scan_matrix_coordinate_non_pattern<Type_, IntegerFieldParser<Type_> >(std::move(wrapped_store));
             } else {
-                return scan_vector_coordinate_non_pattern(std::move(store_int));
+                return scan_vector_coordinate_non_pattern<Type_, IntegerFieldParser<Type_> >(std::move(wrapped_store));
             }
         } else {
             if (my_details.object == Object::MATRIX) {
-                return scan_matrix_array(std::move(store_int));
+                return scan_matrix_array<Type_, IntegerFieldParser<Type_> >(std::move(wrapped_store));
             } else {
-                return scan_vector_array(std::move(store_int));
+                return scan_vector_array<Type_, IntegerFieldParser<Type_> >(std::move(wrapped_store));
             }
         }
     }
 
+private:
+    template<typename Type_>
+    static Type_ convert_to_real(const std::string& temporary, Index overall_line_count) {
+        Type_ output;
+        std::size_t n = 0;
+
+        try {
+            if constexpr(std::is_same<Type_, float>::value) {
+                output = std::stof(temporary, &n);
+            } else if constexpr(std::is_same<Type_, long double>::value) {
+                output = std::stold(temporary, &n);
+            } else {
+                output = std::stod(temporary, &n);
+            }
+        } catch (std::invalid_argument& e) {
+            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(overall_line_count + 1));
+        }
+
+        if (n != temporary.size()) {
+            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(overall_line_count + 1));
+        }
+
+        return output;
+    }
+
+    template<typename Type_>
+    class RealFieldParser {
+    public:
+        template<class Input2_>
+        ParseInfo<Type_> operator()(Input2_& input, Index overall_line_count) {
+            ParseInfo<Type_> output;
+            output.remaining = true;
+
+            temporary.clear();
+            char x = input.get();
+            while (1) {
+                if (x == '\n') {
+                    if (temporary.empty()) {
+                        // This is the only place we need to check as temporary is extended immediately after this.
+                        throw std::runtime_error("empty number field on line " + std::to_string(overall_line_count + 1));
+                    }
+                    output.remaining = input.advance(); // move past the newline.
+                    break;
+                }
+                temporary += x;
+                if (!(input.advance())) {
+                    output.remaining = false;
+                    break;
+                }
+                x = input.get();
+                // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
+                // so there wouldn't be any point doing this check at the start of the first loop iteration.
+                if (x == ' ' || x == '\t') {
+                    if (!advance_and_chomp(input)) { // skipping past the current position before chomping.
+                        output.remaining = false;
+                        break;
+                    }
+                    if (input.get() != '\n') {
+                        throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
+                    }
+                    output.remaining = input.advance(); // move past the newline.
+                    break;
+                }
+            }
+
+            output.value = convert_to_real<Type_>(temporary, overall_line_count);
+            return output;
+        }
+
+    private:
+        std::string temporary;
+    };
+
+public:
     /**
      * Scan the file for real lines, assuming that the field in the banner is `Field::REAL`.
      * 
@@ -1208,74 +1502,34 @@ public:
      * @param store Function with the signature `void(Index row, Index column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
-     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
+     * Alternatively, this function may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
      *
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = double, class Store_>
     bool scan_real(Store_&& store) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
+        check_preamble();
 
-        std::string temporary;
-        auto store_real = [&](Index r, Index c) -> StoreInfo {
-            StoreInfo output;
-            output.remaining = true;
-
-            temporary.clear();
-            char x = my_input->get();
-            while (1) {
-                if (x == '\n') {
-                    if (temporary.empty()) {
-                        // This is the only place we need to check as temporary is extended immediately after this.
-                        throw std::runtime_error("empty number field on line " + std::to_string(my_current_line + 1));
-                    }
-                    output.remaining = my_input->advance(); // move past the newline.
-                    break;
-                }
-                temporary += x;
-                if (!(my_input->advance())) {
-                    output.remaining = false;
-                    break;
-                }
-                x = my_input->get();
-                // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
-                // so there wouldn't be any point doing this check at the start of the first loop iteration.
-                if (x == ' ' || x == '\t') {
-                    if (!advance_and_chomp()) { // skipping past the current position before chomping.
-                        output.remaining = false;
-                        break;
-                    }
-                    if (my_input->get() != '\n') {
-                        throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
-                    }
-                    output.remaining = my_input->advance(); // move past the newline.
-                    break;
-                }
-            }
-
-            auto converted = convert_to_real<Type_>(temporary);
-
+        auto store_real = [&](Index r, Index c, Type_ val) -> bool {
             if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, Type_>::type, bool>::value) {
-                output.quit_early = !store(r, c, converted);
+                return store(r, c, val);
             } else {
-                store(r, c, converted);
+                store(r, c, val);
+                return true;
             }
-            return output;
         };
 
         if (my_details.format == Format::COORDINATE) {
             if (my_details.object == Object::MATRIX) {
-                return scan_matrix_coordinate_non_pattern(std::move(store_real));
+                return scan_matrix_coordinate_non_pattern<Type_, RealFieldParser<Type_> >(std::move(store_real));
             } else {
-                return scan_vector_coordinate_non_pattern(std::move(store_real));
+                return scan_vector_coordinate_non_pattern<Type_, RealFieldParser<Type_> >(std::move(store_real));
             }
         } else {
             if (my_details.object == Object::MATRIX) {
-                return scan_matrix_array(std::move(store_real));
+                return scan_matrix_array<Type_, RealFieldParser<Type_> >(std::move(store_real));
             } else {
-                return scan_vector_array(std::move(store_real));
+                return scan_vector_array<Type_, RealFieldParser<Type_> >(std::move(store_real));
             }
         }
     }
@@ -1290,7 +1544,7 @@ public:
      * @param store Function with the signature `void(Index row, Index column, Type_ value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
-     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
+     * Alternatively, this function may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
      *
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
@@ -1299,6 +1553,92 @@ public:
         return scan_real<Type_, Store_>(std::move(store));
     }
 
+private:
+    template<typename InnerType_>
+    class ComplexFieldParser {
+    public:
+        template<typename Input2_>
+        ParseInfo<std::complex<InnerType_> > operator()(Input2_& input, Index overall_line_count) {
+            ParseInfo<std::complex<InnerType_> > output;
+            output.remaining = true;
+            std::complex<InnerType_> holding;
+
+            // Pulling out the real part first.
+            temporary.clear();
+            char x = input.get();
+            while (1) {
+                if (x == '\n') {
+                    if (temporary.empty()) {
+                        // This is the only place we need to check this error, as temporary is filled up immediately after this clause.
+                        throw std::runtime_error("empty real field on line " + std::to_string(overall_line_count + 1));
+                    } else {
+                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(overall_line_count + 1));
+                    }
+                }
+
+                temporary += x;
+                if (!(input.advance())) {
+                    throw std::runtime_error("missing the imaginary part on line " + std::to_string(overall_line_count + 1));
+                }
+                x = input.get();
+
+                // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
+                // so there wouldn't be any point putting this check at the start of the first loop iteration.
+                if (x == ' ' || x == '\t') {
+                    if (!advance_and_chomp(input)) { // skipping past the current position before chomping.
+                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(overall_line_count + 1));
+                    }
+                    if (input.get() == '\n') {
+                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(overall_line_count + 1));
+                    }
+                    break;
+                }
+            }
+            holding.real(convert_to_real<InnerType_>(temporary, overall_line_count));
+
+            // Now pulling out the imaginary part.
+            temporary.clear();
+            x = input.get();
+            while (1) {
+                temporary += x;
+                if (!(input.advance())) {
+                    output.remaining = false;
+                    break;
+                }
+                x = input.get();
+
+                // Moving the newline check here, as the previous loop to parse the real part already precludes
+                // the presence of a newline character before any other characters. 
+                if (x == '\n') {
+                    output.remaining = input.advance(); // skipping past the newline.
+                    break;
+                }
+
+                // Also moving the blank space check here, as the scan for the imaginary component has already chomped
+                // leading blanks; the first iteration of this loop cannot have any blanks before other characters.
+                if (x == ' ' || x == '\t') {
+                    if (!advance_and_chomp(input)) { // skipping past the current position before chomping.
+                        output.remaining = false;
+                        break;
+                    }
+                    if (input.get() != '\n') {
+                        throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
+                    }
+                    output.remaining = input.advance(); // skipping past the newline.
+                    break;
+                }
+            }
+            holding.imag(convert_to_real<InnerType_>(temporary, overall_line_count));
+
+            output.value = holding;
+            return output;
+        }
+
+    private:
+        std::string temporary;
+    };
+
+public:
     /**
      * Scan the file for complex lines, assuming that the field in the banner is `Field::COMPLEX`.
      * 
@@ -1308,108 +1648,35 @@ public:
      * @param store Function with the signature `void(Index row, Index column, std::complex<Type_> value)`,
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
-     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
+     * Alternatively, this function may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
      *
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = double, class Store_>
     bool scan_complex(Store_ store) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
+        check_preamble();
 
-        std::string temporary;
-        auto store_comp = [&](Index r, Index c) -> StoreInfo {
-            StoreInfo output;
-            output.remaining = true;
-            std::complex<Type_> holding;
-
-            // Pulling out the real part first.
-            temporary.clear();
-            char x = my_input->get();
-            while (1) {
-                if (x == '\n') {
-                    if (temporary.empty()) {
-                        // This is the only place we need to check this error, as temporary is filled up immediately after this clause.
-                        throw std::runtime_error("empty real field on line " + std::to_string(my_current_line + 1));
-                    } else {
-                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
-                    }
-                }
-
-                temporary += x;
-                if (!(my_input->advance())) {
-                    throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
-                }
-                x = my_input->get();
-
-                // We shift the blank space check here, as 'store()' is always called after chomping leading blanks;
-                // so there wouldn't be any point putting this check at the start of the first loop iteration.
-                if (x == ' ' || x == '\t') {
-                    if (!advance_and_chomp()) { // skipping past the current position before chomping.
-                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
-                    }
-                    if (my_input->get() == '\n') {
-                        throw std::runtime_error("missing the imaginary part on line " + std::to_string(my_current_line + 1));
-                    }
-                    break;
-                }
-            }
-            holding.real(convert_to_real<Type_>(temporary));
-
-            // Now pulling out the imaginary part.
-            temporary.clear();
-            x = my_input->get();
-            while (1) {
-                temporary += x;
-                if (!(my_input->advance())) {
-                    output.remaining = false;
-                    break;
-                }
-                x = my_input->get();
-
-                // Moving the newline check here, as the previous loop to parse the real part already precludes
-                // the presence of a newline character before any other characters. 
-                if (x == '\n') {
-                    output.remaining = my_input->advance(); // skipping past the newline.
-                    break;
-                }
-
-                // Also moving the blank space check here, as the scan for the imaginary component has already chomped
-                // leading blanks; the first iteration of this loop cannot have any blanks before other characters.
-                if (x == ' ' || x == '\t') {
-                    if (!advance_and_chomp()) { // skipping past the current position before chomping.
-                        output.remaining = false;
-                        break;
-                    }
-                    if (my_input->get() != '\n') {
-                        throw std::runtime_error("more fields than expected on line " + std::to_string(my_current_line + 1));
-                    }
-                    output.remaining = my_input->advance(); // skipping past the newline.
-                    break;
-                }
-            }
-            holding.imag(convert_to_real<Type_>(temporary));
-
-            if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, decltype(holding)>::type, bool>::value) {
-                output.quit_early = !store(r, c, holding);
+        typedef std::complex<Type_> FullType;
+        auto store_comp = [&](Index r, Index c, FullType val) -> bool {
+            if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, FullType>::type, bool>::value) {
+                return store(r, c, val);
             } else {
-                store(r, c, holding);
+                store(r, c, val);
+                return true;
             }
-            return output;
         };
 
         if (my_details.format == Format::COORDINATE) {
             if (my_details.object == Object::MATRIX) {
-                return scan_matrix_coordinate_non_pattern(std::move(store_comp));
+                return scan_matrix_coordinate_non_pattern<FullType, ComplexFieldParser<Type_> >(std::move(store_comp));
             } else {
-                return scan_vector_coordinate_non_pattern(std::move(store_comp));
+                return scan_vector_coordinate_non_pattern<FullType, ComplexFieldParser<Type_> >(std::move(store_comp));
             }
         } else {
             if (my_details.object == Object::MATRIX) {
-                return scan_matrix_array(std::move(store_comp));
+                return scan_matrix_array<FullType, ComplexFieldParser<Type_> >(std::move(store_comp));
             } else {
-                return scan_vector_array(std::move(store_comp));
+                return scan_vector_array<FullType, ComplexFieldParser<Type_> >(std::move(store_comp));
             }
         }
     }
@@ -1425,25 +1692,23 @@ public:
      * which is passed the corresponding values at each line.
      * Both `row` and `column` will be 1-based indices; for `Object::VECTOR`, `column` will be set to 1.
      * `value` will always be `true` and can be ignored; it is only required here for consistency with the other methods.
-     * Alternatively, this may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
+     * Alternatively, this function may return `bool`, where a `false` indicates that the scanning should terminate early and a `true` indicates that the scanning should continue.
      *
      * @return Whether the scanning terminated early, based on `store` returning `false`. 
      */
     template<typename Type_ = bool, class Store_>
     bool scan_pattern(Store_ store) {
-        if (!my_passed_banner || !my_passed_size) {
-            throw std::runtime_error("banner or size lines have not yet been parsed");
-        }
+        check_preamble();
         if (my_details.format != Format::COORDINATE) {
             throw std::runtime_error("'array' format for 'pattern' field is not supported");
         }
 
         auto store_pat = [&](Index r, Index c) -> bool {
             if constexpr(std::is_same<typename std::invoke_result<Store_, Index, Index, bool>::type, bool>::value) {
-                return !store(r, c, true);
+                return store(r, c, true);
             } else {
                 store(r, c, true);
-                return false;
+                return true;
             }
         };
 
