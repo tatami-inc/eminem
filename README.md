@@ -82,6 +82,10 @@ target_link_libraries(myexe eminem)
 target_link_libraries(mylib INTERFACE eminem)
 ```
 
+By default, this will use `FetchContent` to fetch all external dependencies.
+Applications are advised to pin the versions of all dependencies themselves - see [`extern/CMakeLists.txt`](extern/CMakeLists.txt) for suggested versions.
+If you want to install them manually, use `-DEMINEM_FETCH_EXTERN=OFF`.
+
 ### CMake using `find_package()`
 
 You can install the library by cloning a suitable version of this repository and running the following commands:
@@ -99,10 +103,10 @@ find_package(tatami_eminem CONFIG REQUIRED)
 target_link_libraries(mylib INTERFACE tatami::eminem)
 ```
 
+Again, this will use `FetchContent` to fetch dependencies, see comments above.
+
 ### Manual
 
 If you're not using CMake, the simple approach is to just copy the files the `include/` subdirectory -
 either directly or with Git submodules - and include their path during compilation with, e.g., GCC's `-I`.
-
-You'll also need to add the [**byteme**](https://github.com/LTLA/byteme) header-only library to the compiler's search path.
-Normally, when using CMake, this is automatically linked to Zlib; this will now need to be done manually.
+This also requires the external dependencies listed in [`extern/CMakeLists.txt`](extern/CMakeLists.txt) as well as Zlib.
