@@ -61,6 +61,10 @@ configure_package_config_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Config.cmake.in
     "${CMAKE_CURRENT_BINARY_DIR}/tatami_eminemConfig.cmake"
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tatami_eminem)
 
-install(FILES "${CMAKE_CURRENT_BINARY_DIR}/tatami_eminemConfig.cmake"
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tatami_eminem)
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/tatami_eminemConfigVersion.cmake"
+    COMPATIBILITY SameMajorVersion)
 
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/tatami_eminemConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/tatami_eminemConfigVersion.cmake"
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/tatami_eminem)
