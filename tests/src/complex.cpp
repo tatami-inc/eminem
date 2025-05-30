@@ -56,23 +56,99 @@ INSTANTIATE_TEST_SUITE_P(
             5,
             { { 1.2, 2.1 }, { 2e3, 3.3e2 }, { -45, -6 }, { 0.78, 9.0 } }
         ),
+
         std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
-            "12 34 567 890", // no trailing newline
+            "12 34 567 890\n", // trailing newline after integer
             50,
             50,
             { { 567, 890 } }
         ),
         std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
-            "12 34 567 890   ", // trailing blank without a trailing newline
+            "12 34 567 890   \n", // trailing blank with a trailing newline after integer
             50,
             50,
             { { 567, 890 } }
         ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 567 890", // no trailing newline after integer
+            50,
+            50,
+            { { 567, 890 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 567 890   ", // trailing blank without a trailing newline after integer
+            50,
+            50,
+            { { 567, 890 } }
+        ),
+
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.67 8.90\n", // trailing newline after fraction
+            50,
+            50,
+            { { 5.67, 8.90 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.67 8.90   \n", // trailing blank with a trailing newline after fraction
+            50,
+            50,
+            { { 5.67, 8.90 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.67 8.90", // no trailing newline after fraction
+            50,
+            50,
+            { { 5.67, 8.90 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.67 8.90   ", // trailing blank without a trailing newline after fraction
+            50,
+            50,
+            { { 5.67, 8.90 } }
+        ),
+
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.6e7 89e+0\n", // trailing newline after exponent 
+            50,
+            50,
+            { { 5.6e7, 89 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.6e7 89e+0   \n", // trailing blank with a trailing newline after exponent
+            50,
+            50,
+            { { 5.6e7, 89 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.6e7 89e+0", // no trailing newline after exponent
+            50,
+            50,
+            { { 5.6e7, 89 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.6e7 89e+0   ", // trailing blank without a trailing newline after exponent
+            50,
+            50,
+            { { 5.6e7, 89 } }
+        ),
+
         std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
             "1 1  1.1   0.101 \n2 22\t 22.2  22.22\n33 3\t3.3e3 \t  3.33\t\n44 44 400  \t0.4\t \n", // variable numbers of blanks 
             100,
             100,
             { { 1.1, 0.101 }, { 22.2, 22.22 }, { 3.3e3, 3.33 }, { 400, 0.4 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "1 1 1. -.1\n2 22 22. .222\n", // decimals without any other digits
+            100,
+            100,
+            { { 1.0, -0.1 }, { 22.0, 0.222 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "1 1 +1.1 -0.101\n2 22 0222 00.2\n33 3 03.3e+3 -003.33\n44 2 44e-002 000.4\n", // signs and leading zeros.
+            100,
+            100,
+            { { 1.1, -0.101 }, { 222.0, 0.2 }, { 3.3e3, -3.33 }, { 0.44, 0.4 } }
         )
     )
 );
@@ -92,19 +168,33 @@ static void test_error(const std::string& input, std::string msg) {
 }
 
 TEST(ParserComplex, Error) {
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 \n", "empty real"); 
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1", "missing the imaginary"); 
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1\n", "missing the imaginary"); 
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 ", "missing the imaginary"); 
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 \n", "missing the imaginary"); 
-
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 aaron lun", "failed to convert");
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1\r 2", "failed to convert"); // trailing whitespace that's not a space, newline or tab.
-
+    // Most of the error conditions are redundant with those in ParseReal, so we'll focus on the last_=false case.
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 \n", "unexpected newline"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1", "unexpected end of file"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1\n", "unexpected newline"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 ", "unexpected end of file"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 \n", "no digits"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 4 5", "more fields");
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 a 4", "unrecognized");
 
-    test_error("%%MatrixMarket vector array complex\n1\n \n", "empty real");
-    test_error("%%MatrixMarket vector array complex\n1\n1 \n", "missing the imaginary");
+    // Checking the decimal and exponent EOF errors separately.
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.", "unexpected end of file"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.\n", "unexpected newline"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1. ", "unexpected end of file"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1. \n", "no digits"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.12 4.23 5", "more fields");
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1... 4.34", "unrecognized");
+
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1", "unexpected end of file"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1\n", "unexpected newline"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1 ", "unexpected end of file"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1 \n", "no digits"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e+ \n", "no digits"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 4e+2 5", "more fields");
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 4ee2 5e2", "unrecognized");
+
+    test_error("%%MatrixMarket vector array complex\n1\n \n", "unexpected newline");
+    test_error("%%MatrixMarket vector array complex\n1\n1 \n", "no digits");
 
     {
         std::string input = "%%MatrixMarket matrix array complex general\n1 1\n1 1";
@@ -115,6 +205,84 @@ TEST(ParserComplex, Error) {
                 parser.scan_integer([&](eminem::Index, eminem::Index, int){});
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
+                throw;
+            }
+        });
+    }
+}
+
+TEST(ParserComplex, Specials) {
+    for (int i = 0; i < 2; ++i) {
+        std::string input = "%%MatrixMarket matrix coordinate complex general\n10 10 2\n";
+        if (i == 1) {
+            input += "1 2 inf -INFINITY\n4 5 nan -NaN\n";
+        } else {
+            // Sprinkling in some spaces for fun.
+            input += "1 2 \t inf   -INFINITY  \n4 5\tnan    -NaN\t\n";
+        }
+
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+
+        std::vector<std::complex<double> > observed;
+        EXPECT_TRUE(parser.scan_complex([&](eminem::Index, eminem::Index, std::complex<double> val) { // using scan_double() to get some coverage of the alias.
+            observed.push_back(val);
+        }));
+        ASSERT_EQ(observed.size(), 2);
+        EXPECT_EQ(observed[0].real(), std::numeric_limits<double>::infinity());
+        EXPECT_EQ(observed[0].imag(), -std::numeric_limits<double>::infinity());
+        EXPECT_TRUE(std::isnan(observed[1].real()));
+        EXPECT_TRUE(std::isnan(observed[1].imag()));
+    }
+
+    // No terminating newlines at EOF.
+    for (int i = 0; i < 2; ++i) {
+        std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 1\n1 2 NAN INF";
+        if (i == 1) {
+            input += "   "; // space before EOF.
+        }
+
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+
+        std::vector<std::complex<double> > observed;
+        EXPECT_TRUE(parser.scan_complex([&](eminem::Index, eminem::Index, std::complex<double> val) { // using scan_double() to get some coverage of the alias.
+            observed.push_back(val);
+        }));
+        ASSERT_EQ(observed.size(), 1);
+        EXPECT_TRUE(std::isnan(observed[0].real()));
+        EXPECT_TRUE(std::isinf(observed[0].imag()));
+    }
+
+    // Various errors.
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 in", "unexpected termination");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 inf", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infinity", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 nan", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 inf\t", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 inf ", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 inf\n", "unexpected newline");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 ina", "unexpected character");
+
+    for (int i = 0; i < 2; ++i) {
+        std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 1\n1 2 ";
+        if (i == 1) {
+            input += "NaN";
+        } else {
+            input += "Inf";
+        }
+        input += " NAN";
+
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+        EXPECT_ANY_THROW({
+            try {
+                parser.scan_complex<int>([&](eminem::Index, eminem::Index, std::complex<int>){});
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("requested type does not support"));
                 throw;
             }
         });

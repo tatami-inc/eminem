@@ -48,10 +48,23 @@ INSTANTIATE_TEST_SUITE_P(
     ParserReal,
     ParserRealTest,
     ::testing::Values(
-        std::make_tuple<std::string, int, int, std::vector<double> >("1 1 1.2\n2 2 2e3\n3 3 -456\n4 4 0.789\n", 5, 5, { 1.2, 2e3, -456, 0.789 }), // trailing newline
-        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890", 50, 50, { 567.890 }), // no trailing newline
-        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890   ", 50, 50, { 567.890 }), // trailing blank without a trailing newline.
-        std::make_tuple<std::string, int, int, std::vector<double> >("1 1  1.1  \n2 22   22.22\n33 3\t3.3e3\t\n44 44 \t0.4\t \n", 100, 100, { 1.1, 22.22, 3.3e3, 0.4 }) // variable numbers of blanks 
+        std::make_tuple<std::string, int, int, std::vector<double> >("1 1 1.2\n2 2 2e3\n3 3 -456\n4 4 0.789\n", 5, 5, { 1.2, 2e3, -456, 0.789 }), // basic checks with a trailing newline
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567", 50, 50, { 567 }), // EOF after integer 
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567   ", 50, 50, { 567 }), // EOF with space after integer
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567\n", 50, 50, { 567 }), // newline after integer
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567  \n", 50, 50, { 567 }), // space and newline after integer
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890", 50, 50, { 567.890 }), // EOF after fraction
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890   ", 50, 50, { 567.890 }), // EOF with space after fraction
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890\n", 50, 50, { 567.890 }), // newline after fraction
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890    \n", 50, 50, { 567.890 }), // space and newline after fraction
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8", 50, 50, { 567e8 }), // EOF after exponent
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8   ", 50, 50, { 567e8 }), // EOF with space after exponent
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8\n", 50, 50, { 567e8 }), // newline after exponent
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8    \n", 50, 50, { 567e8 }), // space and newline after exponent
+        std::make_tuple<std::string, int, int, std::vector<double> >("1 1  1.1  \n2 22   22.22\n33 3\t3.3e3\t\n44 44 \t0.4\t \n", 100, 100, { 1.1, 22.22, 3.3e3, 0.4 }), // variable numbers of blanks 
+        std::make_tuple<std::string, int, int, std::vector<double> >("1 1 .1\n2 22 22.\n33 3 3.e3\t\n44 44 .42e4\n", 100, 100, { 0.1, 22.0, 3000.0, 4200.0 }), // combinations of decimals/exponents 
+        std::make_tuple<std::string, int, int, std::vector<double> >("1 1 -1\n2 22 +22\n33 3 -3e+3\t\n44 44 +4e-4\n", 100, 100, { -1, 22.0, -3000.0, 0.0004 }), // add signs everywhere
+        std::make_tuple<std::string, int, int, std::vector<double> >("1 1 00.01\n2 22 002.2\n33 3 003e+010\t\n44 44 42e-002\n", 100, 100, { 0.01, 2.2, 3e10, 0.42 }) // leading zeros are ignored
     )
 );
 
@@ -70,13 +83,32 @@ static void test_error(const std::string& input, std::string msg) {
 }
 
 TEST(ParserReal, Error) {
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 aaron", "failed to convert");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1\r", "failed to convert"); // trailing whitespace that's not a space, newline or tab.
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1 4", "more fields");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 \n", "empty number field");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1\t\n", "empty number field");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 aaron", "unrecognized character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1\r", "unrecognized character"); // trailing whitespace that's not a space, newline or tab.
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1easports", "unrecognized character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1..", "unrecognized character");
 
-    test_error("%%MatrixMarket vector array real\n1\n \n", "empty number field");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1 4", "more fields");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1.1 4", "more fields");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e1 4", "more fields");
+
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 \n", "no digits");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1\t\n", "no digits");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 .\n", "no digits");
+
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 e\n", "no digits");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 e134\n", "no digits");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e\n", "no digits");
+
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 +", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e+", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 +\n", "no digits");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e+\n", "no digits");
+
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1.1e", "unexpected end of file");
+
+    test_error("%%MatrixMarket vector array real\n1\n \n", "no digits");
 
     {
         std::string input = "%%MatrixMarket vector coordinate real general\n1 1 1\n1 1 1";
@@ -126,21 +158,78 @@ TEST(ParserReal, OtherTypes) {
 }
 
 TEST(ParserReal, Specials) {
-    std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 4\n1 2 inf\n4 5 -INF\n7 8 nan\n9 10 -NaN\n";
+    for (int i = 0; i < 2; ++i) {
+        std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 4\n";
+        if (i == 1) {
+            input += "1 2 inf\n4 5 -INFINITY\n7 8 nan\n9 10 -NaN\n";
+        } else {
+            // Sprinkling in some spaces for fun.
+            input += "1 2   INF   \n4 5 -inf  \n7 8 nan\t\n9 10\t-NaN   \n";
+        }
 
-    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
-    parser.scan_preamble();
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
 
-    std::vector<double> observed;
-    EXPECT_TRUE(parser.scan_double([&](eminem::Index, eminem::Index, double val) { // using scan_double() to get some coverage of the alias.
-        observed.push_back(val);
-    }));
-    ASSERT_EQ(observed.size(), 4);
-    EXPECT_EQ(observed[0], std::numeric_limits<double>::infinity());
-    EXPECT_EQ(observed[1], -std::numeric_limits<double>::infinity());
-    EXPECT_TRUE(std::isnan(observed[2]));
-    EXPECT_TRUE(std::isnan(observed[3]));
+        std::vector<double> observed;
+        EXPECT_TRUE(parser.scan_double([&](eminem::Index, eminem::Index, double val) { // using scan_double() to get some coverage of the alias.
+            observed.push_back(val);
+        }));
+        ASSERT_EQ(observed.size(), 4);
+        EXPECT_EQ(observed[0], std::numeric_limits<double>::infinity());
+        EXPECT_EQ(observed[1], -std::numeric_limits<double>::infinity());
+        EXPECT_TRUE(std::isnan(observed[2]));
+        EXPECT_TRUE(std::isnan(observed[3]));
+    }
+
+    // No terminating newlines at EOF.
+    for (int i = 0; i < 2; ++i) {
+        std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 1\n1 2 NAN";
+        if (i == 1) {
+            input += "   "; // space before EOF.
+        }
+
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+
+        std::vector<double> observed;
+        EXPECT_TRUE(parser.scan_double([&](eminem::Index, eminem::Index, double val) { // using scan_double() to get some coverage of the alias.
+            observed.push_back(val);
+        }));
+        ASSERT_EQ(observed.size(), 1);
+        EXPECT_TRUE(std::isnan(observed[0]));
+    }
+
+    // Various errors.
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 in", "unexpected termination");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 ina", "unexpected character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infi", "unexpected termination");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infa", "unexpected character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infa", "unexpected character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 n", "unexpected termination");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 naf", "unexpected character");
+
+    for (int i = 0; i < 2; ++i) {
+        std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 1\n1 2 ";
+        if (i == 1) {
+            input += "NaN";
+        } else {
+            input += "Inf";
+        }
+
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+        EXPECT_ANY_THROW({
+            try {
+                parser.scan_real<int>([&](eminem::Index, eminem::Index, int){});
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("requested type does not support"));
+                throw;
+            }
+        });
+    }
 }
 
 TEST(ParserReal, QuitEarly) {
