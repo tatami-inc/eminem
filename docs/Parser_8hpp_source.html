@@ -1414,23 +1414,23 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l01372" name="l01372"></a><span class="lineno"> 1372</span>    <span class="keyword">public</span>:</div>
 <div class="line"><a id="l01373" name="l01373"></a><span class="lineno"> 1373</span>        <span class="keyword">template</span>&lt;<span class="keyword">class</span> Input2_&gt;</div>
 <div class="line"><a id="l01374" name="l01374"></a><span class="lineno"> 1374</span>        ParseInfo&lt;Type_&gt; operator()(Input2_&amp; input, <a class="code hl_typedef" href="namespaceeminem.html#a1b89d92edc9a5418b920487f16b2d11b">Index</a> overall_line_count) {</div>
-<div class="line"><a id="l01375" name="l01375"></a><span class="lineno"> 1375</span>            Type_ val = 0;</div>
-<div class="line"><a id="l01376" name="l01376"></a><span class="lineno"> 1376</span>            <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
-<div class="line"><a id="l01377" name="l01377"></a><span class="lineno"> 1377</span> </div>
-<div class="line"><a id="l01378" name="l01378"></a><span class="lineno"> 1378</span>            <span class="keywordtype">bool</span> negative = (input.get() == <span class="charliteral">&#39;-&#39;</span>);</div>
-<div class="line"><a id="l01379" name="l01379"></a><span class="lineno"> 1379</span>            <span class="keywordflow">if</span> (negative) {</div>
-<div class="line"><a id="l01380" name="l01380"></a><span class="lineno"> 1380</span>                <span class="keywordflow">if</span> (!(input.advance())) {</div>
-<div class="line"><a id="l01381" name="l01381"></a><span class="lineno"> 1381</span>                    <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;premature termination of an integer on line &quot;</span> + std::to_string(overall_line_count + 1));</div>
-<div class="line"><a id="l01382" name="l01382"></a><span class="lineno"> 1382</span>                }</div>
-<div class="line"><a id="l01383" name="l01383"></a><span class="lineno"> 1383</span>            }</div>
-<div class="line"><a id="l01384" name="l01384"></a><span class="lineno"> 1384</span> </div>
-<div class="line"><a id="l01385" name="l01385"></a><span class="lineno"> 1385</span>            <span class="keyword">constexpr</span> Type_ upper_limit = std::numeric_limits&lt;Type_&gt;::max();</div>
-<div class="line"><a id="l01386" name="l01386"></a><span class="lineno"> 1386</span>            <span class="keyword">constexpr</span> Type_ upper_limit_before_mult = upper_limit / 10;</div>
-<div class="line"><a id="l01387" name="l01387"></a><span class="lineno"> 1387</span>            <span class="keyword">constexpr</span> Type_ upper_limit_mod = upper_limit % 10;</div>
-<div class="line"><a id="l01388" name="l01388"></a><span class="lineno"> 1388</span>            <span class="keyword">constexpr</span> Type_ lower_limit = std::numeric_limits&lt;Type_&gt;::lowest();</div>
-<div class="line"><a id="l01389" name="l01389"></a><span class="lineno"> 1389</span>            <span class="keyword">constexpr</span> Type_ lower_limit_before_mult = lower_limit / 10;</div>
-<div class="line"><a id="l01390" name="l01390"></a><span class="lineno"> 1390</span>            <span class="keyword">constexpr</span> Type_ lower_limit_mod = -(lower_limit % 10);</div>
-<div class="line"><a id="l01391" name="l01391"></a><span class="lineno"> 1391</span> </div>
+<div class="line"><a id="l01375" name="l01375"></a><span class="lineno"> 1375</span>            <span class="keywordtype">char</span> firstchar = input.get();</div>
+<div class="line"><a id="l01376" name="l01376"></a><span class="lineno"> 1376</span>            <span class="keywordtype">bool</span> negative = (firstchar == <span class="charliteral">&#39;-&#39;</span>);</div>
+<div class="line"><a id="l01377" name="l01377"></a><span class="lineno"> 1377</span>            <span class="keywordflow">if</span> (negative || firstchar == <span class="charliteral">&#39;+&#39;</span>) {</div>
+<div class="line"><a id="l01378" name="l01378"></a><span class="lineno"> 1378</span>                <span class="keywordflow">if</span> (!(input.advance())) {</div>
+<div class="line"><a id="l01379" name="l01379"></a><span class="lineno"> 1379</span>                    <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;premature termination of an integer on line &quot;</span> + std::to_string(overall_line_count + 1));</div>
+<div class="line"><a id="l01380" name="l01380"></a><span class="lineno"> 1380</span>                }</div>
+<div class="line"><a id="l01381" name="l01381"></a><span class="lineno"> 1381</span>            }</div>
+<div class="line"><a id="l01382" name="l01382"></a><span class="lineno"> 1382</span> </div>
+<div class="line"><a id="l01383" name="l01383"></a><span class="lineno"> 1383</span>            <span class="keyword">constexpr</span> Type_ upper_limit = std::numeric_limits&lt;Type_&gt;::max();</div>
+<div class="line"><a id="l01384" name="l01384"></a><span class="lineno"> 1384</span>            <span class="keyword">constexpr</span> Type_ upper_limit_before_mult = upper_limit / 10;</div>
+<div class="line"><a id="l01385" name="l01385"></a><span class="lineno"> 1385</span>            <span class="keyword">constexpr</span> Type_ upper_limit_mod = upper_limit % 10;</div>
+<div class="line"><a id="l01386" name="l01386"></a><span class="lineno"> 1386</span>            <span class="keyword">constexpr</span> Type_ lower_limit = std::numeric_limits&lt;Type_&gt;::lowest();</div>
+<div class="line"><a id="l01387" name="l01387"></a><span class="lineno"> 1387</span>            <span class="keyword">constexpr</span> Type_ lower_limit_before_mult = lower_limit / 10;</div>
+<div class="line"><a id="l01388" name="l01388"></a><span class="lineno"> 1388</span>            <span class="keyword">constexpr</span> Type_ lower_limit_mod = -(lower_limit % 10);</div>
+<div class="line"><a id="l01389" name="l01389"></a><span class="lineno"> 1389</span> </div>
+<div class="line"><a id="l01390" name="l01390"></a><span class="lineno"> 1390</span>            Type_ val = 0;</div>
+<div class="line"><a id="l01391" name="l01391"></a><span class="lineno"> 1391</span>            <span class="keywordtype">bool</span> found = <span class="keyword">false</span>;</div>
 <div class="line"><a id="l01392" name="l01392"></a><span class="lineno"> 1392</span>            <span class="keywordflow">while</span> (1) {</div>
 <div class="line"><a id="l01393" name="l01393"></a><span class="lineno"> 1393</span>                <span class="keywordtype">char</span> x = input.get();</div>
 <div class="line"><a id="l01394" name="l01394"></a><span class="lineno"> 1394</span>                <span class="keywordflow">switch</span> (x) {</div>
