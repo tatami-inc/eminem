@@ -10,6 +10,7 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
+#include <limits>
 
 #include "byteme/RawBufferReader.hpp"
 #include "byteme/PerByte.hpp"
@@ -569,13 +570,24 @@ private:
             }
         };
 
+        constexpr Index max_limit = std::numeric_limits<Index>::max();
+        constexpr Index max_limit_before_mult = max_limit / 10; 
+        constexpr Index max_limit_mod = max_limit % 10; 
+
         while (1) {
             char x = input.get();
             switch(x) {
                 case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
+                    { 
+                        Index delta = x - '0';
+                        // Structuring the conditionals so that it's most likely to short-circuit after only testing the first one.
+                        if (output.index >= max_limit_before_mult && !(output.index == max_limit_before_mult && delta <= max_limit_mod)) {
+                            throw std::runtime_error("integer overflow in " + what() + " field on line " + std::to_string(overall_line_count + 1));
+                        }
+                        output.index *= 10;
+                        output.index += delta;
+                    }
                     found = true;
-                    output.index *= 10;
-                    output.index += x - '0';
                     break;
                 case '\n':
                     // This check only needs to be put here, as all blanks should be chomped before calling
@@ -745,6 +757,8 @@ public:
 private:
     template<typename Type_>
     struct ParseInfo {
+        ParseInfo() = default;
+        ParseInfo(Type_ value, bool remaining) : value(value), remaining(remaining) {}
         Type_ value;
         bool remaining;
     };
@@ -1358,6 +1372,9 @@ private:
     public:
         template<class Input2_>
         ParseInfo<Type_> operator()(Input2_& input, Index overall_line_count) {
+            Type_ val = 0;
+            bool found = false;
+
             bool negative = (input.get() == '-');
             if (negative) {
                 if (!(input.advance())) {
@@ -1365,34 +1382,45 @@ private:
                 }
             }
 
-            Type_ val = 0;
-            auto finish = [&](bool valid) -> ParseInfo<Type_> {
-                ParseInfo<Type_> output;
-                output.remaining = valid;
-                if (negative) {
-                    val *= -1;
-                }
-                output.value = val;
-                return output;
-            };
+            constexpr Type_ upper_limit = std::numeric_limits<Type_>::max();
+            constexpr Type_ upper_limit_before_mult = upper_limit / 10;
+            constexpr Type_ upper_limit_mod = upper_limit % 10;
+            constexpr Type_ lower_limit = std::numeric_limits<Type_>::lowest();
+            constexpr Type_ lower_limit_before_mult = lower_limit / 10;
+            constexpr Type_ lower_limit_mod = -(lower_limit % 10);
 
-            bool found = false;
             while (1) {
                 char x = input.get();
                 switch (x) {
                     case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                        val *= 10;
-                        val += x - '0';
+                        {
+                            Type_ delta = x - '0';
+                            // We have to handle negative and positive cases separately as they overflow at different thresholds.
+                            if (negative) {
+                                // Structuring the conditionals so that it's most likely to short-circuit after only testing the first one.
+                                if (val <= lower_limit_before_mult && !(val == lower_limit_before_mult && delta <= lower_limit_mod)) {
+                                    throw std::runtime_error("integer underflow on line " + std::to_string(overall_line_count + 1));
+                                }
+                                val *= 10;
+                                val -= delta;
+                            } else {
+                                if (val >= upper_limit_before_mult && !(val == upper_limit_before_mult && delta <= upper_limit_mod)) {
+                                    throw std::runtime_error("integer overflow on line " + std::to_string(overall_line_count + 1));
+                                }
+                                val *= 10;
+                                val += delta;
+                            }
+                        }
                         found = true;
                         break;
                     case ' ': case '\t':
                         if (!advance_and_chomp(input)) { // skipping past the current position before chomping.
-                            return finish(false);
+                            return ParseInfo<Type_>(val, false);
                         }
                         if (input.get() != '\n') {
                             throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
                         }
-                        return finish(input.advance()); // move past the newline.
+                        return ParseInfo<Type_>(val, input.advance()); // move past the newline.
                     case '\n':
                         // This check only needs to be put here, as all blanks should be chomped before calling
                         // this function; so we must start on a non-blank character. This starting character is either:
@@ -1402,7 +1430,7 @@ private:
                         if (!found) {
                             throw std::runtime_error("empty integer field on line " + std::to_string(overall_line_count + 1));
                         }
-                        return finish(input.advance()); // move past the newline.
+                        return ParseInfo<Type_>(val, input.advance()); // move past the newline.
                     default:
                         throw std::runtime_error("expected an integer value on line " + std::to_string(overall_line_count + 1));
                 }
@@ -1412,7 +1440,7 @@ private:
                 }
             }
 
-            return finish(false);
+            return ParseInfo<Type_>(val, false);
         }
     };
 

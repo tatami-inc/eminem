@@ -236,6 +236,35 @@ TEST(ParserPreamble, SizeErrors) {
     test_error("%%MatrixMarket matrix coordinate integer general\n2 -5 1\n", "unexpected character");
 }
 
+TEST(ParserPreamble, SizeOverflowErrors) {
+    auto limit = std::numeric_limits<eminem::Index>::max();
+
+    // No overflow at this point, as a negative control.
+    auto limitstring = std::to_string(limit);
+    {
+        std::string payload = std::string("%%MatrixMarket matrix coordinate integer general\n2 ") + limitstring + std::string(" 0\n");
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(payload.data()), payload.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+        EXPECT_EQ(parser.get_ncols(), limit);
+    }
+
+    // Obvious overflow if we increase it by 10-fold with an extra digit on the end.
+    test_error("%%MatrixMarket matrix coordinate integer general\n1 " + limitstring + "0 0\n", "overflow");
+
+    // Manually adding one to the limit.
+    auto extrastring = limitstring;
+    for (auto it = extrastring.rbegin(); it != extrastring.rend(); ++it) {
+        int digit = *it - '0';
+        ++digit;
+        if (digit < 10) {
+            *it = digit + '0';
+            break;
+        }
+    }
+    test_error("%%MatrixMarket matrix coordinate integer general\n1 " + extrastring + " 0\n", "overflow");
+}
+
 /**********************************************
  **********************************************/
 

@@ -98,12 +98,82 @@ TEST(ParserInteger, OtherType) {
     eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
     parser.scan_preamble();
 
-    std::vector<uint16_t> observed;
-    EXPECT_TRUE(parser.template scan_integer<uint16_t>([&](eminem::Index, eminem::Index, uint16_t val) {
+    std::vector<std::uint16_t> observed;
+    EXPECT_TRUE(parser.template scan_integer<std::uint16_t>([&](eminem::Index, eminem::Index, std::uint16_t val) {
         observed.push_back(val);
     }));
-    std::vector<uint16_t> expected { 33, 666, 9 };
+    std::vector<std::uint16_t> expected { 33, 666, 9 };
     EXPECT_EQ(observed, expected);
+}
+
+TEST(ParserInteger, Overflow) {
+    // Unsigned.
+    {
+        // First we check that it works as a positive control.
+        std::string input = "%%MatrixMarket matrix coordinate integer general\n2 2 3\n1 1 255\n2 2 0\n2 1 -0\n";
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+
+        std::vector<std::uint8_t> observed;
+        parser.scan_integer<std::uint8_t>([&](eminem::Index, eminem::Index, std::uint8_t val){
+            observed.push_back(val);
+        });
+        std::vector<std::uint8_t> expected { 255, 0, 0 };
+        EXPECT_EQ(observed, expected);
+
+        // Now testing for the failures.
+        auto test_overflow = [&](std::string input) -> void {
+            auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+            eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+            parser.scan_preamble();
+            EXPECT_ANY_THROW({
+                try {
+                    parser.scan_integer<std::uint8_t>([&](eminem::Index, eminem::Index, std::uint8_t){});
+                } catch (std::exception& e) {
+                    EXPECT_THAT(e.what(), ::testing::HasSubstr("flow"));
+                    throw;
+                }
+            });
+        };
+        test_overflow("%%MatrixMarket matrix coordinate integer general\n2 2 1\n1 1 256");
+        test_overflow("%%MatrixMarket matrix coordinate integer general\n2 2 1\n1 1 1000");
+        test_overflow("%%MatrixMarket matrix coordinate integer general\n2 2 1\n1 1 -1");
+    }
+
+    // Signed.
+    {
+        // First we check that it works as a positive control.
+        std::string input = "%%MatrixMarket matrix coordinate integer general\n2 2 3\n1 1 0\n2 2 127\n2 1 -128\n";
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+        std::vector<std::int8_t> observed;
+        parser.scan_integer<std::int8_t>([&](eminem::Index, eminem::Index, std::int8_t val){
+            observed.push_back(val);
+        });
+        std::vector<std::int8_t> expected { 0, 127, -128 };
+        EXPECT_EQ(observed, expected);
+
+        // Now testing for the failures.
+        auto test_overflow = [&](std::string input) -> void {
+            auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+            eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+            parser.scan_preamble();
+            EXPECT_ANY_THROW({
+                try {
+                    parser.scan_integer<std::int8_t>([&](eminem::Index, eminem::Index, std::int8_t){});
+                } catch (std::exception& e) {
+                    EXPECT_THAT(e.what(), ::testing::HasSubstr("flow"));
+                    throw;
+                }
+            });
+        };
+        test_overflow("%%MatrixMarket matrix coordinate integer general\n2 2 1\n1 1 128");
+        test_overflow("%%MatrixMarket matrix coordinate integer general\n2 2 1\n1 1 1000");
+        test_overflow("%%MatrixMarket matrix coordinate integer general\n2 2 1\n1 1 -129");
+        test_overflow("%%MatrixMarket matrix coordinate integer general\n2 2 1\n1 1 -1000");
+    }
 }
 
 TEST(ParserInteger, QuitEarly) {
