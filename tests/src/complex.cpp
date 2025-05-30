@@ -179,12 +179,14 @@ TEST(ParserComplex, Error) {
 
     // Checking the decimal and exponent EOF errors separately.
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.", "unexpected end of file"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.1", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.\n", "unexpected newline"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1. ", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1. \n", "no digits"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.12 4.23 5", "more fields");
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1... 4.34", "unrecognized");
 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1\n", "unexpected newline"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1 ", "unexpected end of file"); 

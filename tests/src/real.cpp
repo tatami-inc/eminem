@@ -53,6 +53,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567   ", 50, 50, { 567 }), // EOF with space after integer
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567\n", 50, 50, { 567 }), // newline after integer
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567  \n", 50, 50, { 567 }), // space and newline after integer
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.", 50, 50, { 567.0 }), // EOF after fraction
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890", 50, 50, { 567.890 }), // EOF after fraction
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890   ", 50, 50, { 567.890 }), // EOF with space after fraction
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890\n", 50, 50, { 567.890 }), // newline after fraction
@@ -164,7 +165,7 @@ TEST(ParserReal, Specials) {
             input += "1 2 inf\n4 5 -INFINITY\n7 8 nan\n9 10 -NaN\n";
         } else {
             // Sprinkling in some spaces for fun.
-            input += "1 2   INF   \n4 5 -inf  \n7 8 nan\t\n9 10\t-NaN   \n";
+            input += "1 2   INF   \n4 5 -inf\t \n7 8 nan\t\n9 10\t-NaN   \n";
         }
 
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
@@ -209,6 +210,8 @@ TEST(ParserReal, Specials) {
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infa", "unexpected character");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 n", "unexpected termination");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 naf", "unexpected character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 nanfoo", "unexpected character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 nan foo", "more fields");
 
     for (int i = 0; i < 2; ++i) {
         std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 1\n1 2 ";
