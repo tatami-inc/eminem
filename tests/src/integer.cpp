@@ -50,7 +50,8 @@ INSTANTIATE_TEST_SUITE_P(
         std::make_tuple<std::string, int, int, std::vector<int> >("1 1 -1\n2 2 -23\n3 3 -456\n4 4 -7890\n", 5, 5, { -1, -23, -456, -7890 }), // negative values
         std::make_tuple<std::string, int, int, std::vector<int> >("12 34 567890", 50, 50, { 567890 }), // no trailing newline
         std::make_tuple<std::string, int, int, std::vector<int> >("12 34 567890   ", 50, 50, { 567890 }), // trailing blank without a trailing newline.
-        std::make_tuple<std::string, int, int, std::vector<int> >("1 1  11  \n2 22   2222\n33 3\t33\t\n44 44 \t4\t \n", 100, 100, { 11, 2222, 33, 4 }) // variable numbers of blanks 
+        std::make_tuple<std::string, int, int, std::vector<int> >("1 1  11  \n2 22   2222\n33 3\t33\t\n44 44 \t4\t \n", 100, 100, { 11, 2222, 33, 4 }), // variable numbers of blanks 
+        std::make_tuple<std::string, int, int, std::vector<int> >("1 1  0111\n2 22 +002\n33 3 033\t\n44 44 +0004\n", 100, 100, { 111, 2, 33, 4 }) // leading zeros and pluses
     )
 );
 

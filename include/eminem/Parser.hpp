@@ -1372,11 +1372,9 @@ private:
     public:
         template<class Input2_>
         ParseInfo<Type_> operator()(Input2_& input, Index overall_line_count) {
-            Type_ val = 0;
-            bool found = false;
-
-            bool negative = (input.get() == '-');
-            if (negative) {
+            char firstchar = input.get();
+            bool negative = (firstchar == '-');
+            if (negative || firstchar == '+') {
                 if (!(input.advance())) {
                     throw std::runtime_error("premature termination of an integer on line " + std::to_string(overall_line_count + 1));
                 }
@@ -1389,6 +1387,8 @@ private:
             constexpr Type_ lower_limit_before_mult = lower_limit / 10;
             constexpr Type_ lower_limit_mod = -(lower_limit % 10);
 
+            Type_ val = 0;
+            bool found = false;
             while (1) {
                 char x = input.get();
                 switch (x) {
