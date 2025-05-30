@@ -635,9 +635,9 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l00576" name="l00576"></a><span class="lineno">  576</span>            <span class="keywordflow">if</span> <span class="keyword">constexpr</span>(last_) {</div>
 <div class="line"><a id="l00577" name="l00577"></a><span class="lineno">  577</span>                output.remaining = remaining;</div>
 <div class="line"><a id="l00578" name="l00578"></a><span class="lineno">  578</span>            }</div>
-<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>            <span class="comment">// Prohibit leading zeros aside from zero itself; these are are octal in C and we want to avoid the possibility for confusion.</span></div>
+<div class="line"><a id="l00579" name="l00579"></a><span class="lineno">  579</span>            <span class="comment">// Prohibit leading zeros aside from zero itself; these are are octal in C and we want to avoid ambiguity.</span></div>
 <div class="line"><a id="l00580" name="l00580"></a><span class="lineno">  580</span>            <span class="keywordflow">if</span> (starts_with_zero &amp;&amp; index != 0) {</div>
-<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>                <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;octal number in the &quot;</span> + what() + <span class="stringliteral">&quot; field on line &quot;</span> + std::to_string(overall_line_count + 1));</div>
+<div class="line"><a id="l00581" name="l00581"></a><span class="lineno">  581</span>                <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;ambiguous octal-like number in the &quot;</span> + what() + <span class="stringliteral">&quot; field on line &quot;</span> + std::to_string(overall_line_count + 1));</div>
 <div class="line"><a id="l00582" name="l00582"></a><span class="lineno">  582</span>            }</div>
 <div class="line"><a id="l00583" name="l00583"></a><span class="lineno">  583</span>            <span class="keywordflow">return</span> output;</div>
 <div class="line"><a id="l00584" name="l00584"></a><span class="lineno">  584</span>        };</div>
@@ -1430,7 +1430,7 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l01388" name="l01388"></a><span class="lineno"> 1388</span>                    val *= -1;</div>
 <div class="line"><a id="l01389" name="l01389"></a><span class="lineno"> 1389</span>                }</div>
 <div class="line"><a id="l01390" name="l01390"></a><span class="lineno"> 1390</span>                <span class="keywordflow">if</span> (starts_with_zero &amp;&amp; val != 0) {</div>
-<div class="line"><a id="l01391" name="l01391"></a><span class="lineno"> 1391</span>                    <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;octal number on line &quot;</span> + std::to_string(overall_line_count + 1));</div>
+<div class="line"><a id="l01391" name="l01391"></a><span class="lineno"> 1391</span>                    <span class="keywordflow">throw</span> std::runtime_error(<span class="stringliteral">&quot;ambiguous octal-like number on line &quot;</span> + std::to_string(overall_line_count + 1));</div>
 <div class="line"><a id="l01392" name="l01392"></a><span class="lineno"> 1392</span>                }</div>
 <div class="line"><a id="l01393" name="l01393"></a><span class="lineno"> 1393</span>                output.value = val;</div>
 <div class="line"><a id="l01394" name="l01394"></a><span class="lineno"> 1394</span>                <span class="keywordflow">return</span> output;</div>
