@@ -220,16 +220,46 @@ inline std::size_t count_newlines(const std::vector<char>& buffer) {
  * @endcond
  */
 
-/* GENERAL COMMENTS:
- * - This sticks to the specification described at https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz
- * - We will allow both tabs and whitespaces when considering a 'blank' character.
- * - We must consider the possibility that the final line of the file is not newline terminated.
- */
-
 /**
  * @brief Parse a matrix from a Matrix Market file.
  *
  * @tparam Input_ Class for the source of input bytes, satisfying the `byteme::PerByteInterface` instance.
+ *
+ * This parses a Matrix Market file according to the specification described at https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz.
+ * It is expected that users call `scan_preamble()` to determine the field type (see `eminem::Field` for supported values),
+ * after which they may call one of `scan_integer()`, `scan_real()`, etc. to parse the rest of the file.
+ * An error will be thrown upon detecting a non-compliant file.
+ *
+ * As the Matrix Market specification is somewhat vague in parts, we apply the following refinements:
+ *
+ * - We allow both tabs and whitespaces for a "blank" character.
+ * - The final line of the file may or may not be newline terminated.
+ * - Integer values for the row/column indices, number of rows/columns and number of lines should be a sequence of one or more digits.
+ *   Leading zeros are ignored and will not be interpreted as octal.
+ *   An error is thrown if overflow of the `Index` type occurs in `scan_preamble()`.
+ *   An error is also thrown if the row/column indices in any data line exceed the number of rows/columns in the preamble,
+ *   or if the observed number of data lines exceeds the expected number for coordinate matrices/vectors.
+ * - Integer data values should be a sequence of one or more digits, optionally preceded by a `+` or `-` sign.
+ *   Leading zeros are ignored and will not be interpreted as octal.
+ *   An error is thrown if overflow of the `Type_` type occurs in `scan_integer()`.
+ *
+ * Real data values should follow one of the following formats:
+ *
+ * - `(sign)[digit sequence](exponent)`
+ * - `(sign)[digit sequence].(exponent)`
+ * - `(sign).[digit sequence](exponent)`
+ * - `(sign)[digit sequence].[digit sequence](exponent)`
+ *
+ * The digit sequence should contain one or mor digits, possibly containing leading zeros that will be ignored.
+ * The sign is optional and should be either `+` or `-`.
+ * The exponent is optional should have the form `e(sign)[digit sequence]` or `E(sign)[digit sequence]`, where the sign is again optional.
+ * We also support case-insensitive matches to `inf`, `infinity` or `nan`.
+ * This will be converted to their corresponding IEEE special values if they are available for the provided `Type_` in `scan_real()`, otherwise an error is thrown.
+ * For non-special values, no additional checks for overflow are applied. 
+ * If IEEE arithmetic is available, overflow will manifest as infinities, otherwise they will be undefined behavior.
+ * 
+ * No validation is performed to determine whether coordinates are consistent with non-general symmetries.
+ * Similarly, we do not check for the existence of multiple lines with the same row/column indices in coordinate matrices/vectors.
  */
 template<class Input_>
 class Parser {
