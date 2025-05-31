@@ -544,14 +544,15 @@ private:
         my_passed_banner = true;
 
         // Ignoring all other fields until the newline. We can use a do/while
-        // to skip a comparison because we know that the current character
-        // cannot be a newline if eol = false.
+        // to skip the initial comparison because we know that the current
+        // character cannot be a newline if eol = false.
         if (!eol) {
             do {
                 if (!(my_input->advance())) {
                     throw std::runtime_error("end of file reached before the end of the banner line");
                 }
             } while (my_input->get() != '\n'); 
+            my_input->advance(); // move past the newline.
         }
 
         ++my_current_line;
@@ -727,6 +728,7 @@ private:
             my_ncols = 1;
         }
 
+        ++my_current_line;
         my_passed_size = true;
     }
 

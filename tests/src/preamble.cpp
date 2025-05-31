@@ -186,6 +186,7 @@ TEST(ParserPreamble, GeneralErrors) {
     test_error("%%MatrixMarketey", "first line of the file");
     test_error("%%MatrixMarket\n", "end of file reached before matching the banner");
     test_error("%%MatrixMarket\nwhee", "end of line reached before matching the banner");
+    test_error("%%MatrixMarket matrix coordinate real symmetric other stuff", "end of file reached before the end of the banner");
     test_error("% %MatrixMarket matrix coordinate real symmetric\n5 2 1", "first line");
 }
 
