@@ -85,6 +85,13 @@ INSTANTIATE_TEST_SUITE_P(
                 { 11, 2, 333, 4 }
             ),
             std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
+                " 1\r11  \r\n\r22 \t2 \t\r\n3\t\t333\r\n444 \r 4 \r\r\n", // throwing in some carriage returns
+                500,
+                500,
+                { 1, 22, 3, 444 },
+                { 11, 2, 333, 4 }
+            ),
+            std::make_tuple<std::string, int, int, std::vector<int>, std::vector<int> >(
                 "\n\n19 29\n%iamacomment\n28 3\n%another comment\n\n65 44\n98 7\n", // comments, newlines and crap. 
                 500,
                 500,

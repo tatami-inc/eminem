@@ -49,20 +49,28 @@ INSTANTIATE_TEST_SUITE_P(
     ParserRealTest,
     ::testing::Values(
         std::make_tuple<std::string, int, int, std::vector<double> >("1 1 1.2\n2 2 2e3\n3 3 -456\n4 4 0.789\n", 5, 5, { 1.2, 2e3, -456, 0.789 }), // basic checks with a trailing newline
+
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567", 50, 50, { 567 }), // EOF after integer 
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567   ", 50, 50, { 567 }), // EOF with space after integer
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567\n", 50, 50, { 567 }), // newline after integer
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567\r\n", 50, 50, { 567 }), // carriage return after integer
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567  \n", 50, 50, { 567 }), // space and newline after integer
+
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.", 50, 50, { 567.0 }), // EOF after fraction
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890", 50, 50, { 567.890 }), // EOF after fraction
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890   ", 50, 50, { 567.890 }), // EOF with space after fraction
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890\n", 50, 50, { 567.890 }), // newline after fraction
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890\r\n", 50, 50, { 567.890 }), // carriage return after fraction
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567.890    \n", 50, 50, { 567.890 }), // space and newline after fraction
+
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8", 50, 50, { 567e8 }), // EOF after exponent
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8   ", 50, 50, { 567e8 }), // EOF with space after exponent
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8\n", 50, 50, { 567e8 }), // newline after exponent
+        std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8\r\n", 50, 50, { 567e8 }), // carriage return after exponent
         std::make_tuple<std::string, int, int, std::vector<double> >("12 34 567e8    \n", 50, 50, { 567e8 }), // space and newline after exponent
+
         std::make_tuple<std::string, int, int, std::vector<double> >("1 1  1.1  \n2 22   22.22\n33 3\t3.3e3\t\n44 44 \t0.4\t \n", 100, 100, { 1.1, 22.22, 3.3e3, 0.4 }), // variable numbers of blanks 
+        std::make_tuple<std::string, int, int, std::vector<double> >("1 1 1.1\r\n2 22 \r2.2\r\r\n33 3\t3.3e3 \r\n44 44\t0.4\t\r\n", 100, 100, { 1.1, 2.2, 3.3e3, 0.4 }), // throw in some carriage returns
         std::make_tuple<std::string, int, int, std::vector<double> >("1 1 .1\n2 22 22.\n33 3 3.e3\t\n44 44 .42e4\n", 100, 100, { 0.1, 22.0, 3000.0, 4200.0 }), // combinations of decimals/exponents 
         std::make_tuple<std::string, int, int, std::vector<double> >("1 1 -1\n2 22 +22\n33 3 -3e+3\t\n44 44 +4e-4\n", 100, 100, { -1, 22.0, -3000.0, 0.0004 }), // add signs everywhere
         std::make_tuple<std::string, int, int, std::vector<double> >("1 1 00.01\n2 22 002.2\n33 3 003e+010\t\n44 44 42e-002\n", 100, 100, { 0.01, 2.2, 3e10, 0.42 }) // leading zeros are ignored
@@ -85,7 +93,7 @@ static void test_error(const std::string& input, std::string msg) {
 
 TEST(ParserReal, Error) {
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 aaron", "unrecognized character");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1\r", "unrecognized character"); // trailing whitespace that's not a space, newline or tab.
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1\v", "unrecognized character"); // trailing whitespace that's not a space, newline, CR or horizontal tab.
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1easports", "unrecognized character");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1..", "unrecognized character");
 
@@ -159,13 +167,16 @@ TEST(ParserReal, OtherTypes) {
 }
 
 TEST(ParserReal, Specials) {
-    for (int i = 0; i < 2; ++i) {
+    for (int i = 0; i < 3; ++i) {
         std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 4\n";
         if (i == 1) {
             input += "1 2 inf\n4 5 -INFINITY\n7 8 nan\n9 10 -NaN\n";
-        } else {
+        } else if (i == 2) {
             // Sprinkling in some spaces for fun.
             input += "1 2   INF   \n4 5 -inf\t \n7 8 nan\t\n9 10\t-NaN   \n";
+        } else {
+            // Throwing in some carriage returns
+            input += "1\r2   INF\r\n4 5 -inf\t \r\n7 8 nan\r\t\r\n9 10\t-NaN   \r\n";
         }
 
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 

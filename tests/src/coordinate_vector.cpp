@@ -79,6 +79,12 @@ INSTANTIATE_TEST_SUITE_P(
                 { 12, 345, 67, 890 }
             ),
             std::make_tuple<std::string, int, std::vector<int>, std::vector<int> >(
+                "\r1 12 \r\n\t22 \r\t 345\t\r\n313\t\t 67 \r\r\n444  890\r\n", // throwing in some carriage returns
+                500,
+                { 1, 22, 313, 444 },
+                { 12, 345, 67, 890 }
+            ),
+            std::make_tuple<std::string, int, std::vector<int>, std::vector<int> >(
                 "\n\n19 9\n%iamacomment\n28 13\n%another comment\n\n65 43\n98 5\n", // comments, newlines and crap. 
                 100,
                 { 19, 28, 65, 98 },

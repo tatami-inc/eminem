@@ -74,6 +74,11 @@ INSTANTIATE_TEST_SUITE_P(
                 { 1, 22, 3, 444 }
             ),
             std::make_tuple<std::string, int, std::vector<int> >(
+                "191\r\n 422 \r\n73\t\r\n\r484\r\n", // throwing in some carriage returns
+                500,
+                { 191, 422, 73, 484 }
+            ),
+            std::make_tuple<std::string, int, std::vector<int> >(
                 "\n\n199\n%iamacomment\n283\n%another comment\n\n654\n987\n", // comments, newlines and crap. 
                 1000,
                 { 199, 283, 654, 987 }

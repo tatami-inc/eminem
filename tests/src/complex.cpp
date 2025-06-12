@@ -70,6 +70,12 @@ INSTANTIATE_TEST_SUITE_P(
             { { 567, 890 } }
         ),
         std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 567 890\r\n", // throwing in a carriage return
+            50,
+            50,
+            { { 567, 890 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
             "12 34 567 890", // no trailing newline after integer
             50,
             50,
@@ -95,6 +101,12 @@ INSTANTIATE_TEST_SUITE_P(
             { { 5.67, 8.90 } }
         ),
         std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.67 8.90\r\n", // throwing in a carriage return
+            50,
+            50,
+            { { 5.67, 8.90 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
             "12 34 5.67 8.90", // no trailing newline after fraction
             50,
             50,
@@ -115,6 +127,12 @@ INSTANTIATE_TEST_SUITE_P(
         ),
         std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
             "12 34 5.6e7 89e+0   \n", // trailing blank with a trailing newline after exponent
+            50,
+            50,
+            { { 5.6e7, 89 } }
+        ),
+        std::make_tuple<std::string, int, int, std::vector<std::complex<double> > >(
+            "12 34 5.6e7 89e+0\r\n", // throwing in a carriage return.
             50,
             50,
             { { 5.6e7, 89 } }

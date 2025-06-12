@@ -43,6 +43,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::tuple<std::string, int, int, int>("%%MatrixMarket matrix coordinate integer general\n69 2 43\n", 69, 2, 43), // trailing newline
         std::tuple<std::string, int, int, int>("%%MatrixMarket matrix coordinate integer general\n%other comment\n%morestuff\n\n5 124 27\n", 5, 124, 27), // comments and empty lines
         std::tuple<std::string, int, int, int>("%%MatrixMarket  matrix\tcoordinate    integer  general    \n\t19\t 110 \t88\t\n", 19, 110, 88), // extra blanks
+        std::tuple<std::string, int, int, int>("%%MatrixMarket matrix coordinate integer general\r\n129\r42 199\r\n", 129, 42, 199), // throwing in some carriage returns
         std::tuple<std::string, int, int, int>("%%MatrixMarket matrix coordinate integer general foobar\n123 45 67890\n", 123, 45, 67890) // extra fields
     )
 );
@@ -82,6 +83,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::tuple<std::string, int, int>("%%MatrixMarket vector coordinate integer general\n69 23\n", 69, 23), // trailing newline
         std::tuple<std::string, int, int>("%%MatrixMarket vector coordinate integer general\n\n%other comment\n% FOO BAR\n5124 27\n", 5124, 27), // comments and empty lines
         std::tuple<std::string, int, int>("%%MatrixMarket   vector \tcoordinate    integer  general    \n  1910 \t88\t\n", 1910, 88), // extra blanks
+        std::tuple<std::string, int, int>("%%MatrixMarket vector coordinate integer general\r\n69 23 \r\n", 69, 23), // throwing in some carriage returns
         std::tuple<std::string, int, int>("%%MatrixMarket vector coordinate integer symmetric foobar\n123456 7890\n", 123456, 7890) // extra fields (symmetry is ignored)
     )
 );
@@ -121,6 +123,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::tuple<std::string, int, int>("%%MatrixMarket matrix array integer general\n69 243\n", 69, 243), // trailing newline
         std::tuple<std::string, int, int>("%%MatrixMarket matrix array integer general\n%other comment\n%morestuff\n\n512 427\n", 512, 427), // comments and empty lines
         std::tuple<std::string, int, int>("%%MatrixMarket\t\tmatrix\tarray    integer  general    \n\t\t 110 \t88\t\n", 110, 88), // extra blanks
+        std::tuple<std::string, int, int>("%%MatrixMarket matrix array integer general\t\r\n69 243 \r\n", 69, 243), // throwing in some carriage returns
         std::tuple<std::string, int, int>("%%MatrixMarket matrix array integer general foobar\n12345 67890\n", 12345, 67890) // extra fields
     )
 );
@@ -159,6 +162,7 @@ INSTANTIATE_TEST_SUITE_P(
         std::tuple<std::string, int>("%%MatrixMarket vector array integer general\n69243\n", 69243), // trailing newline
         std::tuple<std::string, int>("%%MatrixMarket vector array integer general\n%other comment\n%morestuff\n\n512427\n", 512427), // comments and empty lines
         std::tuple<std::string, int>("%%MatrixMarket  vector    array    integer  general    \n\t\t 11088\t\n", 11088), // extra blanks
+        std::tuple<std::string, int>("%%MatrixMarket vector array integer general\r\n 69243 \r\n", 69243), // throwing in some carriage returns
         std::tuple<std::string, int>("%%MatrixMarket vector array integer general foobar\n1234567890\n", 1234567890) // extra fields
     )
 );

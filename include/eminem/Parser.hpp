@@ -232,7 +232,10 @@ inline std::size_t count_newlines(const std::vector<char>& buffer) {
  *
  * As the Matrix Market specification is somewhat vague in parts, we apply the following refinements:
  *
- * - We allow both tabs and whitespaces for a "blank" character.
+ * - We define a "blank" character as a horizontal tab, a space (ASCII 32) or a carriage return.
+ *   A new line is only defined by the line feed character (ASCII 10).
+ *   The carriage return is only considered as a blank for compatibility with systems that use CRLF to define new lines,
+ *   and we do not check for whether the carriage return is followed by a line feed.
  * - The final line of the file may or may not be newline terminated.
  * - Integer values for the row/column indices, number of rows/columns and number of lines should be a sequence of one or more digits.
  *   Leading zeros are ignored and will not be interpreted as octal.
@@ -286,7 +289,7 @@ private:
     static bool chomp(Input2_& input) {
         while (1) {
             char x = input.get();
-            if (x != ' ' && x != '\t') {
+            if (x != ' ' && x != '\t' && x != '\r') {
                 return true;
             }
             if (!(input.advance())) {
@@ -346,7 +349,7 @@ private:
         }
 
         char next = my_input->get();
-        if (next == ' ' || next == '\t') {
+        if (next == ' ' || next == '\t' || next == '\r') {
             if (!advance_and_chomp(*my_input)) { // gobble up all of the remaining horizontal space.
                 return ExpectedMatch(true, false, false);
             }
@@ -634,7 +637,7 @@ private:
                         return output;
                     }
                     throw std::runtime_error("unexpected newline when parsing " + what() + " field on line " + std::to_string(overall_line_count + 1));
-                case ' ': case '\t':
+                case ' ': case '\t': case '\r':
                     if (!advance_and_chomp(input)) { // skipping the current and subsequent blanks.
                         if constexpr(last_) {
                             return output;
@@ -1445,7 +1448,7 @@ private:
                         }
                         found = true;
                         break;
-                    case ' ': case '\t':
+                    case ' ': case '\t': case '\r':
                         if (!advance_and_chomp(input)) { // skipping past the current position before chomping.
                             return ParseInfo<Type_>(val, false);
                         }
@@ -1549,7 +1552,7 @@ private:
             remaining = input.advance();
             if (remaining) {
                 char current = input.get();
-                if (current != '\n' && current != '\t' && current != ' ') {
+                if (current != '\n' && current != ' ' && current != '\t' && current != '\r') {
                     if (current != 'i' && current != 'I') {
                         throw std::runtime_error("unexpected character when parsing " + what() + " on line " + std::to_string(overall_line_count + 1));
                     }
@@ -1570,7 +1573,7 @@ private:
         if (remaining) {
             // Using a switch for consistency with parse_real().
             switch(input.get()) {
-                case '\t': case ' ':
+                case ' ': case '\t': case '\r':
                     if (!advance_and_chomp(input)) {
                         if constexpr(last_) {
                             remaining = false;
@@ -1657,7 +1660,7 @@ private:
                     value += val - '0';
                     found = true;
                     break;
-                case ' ': case '\t':
+                case ' ': case '\t': case '\r':
                     if (!advance_and_chomp(input)) {
                         if constexpr(last_) {
                             remaining = false;
@@ -1717,7 +1720,7 @@ decimal_processing:
                         value += (val - '0') / multiplier;
                         found = true;
                         break;
-                    case ' ': case '\t':
+                    case ' ': case '\t': case '\r':
                         if (!advance_and_chomp(input)) {
                             if constexpr(last_) {
                                 remaining = false;
@@ -1777,7 +1780,7 @@ exponent_processing:
                         exponent += (val - '0');
                         expfound = true;
                         break;
-                    case ' ': case '\t':
+                    case ' ': case '\t': case '\r':
                         if (!advance_and_chomp(input)) {
                             if constexpr(last_) {
                                 remaining = false;
