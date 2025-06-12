@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(eminem
-    VERSION 1.1.0
+    VERSION 1.1.1
     DESCRIPTION "Matrix Market parser"
     LANGUAGES CXX)
 
