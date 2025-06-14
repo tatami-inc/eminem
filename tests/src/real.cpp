@@ -92,10 +92,10 @@ static void test_error(const std::string& input, std::string msg) {
 }
 
 TEST(ParserReal, Error) {
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 aaron", "unrecognized character");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1\v", "unrecognized character"); // trailing whitespace that's not a space, newline, CR or horizontal tab.
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1easports", "unrecognized character");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1..", "unrecognized character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 aaron", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1\v", "incorrectly formatted"); // trailing whitespace that's not a space, newline, CR or horizontal tab.
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1easports", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1..", "incorrectly formatted");
 
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1 4", "more fields");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1.1 4", "more fields");
@@ -103,31 +103,47 @@ TEST(ParserReal, Error) {
 
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 \n", "no digits");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1\t\n", "no digits");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 .\n", "no digits");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 .\n", "incorrectly formatted");
 
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 e\n", "no digits");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 e134\n", "no digits");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e\n", "no digits");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 e\n", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 e134\n", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e\n", "incorrectly formatted");
 
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 +", "unexpected end of file");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e+", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 +", "unexpected end");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e+", "incorrectly formatted");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 +\n", "no digits");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e+\n", "no digits");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e+\n", "incorrectly formatted");
 
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e", "unexpected end of file");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1.1e", "unexpected end of file");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1e", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1.1e", "incorrectly formatted");
 
     test_error("%%MatrixMarket vector array real\n1\n \n", "no digits");
 
     {
-        std::string input = "%%MatrixMarket vector coordinate real general\n1 1 1\n1 1 1";
+        std::string input = "%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
         eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
         EXPECT_ANY_THROW({
             try {
-                parser.scan_integer([&](eminem::Index, eminem::Index, int){});
+                parser.scan_real([&](eminem::Index, eminem::Index, int){});
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
+                throw;
+            }
+        });
+    }
+
+    {
+        // Creating a huge number that cannot be held in a double-precision float.
+        std::string input = "%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1" + std::string(1000, '0');
+        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
+        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        parser.scan_preamble();
+        EXPECT_ANY_THROW({
+            try {
+                parser.scan_real<double>([&](eminem::Index, eminem::Index, int){});
+            } catch (std::exception& e) {
+                EXPECT_THAT(e.what(), ::testing::HasSubstr("could not represent"));
                 throw;
             }
         });
@@ -214,36 +230,15 @@ TEST(ParserReal, Specials) {
     }
 
     // Various errors.
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 in", "unexpected termination");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 ina", "unexpected character");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infi", "unexpected termination");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infa", "unexpected character");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infa", "unexpected character");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 n", "unexpected termination");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 naf", "unexpected character");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 nanfoo", "unexpected character");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 in", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 ina", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infi", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infa", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infa", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 n", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 naf", "incorrectly formatted");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 nanfoo", "incorrectly formatted");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 nan foo", "more fields");
-
-    for (int i = 0; i < 2; ++i) {
-        std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 1\n1 2 ";
-        if (i == 1) {
-            input += "NaN";
-        } else {
-            input += "Inf";
-        }
-
-        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
-        parser.scan_preamble();
-        EXPECT_ANY_THROW({
-            try {
-                parser.scan_real<int>([&](eminem::Index, eminem::Index, int){});
-            } catch (std::exception& e) {
-                EXPECT_THAT(e.what(), ::testing::HasSubstr("requested type does not support"));
-                throw;
-            }
-        });
-    }
 }
 
 TEST(ParserReal, QuitEarly) {
