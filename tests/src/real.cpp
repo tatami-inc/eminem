@@ -120,12 +120,12 @@ TEST(ParserReal, Error) {
     test_error("%%MatrixMarket vector array real\n1\n \n", "no digits");
 
     {
-        std::string input = "%%MatrixMarket vector coordinate real general\n1 1 1\n1 1 1";
+        std::string input = "%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
         eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
         EXPECT_ANY_THROW({
             try {
-                parser.scan_integer([&](eminem::Index, eminem::Index, int){});
+                parser.scan_real([&](eminem::Index, eminem::Index, int){});
             } catch (std::exception& e) {
                 EXPECT_THAT(e.what(), ::testing::HasSubstr("banner or size lines have not yet been parsed"));
                 throw;
