@@ -106,7 +106,7 @@ $(function(){ initResizable(false); });
 Public Attributes</h2></td></tr>
 <tr class="memitem:a9583a1a5fd86cfe6b70a66785d8faae4" id="r_a9583a1a5fd86cfe6b70a66785d8faae4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a9583a1a5fd86cfe6b70a66785d8faae4">num_threads</a> = 1</td></tr>
 <tr class="separator:a9583a1a5fd86cfe6b70a66785d8faae4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0ee3f452160d3f1276ac2e66b7cc65f1" id="r_a0ee3f452160d3f1276ac2e66b7cc65f1"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0ee3f452160d3f1276ac2e66b7cc65f1">block_size</a> = 65536</td></tr>
+<tr class="memitem:a0ee3f452160d3f1276ac2e66b7cc65f1" id="r_a0ee3f452160d3f1276ac2e66b7cc65f1"><td class="memItemLeft" align="right" valign="top">std::size_t&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0ee3f452160d3f1276ac2e66b7cc65f1">block_size</a> = sanisizer::cap&lt;std::size_t&gt;(65536)</td></tr>
 <tr class="separator:a0ee3f452160d3f1276ac2e66b7cc65f1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
@@ -134,7 +134,7 @@ Public Attributes</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">std::size_t eminem::ParserOptions::block_size = 65536</td>
+          <td class="memname">std::size_t eminem::ParserOptions::block_size = sanisizer::cap&lt;std::size_t&gt;(65536)</td>
         </tr>
       </table>
 </div><div class="memdoc">
