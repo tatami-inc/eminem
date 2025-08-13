@@ -16,15 +16,8 @@ jobs:
     - name: Get latest CMake
       uses: lukka/get-cmake@latest
 
-    - name: Install byteme
-      run: |
-        git clone https://github.com/LTLA/byteme dep-byteme --depth=1
-        cd dep-byteme
-        cmake -S . -B build -DBYTEME_TESTS=OFF
-        sudo cmake --install build
-
     - name: Configure the build
-      run: cmake -S . -B build -DEMINEM_FETCH_EXTERN=OFF -DEMINEM_TESTS=OFF
+      run: cmake -S . -B build -DEMINEM_TESTS=OFF
 
     - name: Install the library
       run: sudo cmake --install build
