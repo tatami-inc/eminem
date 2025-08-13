@@ -14,6 +14,7 @@
 
 #include "byteme/RawBufferReader.hpp"
 #include "byteme/PerByte.hpp"
+#include "sanisizer/sanisizer.hpp"
 
 #include "utils.hpp"
 
@@ -45,7 +46,7 @@ struct ParserOptions {
      * This is rounded up to the nearest newline before parallel processing.
      * Only relevant when `num_threads > 1`.
      */
-    std::size_t block_size = 65536;
+    std::size_t block_size = sanisizer::cap<std::size_t>(65536);
 };
 
 /**
@@ -55,7 +56,9 @@ template<typename Workspace_>
 class ThreadPool {
 public:
     template<typename RunJob_>
-    ThreadPool(RunJob_ run_job, int num_threads) : my_helpers(num_threads) {
+    ThreadPool(RunJob_ run_job, int num_threads) :
+        my_helpers(sanisizer::cast<decltype(my_helpers.size())>(num_threads)) 
+    {
         std::mutex init_mut;
         std::condition_variable init_cv;
         int num_initialized = 0;
@@ -275,7 +278,9 @@ public:
         my_input(std::move(input)),
         my_nthreads(options.num_threads),
         my_block_size(options.block_size)
-    {}
+    {
+        sanisizer::cast<typename std::vector<char>::size_type>(my_block_size); // checking that there won't be any overflow in fill_to_next_newline().
+    }
 
 private:
     std::unique_ptr<Input_> my_input;

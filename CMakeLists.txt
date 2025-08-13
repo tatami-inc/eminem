@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(eminem
-    VERSION 1.1.1
+    VERSION 1.1.2
     DESCRIPTION "Matrix Market parser"
     LANGUAGES CXX)
 
@@ -15,9 +15,10 @@ if(EMINEM_FETCH_EXTERN)
     add_subdirectory(extern)
 else()
     find_package(ltla_byteme 2.0.0 CONFIG REQUIRED)
+    find_package(ltla_sanisizer 0.1.0 CONFIG REQUIRED)
 endif()
 
-target_link_libraries(eminem INTERFACE ltla::byteme)
+target_link_libraries(eminem INTERFACE ltla::byteme ltla::sanisizer)
 
 # Switch between include directories depending on whether the downstream is
 # using the build directly or is using the installed package.
