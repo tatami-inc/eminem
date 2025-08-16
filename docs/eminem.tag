@@ -100,81 +100,89 @@
     <name>eminem::Parser</name>
     <filename>classeminem_1_1Parser.html</filename>
     <templarg>class Input_</templarg>
+    <templarg>typename Index_</templarg>
+    <member kind="typedef">
+      <type>unsigned long long</type>
+      <name>LineIndex</name>
+      <anchorfile>classeminem_1_1Parser.html</anchorfile>
+      <anchor>aa342a8f7f71a54003e8989c5053cee9a</anchor>
+      <arglist></arglist>
+    </member>
     <member kind="function">
       <type></type>
       <name>Parser</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a9dde0158f2dcc903c71d1800923effad</anchor>
+      <anchor>a449fdbbe6fccfaedd23993e2d61fd741</anchor>
       <arglist>(std::unique_ptr&lt; Input_ &gt; input, const ParserOptions &amp;options)</arglist>
     </member>
     <member kind="function">
       <type>const MatrixDetails &amp;</type>
       <name>get_banner</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a4326ef24eddeca2ff45e00bbfba9f851</anchor>
+      <anchor>a4073ef8fc24d3403c1ac655b82f99179</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
-      <type>Index</type>
+      <type>Index_</type>
       <name>get_nrows</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>aab9cec4211cc545e2c8550267fa648f1</anchor>
+      <anchor>a0a82592efbbe5cfc528c8618c787f0af</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
-      <type>Index</type>
+      <type>Index_</type>
       <name>get_ncols</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a1d5fe77163613f3538e0466fdf38f8a2</anchor>
+      <anchor>ad0245f01da0ffdac6511315c94da3e1e</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
-      <type>Index</type>
+      <type>LineIndex</type>
       <name>get_nlines</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>aac1969c401b04521698edd6b75d03c5a</anchor>
+      <anchor>a36dbe8d651129ddce69b9db0e594f8a1</anchor>
       <arglist>() const</arglist>
     </member>
     <member kind="function">
       <type>void</type>
       <name>scan_preamble</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a91d2ea36cd1962b19675eac852b77d54</anchor>
+      <anchor>a04f29bcd5780761aff7ab09b7a8325ea</anchor>
       <arglist>()</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>scan_integer</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a3e5320df82912206164d5fcafb7f1f4e</anchor>
+      <anchor>af565251e8f3e499ada1867a904e9327c</anchor>
       <arglist>(Store_ store)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>scan_real</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a90d0c99c93cd42aad1d455693cacbde4</anchor>
+      <anchor>a886a3f96eefbfd7c40ea884f0e4e63a6</anchor>
       <arglist>(Store_ &amp;&amp;store)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>scan_double</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a9136c73b661df9587a36e79d52b995eb</anchor>
+      <anchor>a820274a84266ec42a56946faa9a14997</anchor>
       <arglist>(Store_ store)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>scan_complex</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a67a0424acaeb50b22474dfd77010c2be</anchor>
+      <anchor>a227f3f6dc4fa76da4a58c9cde71edd85</anchor>
       <arglist>(Store_ store)</arglist>
     </member>
     <member kind="function">
       <type>bool</type>
       <name>scan_pattern</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a65285363373e976d790a2ff764621f86</anchor>
+      <anchor>a87b392fda6246cbfc0cc1a8789bd6550</anchor>
       <arglist>(Store_ store)</arglist>
     </member>
   </compound>
@@ -333,13 +341,6 @@
     <class kind="struct">eminem::ParseTextBufferOptions</class>
     <class kind="struct">eminem::ParseTextFileOptions</class>
     <class kind="struct">eminem::ParseZlibBufferOptions</class>
-    <member kind="typedef">
-      <type>unsigned long long</type>
-      <name>Index</name>
-      <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>a1b89d92edc9a5418b920487f16b2d11b</anchor>
-      <arglist></arglist>
-    </member>
     <member kind="enumeration">
       <type></type>
       <name>Object</name>
@@ -382,45 +383,45 @@
       <enumvalue file="namespaceeminem.html" anchor="a3222df29bae0a3f6387230b58f36e920a7ef6fdd31540cc6c5a031f31c22f2bde">HERMITIAN</enumvalue>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt; &gt;</type>
+      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
       <name>parse_gzip_file</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>ab373ea32fda997435cd73b1663525cbe</anchor>
+      <anchor>a907387b09a970b7d27a2b9a60db846d2</anchor>
       <arglist>(const char *path, const ParseGzipFileOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt; &gt;</type>
+      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
       <name>parse_zlib_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>ab82afe963c54dec54acb28c50d8b8a0a</anchor>
+      <anchor>a295c0726c5c90fb6d3b64332221ece36</anchor>
       <arglist>(const unsigned char *buffer, std::size_t len, const ParseZlibBufferOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt; &gt;</type>
+      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
       <name>parse_some_file</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>ae5be0ff91433f365d1736c7f300aba83</anchor>
+      <anchor>aa96bca5a6f809e792ddc1e96e0fe0cfc</anchor>
       <arglist>(const char *path, const ParseSomeFileOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt; &gt;</type>
+      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
       <name>parse_some_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>a1bdc1c3dad71722fc6a3fefb64f1469e</anchor>
+      <anchor>a061b7a113d8f224fcebb6e8fe5882342</anchor>
       <arglist>(const unsigned char *buffer, std::size_t len, const ParseSomeBufferOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt; &gt;</type>
+      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
       <name>parse_text_file</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>afbf93e2ee2c89faf00aff1857a22416e</anchor>
+      <anchor>a896794260d133ec3a4116348a205fd97</anchor>
       <arglist>(const char *path, const ParseTextFileOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt; &gt;</type>
+      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
       <name>parse_text_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>a6c1f249ff1fe330012bd2706553eb483</anchor>
+      <anchor>ad6da882a39fcb6e3bc36638b28910680</anchor>
       <arglist>(const unsigned char *buffer, std::size_t len, const ParseTextBufferOptions &amp;options)</arglist>
     </member>
   </compound>
