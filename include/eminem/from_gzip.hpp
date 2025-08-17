@@ -48,7 +48,7 @@ struct ParseGzipFileOptions {
  * @param options Further options.
  */
 template<typename Index_ = unsigned long long>
-Parser<byteme::PerByteSerial<char>, Index_> parse_gzip_file(const char* path, const ParseGzipFileOptions& options) {
+Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_> parse_gzip_file(const char* path, const ParseGzipFileOptions& options) {
     ParserOptions popt;
     popt.num_threads = options.num_threads;
     popt.block_size = options.block_size;
@@ -57,7 +57,7 @@ Parser<byteme::PerByteSerial<char>, Index_> parse_gzip_file(const char* path, co
     gopt.buffer_size = options.buffer_size;
     auto reader = std::make_unique<byteme::GzipFileReader>(path, gopt);
     auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-    return Parser<byteme::PerByteSerial<char>, Index_>(std::move(pb), popt);
+    return Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_>(std::move(pb), popt);
 }
 
 /**
@@ -97,7 +97,7 @@ struct ParseZlibBufferOptions {
  * @param options Further options.
  */
 template<typename Index_ = unsigned long long>
-Parser<byteme::PerByteSerial<char>, Index_> parse_zlib_buffer(const unsigned char* buffer, std::size_t len, const ParseZlibBufferOptions& options) {
+Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_> parse_zlib_buffer(const unsigned char* buffer, std::size_t len, const ParseZlibBufferOptions& options) {
     ParserOptions popt;
     popt.num_threads = options.num_threads;
     popt.block_size = options.block_size;
@@ -107,7 +107,7 @@ Parser<byteme::PerByteSerial<char>, Index_> parse_zlib_buffer(const unsigned cha
     zopt.mode = options.mode;
     auto reader = std::make_unique<byteme::ZlibBufferReader>(buffer, len, zopt);
     auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-    return Parser<byteme::PerByteSerial<char>, Index_>(std::move(pb), popt);
+    return Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_>(std::move(pb), popt);
 }
 
 /**
@@ -140,7 +140,7 @@ struct ParseSomeFileOptions {
  * @param options Further options.
  */
 template<typename Index_ = unsigned long long>
-Parser<byteme::PerByteSerial<char>, Index_> parse_some_file(const char* path, const ParseSomeFileOptions& options) {
+Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_> parse_some_file(const char* path, const ParseSomeFileOptions& options) {
     ParserOptions popt;
     popt.num_threads = options.num_threads;
     popt.block_size = options.block_size;
@@ -150,7 +150,7 @@ Parser<byteme::PerByteSerial<char>, Index_> parse_some_file(const char* path, co
     auto reader = std::make_unique<byteme::SomeFileReader>(path, sopt);
     auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
 
-    return Parser<byteme::PerByteSerial<char>, Index_>(std::move(pb), popt);
+    return Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_>(std::move(pb), popt);
 }
 
 /**
@@ -184,7 +184,7 @@ struct ParseSomeBufferOptions {
  * @param options Further options.
  */
 template<typename Index_ = unsigned long long>
-Parser<byteme::PerByteSerial<char>, Index_> parse_some_buffer(const unsigned char* buffer, std::size_t len, const ParseSomeBufferOptions& options) {
+Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_> parse_some_buffer(const unsigned char* buffer, std::size_t len, const ParseSomeBufferOptions& options) {
     ParserOptions popt;
     popt.num_threads = options.num_threads;
     popt.block_size = options.block_size;
@@ -193,7 +193,7 @@ Parser<byteme::PerByteSerial<char>, Index_> parse_some_buffer(const unsigned cha
     sopt.buffer_size = options.buffer_size;
     auto reader = std::make_unique<byteme::SomeBufferReader>(buffer, len, sopt);
     auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-    return Parser<byteme::PerByteSerial<char>, Index_>(std::move(pb), popt);
+    return Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_>(std::move(pb), popt);
 }
 
 }

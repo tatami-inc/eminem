@@ -46,7 +46,7 @@ struct ParseTextFileOptions {
  * @param options Further options.
  */
 template<typename Index_ = unsigned long long>
-Parser<byteme::PerByteSerial<char>, Index_> parse_text_file(const char* path, const ParseTextFileOptions& options) {
+Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_> parse_text_file(const char* path, const ParseTextFileOptions& options) {
     ParserOptions popt;
     popt.num_threads = options.num_threads;
     popt.block_size = options.block_size;
@@ -55,7 +55,7 @@ Parser<byteme::PerByteSerial<char>, Index_> parse_text_file(const char* path, co
     topt.buffer_size = options.buffer_size;
     auto reader = std::make_unique<byteme::RawFileReader>(path, topt);
     auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-    return Parser<byteme::PerByteSerial<char>, Index_>(std::move(pb), popt);
+    return Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_>(std::move(pb), popt);
 }
 
 /**
@@ -84,14 +84,14 @@ struct ParseTextBufferOptions {
  * @param options Further options.
  */
 template<typename Index_ = unsigned long long>
-Parser<byteme::PerByteSerial<char>, Index_> parse_text_buffer(const unsigned char* buffer, std::size_t len, const ParseTextBufferOptions& options) {
+Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_> parse_text_buffer(const unsigned char* buffer, std::size_t len, const ParseTextBufferOptions& options) {
     ParserOptions popt;
     popt.num_threads = options.num_threads;
     popt.block_size = options.block_size;
 
     auto reader = std::make_unique<byteme::RawBufferReader>(buffer, len);
     auto pb = std::make_unique<byteme::PerByteSerial<char> >(std::move(reader));
-    return Parser<byteme::PerByteSerial<char>, Index_>(std::move(pb), popt);
+    return Parser<std::unique_ptr<byteme::PerByteSerial<char> >, Index_>(std::move(pb), popt);
 }
 
 }

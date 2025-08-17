@@ -228,7 +228,8 @@ typedef unsigned long long LineIndex;
 /**
  * @brief Parse a matrix from a Matrix Market file.
  *
- * @tparam Input_ Class for the source of input bytes, satisfying the `byteme::PerByteInterface` instance.
+ * @tparam Input_ Class of the source of input bytes.
+ * This should be a pointer to an object satisfying the `byteme::PerByteInterface` instance.
  * @tparam Index_ Integer type of the row/column indices.
  *
  * This parses a Matrix Market file according to the specification described at https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz.
@@ -274,10 +275,10 @@ template<class Input_, typename Index_ = unsigned long long>
 class Parser {
 public:
     /**
-     * @param input Source of input bytes, typically a `byteme::PerByteInterface` instance.
+     * @param input Source of input bytes, typically a pointer to a `byteme::PerByteInterface` instance.
      * @param options Further options.
      */
-    Parser(std::unique_ptr<Input_> input, const ParserOptions& options) : 
+    Parser(Input_ input, const ParserOptions& options) : 
         my_input(std::move(input)),
         my_nthreads(options.num_threads),
         my_block_size(options.block_size)
@@ -286,7 +287,7 @@ public:
     }
 
 private:
-    std::unique_ptr<Input_> my_input;
+    Input_ my_input;
     int my_nthreads;
     std::size_t my_block_size;
 
