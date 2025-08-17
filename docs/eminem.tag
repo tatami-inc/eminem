@@ -105,8 +105,8 @@
       <type></type>
       <name>Parser</name>
       <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>a449fdbbe6fccfaedd23993e2d61fd741</anchor>
-      <arglist>(std::unique_ptr&lt; Input_ &gt; input, const ParserOptions &amp;options)</arglist>
+      <anchor>a170d8a5e218e59d547ca607a746ebb47</anchor>
+      <arglist>(Input_ input, const ParserOptions &amp;options)</arglist>
     </member>
     <member kind="function">
       <type>const MatrixDetails &amp;</type>
@@ -383,45 +383,45 @@
       <enumvalue file="namespaceeminem.html" anchor="a3222df29bae0a3f6387230b58f36e920a7ef6fdd31540cc6c5a031f31c22f2bde">HERMITIAN</enumvalue>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
+      <type>Parser&lt; std::unique_ptr&lt; byteme::PerByteSerial&lt; char &gt; &gt;, Index_ &gt;</type>
       <name>parse_gzip_file</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>a907387b09a970b7d27a2b9a60db846d2</anchor>
+      <anchor>afc1dcfd61dbbba8db216a5aaf5f20939</anchor>
       <arglist>(const char *path, const ParseGzipFileOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
+      <type>Parser&lt; std::unique_ptr&lt; byteme::PerByteSerial&lt; char &gt; &gt;, Index_ &gt;</type>
       <name>parse_zlib_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>a295c0726c5c90fb6d3b64332221ece36</anchor>
+      <anchor>a2a2870c193f8b2ab3a0a288ae866f188</anchor>
       <arglist>(const unsigned char *buffer, std::size_t len, const ParseZlibBufferOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
+      <type>Parser&lt; std::unique_ptr&lt; byteme::PerByteSerial&lt; char &gt; &gt;, Index_ &gt;</type>
       <name>parse_some_file</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>aa96bca5a6f809e792ddc1e96e0fe0cfc</anchor>
+      <anchor>a3207d4b61606162883a11fc85ceeb4ee</anchor>
       <arglist>(const char *path, const ParseSomeFileOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
+      <type>Parser&lt; std::unique_ptr&lt; byteme::PerByteSerial&lt; char &gt; &gt;, Index_ &gt;</type>
       <name>parse_some_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>a061b7a113d8f224fcebb6e8fe5882342</anchor>
+      <anchor>a85d2dc0be8f3b30a75ff857f6d413036</anchor>
       <arglist>(const unsigned char *buffer, std::size_t len, const ParseSomeBufferOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
+      <type>Parser&lt; std::unique_ptr&lt; byteme::PerByteSerial&lt; char &gt; &gt;, Index_ &gt;</type>
       <name>parse_text_file</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>a896794260d133ec3a4116348a205fd97</anchor>
+      <anchor>a5a0bff269581203475e68271e916bfbf</anchor>
       <arglist>(const char *path, const ParseTextFileOptions &amp;options)</arglist>
     </member>
     <member kind="function">
-      <type>Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt;</type>
+      <type>Parser&lt; std::unique_ptr&lt; byteme::PerByteSerial&lt; char &gt; &gt;, Index_ &gt;</type>
       <name>parse_text_buffer</name>
       <anchorfile>namespaceeminem.html</anchorfile>
-      <anchor>ad6da882a39fcb6e3bc36638b28910680</anchor>
+      <anchor>a606e160367df62519511ea51f9116f5a</anchor>
       <arglist>(const unsigned char *buffer, std::size_t len, const ParseTextBufferOptions &amp;options)</arglist>
     </member>
   </compound>

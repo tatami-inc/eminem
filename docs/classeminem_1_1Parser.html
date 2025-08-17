@@ -104,8 +104,8 @@ $(function(){ initResizable(false); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a449fdbbe6fccfaedd23993e2d61fd741" id="r_a449fdbbe6fccfaedd23993e2d61fd741"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a449fdbbe6fccfaedd23993e2d61fd741">Parser</a> (std::unique_ptr&lt; Input_ &gt; input, const <a class="el" href="structeminem_1_1ParserOptions.html">ParserOptions</a> &amp;options)</td></tr>
-<tr class="separator:a449fdbbe6fccfaedd23993e2d61fd741"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a170d8a5e218e59d547ca607a746ebb47" id="r_a170d8a5e218e59d547ca607a746ebb47"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a170d8a5e218e59d547ca607a746ebb47">Parser</a> (Input_ input, const <a class="el" href="structeminem_1_1ParserOptions.html">ParserOptions</a> &amp;options)</td></tr>
+<tr class="separator:a170d8a5e218e59d547ca607a746ebb47"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4073ef8fc24d3403c1ac655b82f99179" id="r_a4073ef8fc24d3403c1ac655b82f99179"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structeminem_1_1MatrixDetails.html">MatrixDetails</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4073ef8fc24d3403c1ac655b82f99179">get_banner</a> () const</td></tr>
 <tr class="separator:a4073ef8fc24d3403c1ac655b82f99179"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0a82592efbbe5cfc528c8618c787f0af" id="r_a0a82592efbbe5cfc528c8618c787f0af"><td class="memItemLeft" align="right" valign="top">Index_&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0a82592efbbe5cfc528c8618c787f0af">get_nrows</a> () const</td></tr>
@@ -137,7 +137,7 @@ Public Member Functions</h2></td></tr>
 class eminem::Parser&lt; Input_, Index_ &gt;</div><p>Parse a matrix from a Matrix Market file. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">Input_</td><td>Class for the source of input bytes, satisfying the <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html">byteme::PerByteInterface</a></code> instance. </td></tr>
+    <tr><td class="paramname">Input_</td><td>Class of the source of input bytes. This should be a pointer to an object satisfying the <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html">byteme::PerByteInterface</a></code> instance. </td></tr>
     <tr><td class="paramname">Index_</td><td>Integer type of the row/column indices.</td></tr>
   </table>
   </dd>
@@ -160,8 +160,8 @@ class eminem::Parser&lt; Input_, Index_ &gt;</div><p>Parse a matrix from a Matri
 <p>The digit sequence should contain one or mor digits, possibly containing leading zeros that will be ignored. The sign is optional and should be either <code>+</code> or <code>-</code>. The exponent is optional should have the form <code>e(sign)[digit sequence]</code> or <code>E(sign)[digit sequence]</code>, where the sign is again optional. We also support case-insensitive matches to <code>inf</code>, <code>infinity</code> or <code>nan</code>. This will be converted to their corresponding IEEE special values if they are available for the provided <code>Type_</code> in <code><a class="el" href="#a886a3f96eefbfd7c40ea884f0e4e63a6">scan_real()</a></code>, otherwise an error is thrown. For non-special values, no additional checks for overflow are applied. If IEEE arithmetic is available, overflow will manifest as infinities, otherwise they will be undefined behavior.</p>
 <p>No validation is performed to determine whether coordinates are consistent with non-general symmetries. Similarly, we do not check for the existence of multiple lines with the same row/column indices in coordinate matrices/vectors. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a449fdbbe6fccfaedd23993e2d61fd741" name="a449fdbbe6fccfaedd23993e2d61fd741"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a449fdbbe6fccfaedd23993e2d61fd741">&#9670;&#160;</a></span>Parser()</h2>
+<a id="a170d8a5e218e59d547ca607a746ebb47" name="a170d8a5e218e59d547ca607a746ebb47"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a170d8a5e218e59d547ca607a746ebb47">&#9670;&#160;</a></span>Parser()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -174,7 +174,7 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
         <tr>
           <td class="memname"><a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::Parser </td>
           <td>(</td>
-          <td class="paramtype">std::unique_ptr&lt; Input_ &gt;</td>          <td class="paramname"><span class="paramname"><em>input</em></span>, </td>
+          <td class="paramtype">Input_</td>          <td class="paramname"><span class="paramname"><em>input</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -190,7 +190,7 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">input</td><td>Source of input bytes, typically a <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html">byteme::PerByteInterface</a></code> instance. </td></tr>
+    <tr><td class="paramname">input</td><td>Source of input bytes, typically a pointer to a <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html">byteme::PerByteInterface</a></code> instance. </td></tr>
     <tr><td class="paramname">options</td><td>Further options. </td></tr>
   </table>
   </dd>

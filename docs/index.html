@@ -98,9 +98,9 @@ $(function(){ initResizable(false); });
 <div class="fragment"><div class="line"><span class="preprocessor">#include &quot;<a class="code" href="eminem_8hpp.html">eminem/eminem.hpp</a>&quot;</span></div>
 <div class="line"> </div>
 <div class="line"><span class="comment">// Using default options, hence the &#39;{}&#39;</span></div>
-<div class="line"><span class="keyword">auto</span> parser = <a class="code hl_function" href="namespaceeminem.html#a896794260d133ec3a4116348a205fd97">eminem::parse_text_file</a>(<span class="stringliteral">&quot;some_path.mm&quot;</span>, {});</div>
+<div class="line"><span class="keyword">auto</span> parser = <a class="code hl_function" href="namespaceeminem.html#a5a0bff269581203475e68271e916bfbf">eminem::parse_text_file</a>(<span class="stringliteral">&quot;some_path.mm&quot;</span>, {});</div>
 <div class="ttc" id="aeminem_8hpp_html"><div class="ttname"><a href="eminem_8hpp.html">eminem.hpp</a></div><div class="ttdoc">Umbrella header for the eminem library.</div></div>
-<div class="ttc" id="anamespaceeminem_html_a896794260d133ec3a4116348a205fd97"><div class="ttname"><a href="namespaceeminem.html#a896794260d133ec3a4116348a205fd97">eminem::parse_text_file</a></div><div class="ttdeci">Parser&lt; byteme::PerByteSerial&lt; char &gt;, Index_ &gt; parse_text_file(const char *path, const ParseTextFileOptions &amp;options)</div><div class="ttdef"><b>Definition</b> from_text.hpp:49</div></div>
+<div class="ttc" id="anamespaceeminem_html_a5a0bff269581203475e68271e916bfbf"><div class="ttname"><a href="namespaceeminem.html#a5a0bff269581203475e68271e916bfbf">eminem::parse_text_file</a></div><div class="ttdeci">Parser&lt; std::unique_ptr&lt; byteme::PerByteSerial&lt; char &gt; &gt;, Index_ &gt; parse_text_file(const char *path, const ParseTextFileOptions &amp;options)</div><div class="ttdef"><b>Definition</b> from_text.hpp:49</div></div>
 </div><!-- fragment --><p>We scan through the preamble, which contains the banner and the size lines. The type of the data field in the banner will determine which scanning function to use. The size lines can also help with pre-allocation of memory to store the scanning output, if necessary.</p>
 <div class="fragment"><div class="line">parser.scan_preamble();</div>
 <div class="line"><span class="keyword">auto</span> deets = parser.get_banner();</div>
