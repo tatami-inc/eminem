@@ -101,13 +101,6 @@
     <filename>classeminem_1_1Parser.html</filename>
     <templarg>class Input_</templarg>
     <templarg>typename Index_</templarg>
-    <member kind="typedef">
-      <type>unsigned long long</type>
-      <name>LineIndex</name>
-      <anchorfile>classeminem_1_1Parser.html</anchorfile>
-      <anchor>aa342a8f7f71a54003e8989c5053cee9a</anchor>
-      <arglist></arglist>
-    </member>
     <member kind="function">
       <type></type>
       <name>Parser</name>
@@ -341,6 +334,13 @@
     <class kind="struct">eminem::ParseTextBufferOptions</class>
     <class kind="struct">eminem::ParseTextFileOptions</class>
     <class kind="struct">eminem::ParseZlibBufferOptions</class>
+    <member kind="typedef">
+      <type>unsigned long long</type>
+      <name>LineIndex</name>
+      <anchorfile>namespaceeminem.html</anchorfile>
+      <anchor>ae83f2521db54580a7597b3b41a9e30e4</anchor>
+      <arglist></arglist>
+    </member>
     <member kind="enumeration">
       <type></type>
       <name>Object</name>

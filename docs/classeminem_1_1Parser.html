@@ -91,7 +91,6 @@ $(function(){ initResizable(false); });
 <div id="doc-content">
 <div class="header">
   <div class="summary">
-<a href="#pub-types">Public Types</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classeminem_1_1Parser-members.html">List of all members</a>  </div>
   <div class="headertitle"><div class="title">eminem::Parser&lt; Input_, Index_ &gt; Class Template Reference</div></div>
@@ -103,11 +102,6 @@ $(function(){ initResizable(false); });
 
 <p><code>#include &lt;<a class="el" href="Parser_8hpp_source.html">Parser.hpp</a>&gt;</code></p>
 <table class="memberdecls">
-<tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-types" name="pub-types"></a>
-Public Types</h2></td></tr>
-<tr class="memitem:aa342a8f7f71a54003e8989c5053cee9a" id="r_aa342a8f7f71a54003e8989c5053cee9a"><td class="memItemLeft" align="right" valign="top">typedef unsigned long long&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aa342a8f7f71a54003e8989c5053cee9a">LineIndex</a></td></tr>
-<tr class="separator:aa342a8f7f71a54003e8989c5053cee9a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-</table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
 <tr class="memitem:a449fdbbe6fccfaedd23993e2d61fd741" id="r_a449fdbbe6fccfaedd23993e2d61fd741"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a449fdbbe6fccfaedd23993e2d61fd741">Parser</a> (std::unique_ptr&lt; Input_ &gt; input, const <a class="el" href="structeminem_1_1ParserOptions.html">ParserOptions</a> &amp;options)</td></tr>
@@ -118,7 +112,7 @@ Public Member Functions</h2></td></tr>
 <tr class="separator:a0a82592efbbe5cfc528c8618c787f0af"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad0245f01da0ffdac6511315c94da3e1e" id="r_ad0245f01da0ffdac6511315c94da3e1e"><td class="memItemLeft" align="right" valign="top">Index_&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad0245f01da0ffdac6511315c94da3e1e">get_ncols</a> () const</td></tr>
 <tr class="separator:ad0245f01da0ffdac6511315c94da3e1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a36dbe8d651129ddce69b9db0e594f8a1" id="r_a36dbe8d651129ddce69b9db0e594f8a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="#aa342a8f7f71a54003e8989c5053cee9a">LineIndex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a36dbe8d651129ddce69b9db0e594f8a1">get_nlines</a> () const</td></tr>
+<tr class="memitem:a36dbe8d651129ddce69b9db0e594f8a1" id="r_a36dbe8d651129ddce69b9db0e594f8a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceeminem.html#ae83f2521db54580a7597b3b41a9e30e4">LineIndex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a36dbe8d651129ddce69b9db0e594f8a1">get_nlines</a> () const</td></tr>
 <tr class="separator:a36dbe8d651129ddce69b9db0e594f8a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a04f29bcd5780761aff7ab09b7a8325ea" id="r_a04f29bcd5780761aff7ab09b7a8325ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a04f29bcd5780761aff7ab09b7a8325ea">scan_preamble</a> ()</td></tr>
 <tr class="separator:a04f29bcd5780761aff7ab09b7a8325ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -165,25 +159,7 @@ class eminem::Parser&lt; Input_, Index_ &gt;</div><p>Parse a matrix from a Matri
 </ul>
 <p>The digit sequence should contain one or mor digits, possibly containing leading zeros that will be ignored. The sign is optional and should be either <code>+</code> or <code>-</code>. The exponent is optional should have the form <code>e(sign)[digit sequence]</code> or <code>E(sign)[digit sequence]</code>, where the sign is again optional. We also support case-insensitive matches to <code>inf</code>, <code>infinity</code> or <code>nan</code>. This will be converted to their corresponding IEEE special values if they are available for the provided <code>Type_</code> in <code><a class="el" href="#a886a3f96eefbfd7c40ea884f0e4e63a6">scan_real()</a></code>, otherwise an error is thrown. For non-special values, no additional checks for overflow are applied. If IEEE arithmetic is available, overflow will manifest as infinities, otherwise they will be undefined behavior.</p>
 <p>No validation is performed to determine whether coordinates are consistent with non-general symmetries. Similarly, we do not check for the existence of multiple lines with the same row/column indices in coordinate matrices/vectors. </p>
-</div><h2 class="groupheader">Member Typedef Documentation</h2>
-<a id="aa342a8f7f71a54003e8989c5053cee9a" name="aa342a8f7f71a54003e8989c5053cee9a"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa342a8f7f71a54003e8989c5053cee9a">&#9670;&#160;</a></span>LineIndex</h2>
-
-<div class="memitem">
-<div class="memproto">
-<div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
-      <table class="memname">
-        <tr>
-          <td class="memname">unsigned long long <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::LineIndex</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-<p>Integer type of the line counts. We use an <code>unsigned long long</code> by default to guarantee at least 64 bits of storage. </p>
-
-</div>
-</div>
-<h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a449fdbbe6fccfaedd23993e2d61fd741" name="a449fdbbe6fccfaedd23993e2d61fd741"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a449fdbbe6fccfaedd23993e2d61fd741">&#9670;&#160;</a></span>Parser()</h2>
 
@@ -322,7 +298,7 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="#aa342a8f7f71a54003e8989c5053cee9a">LineIndex</a> <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::get_nlines </td>
+          <td class="memname"><a class="el" href="namespaceeminem.html#ae83f2521db54580a7597b3b41a9e30e4">LineIndex</a> <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::get_nlines </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
