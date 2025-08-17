@@ -191,30 +191,30 @@ TEST(ParserComplex, Error) {
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1\n", "unexpected newline"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 ", "unexpected end of file"); 
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 \n", "no digits"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 \n", "unexpected newline"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 4 5", "more fields");
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 a 4", "unrecognized");
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 a 4", "failed to convert");
 
     // Checking the decimal and exponent EOF errors separately.
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.1", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.\n", "unexpected newline"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1. ", "unexpected end of file"); 
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1. \n", "no digits"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1. \n", "unexpected newline"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1.12 4.23 5", "more fields");
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1... 4.34", "unrecognized");
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1... 4.34", "failed to convert");
 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1", "unexpected end of file"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1\n", "unexpected newline"); 
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1 ", "unexpected end of file"); 
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1 \n", "no digits"); 
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e+ \n", "no digits"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e1 \n", "unexpected newline"); 
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1e+ \n", "unexpected newline");
     test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 1 4e+2 5", "more fields");
-    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 4ee2 5e2", "unrecognized");
+    test_error("%%MatrixMarket matrix coordinate complex general\n1 1 1\n1 1 4ee2 5e2", "failed to convert");
 
     test_error("%%MatrixMarket vector array complex\n1\n \n", "unexpected newline");
-    test_error("%%MatrixMarket vector array complex\n1\n1 \n", "no digits");
+    test_error("%%MatrixMarket vector array complex\n1\n1 \n", "unexpected newline");
 
     {
         std::string input = "%%MatrixMarket matrix array complex general\n1 1\n1 1";
@@ -277,36 +277,13 @@ TEST(ParserComplex, Specials) {
     }
 
     // Various errors.
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 in", "unexpected termination");
+    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 in", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 inf", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 infinity", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 nan", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 inf\t", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 inf ", "unexpected end of file");
     test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 inf\n", "unexpected newline");
-    test_error("%%MatrixMarket matrix coordinate real general\n1 1 1\n1 1 ina", "unexpected character");
-
-    for (int i = 0; i < 2; ++i) {
-        std::string input = "%%MatrixMarket matrix coordinate real general\n10 10 1\n1 2 ";
-        if (i == 1) {
-            input += "NaN";
-        } else {
-            input += "Inf";
-        }
-        input += " NAN";
-
-        auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
-        parser.scan_preamble();
-        EXPECT_ANY_THROW({
-            try {
-                parser.scan_complex<int>([&](eminem::Index, eminem::Index, std::complex<int>){});
-            } catch (std::exception& e) {
-                EXPECT_THAT(e.what(), ::testing::HasSubstr("requested type does not support"));
-                throw;
-            }
-        });
-    }
 }
 
 TEST(ParserComplex, OtherTypes) {

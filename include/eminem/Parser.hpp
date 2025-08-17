@@ -1513,6 +1513,7 @@ public:
     template<typename Type_ = int, class Store_>
     bool scan_integer(Store_ store) {
         check_preamble();
+        static_assert(std::is_integral<Type_>::value);
 
         auto wrapped_store = [&](Index_ r, Index_ c, Type_ val) -> bool {
             if constexpr(std::is_same<typename std::invoke_result<Store_, Index_, Index_, Type_>::type, bool>::value) {
@@ -1540,323 +1541,83 @@ public:
 
 private:
     template<bool last_, typename Type_, typename Input2_>
-    static typename std::conditional<last_, ParseInfo<Type_>, Type_>::type parse_special(Input2_& input, bool negative, bool check_inf, LineIndex overall_line_count) {
-        auto what = [&]() -> std::string {
-            if (check_inf) {
-                return std::string("infinity");
-            } else {
-                return std::string("NaN");
-            }
-        };
-
-        auto check = [&](char lower, char upper) -> void {
-            if (!input.advance()) {
-                throw std::runtime_error("unexpected termination of " + what() + " on line " + std::to_string(overall_line_count + 1));
-            }
-            char current = input.get();
-            if (current != lower && current != upper) {
-                throw std::runtime_error("unexpected character when parsing " + what() + " on line " + std::to_string(overall_line_count + 1));
-            }
-        };
-
-        bool remaining = true;
-        if (check_inf) {
-            // We already know that we're starting with 'i', so we can proceed to the remaining two letters.
-            check('n', 'N');
-            check('f', 'F');
-
-            // Checking if there's any more letters.
-            remaining = input.advance();
-            if (remaining) {
-                char current = input.get();
-                if (current != '\n' && current != ' ' && current != '\t' && current != '\r') {
-                    if (current != 'i' && current != 'I') {
-                        throw std::runtime_error("unexpected character when parsing " + what() + " on line " + std::to_string(overall_line_count + 1));
-                    }
-                    check('n', 'N');
-                    check('i', 'I');
-                    check('t', 'T');
-                    check('y', 'Y');
-                    remaining = input.advance();
-                }
-            }
-        } else {
-            // We already know that we're starting with 'n', so we can proceed to the remaining two letters.
-            check('a', 'A');
-            check('n', 'N');
-            remaining = input.advance();
-        }
-
-        if (remaining) {
-            // Using a switch for consistency with parse_real().
-            switch(input.get()) {
-                case ' ': case '\t': case '\r':
-                    if (!advance_and_chomp(input)) {
-                        if constexpr(last_) {
-                            remaining = false;
-                            break;
-                        }
-                        throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-                    }
-                    if constexpr(last_) {
-                        if (input.get() != '\n') {
-                            throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
-                        }
-                        remaining = input.advance(); // advance past the newline
-                    }
-                    break;
-                case '\n':
-                    if constexpr(last_) {
-                        remaining = input.advance(); // advance past the newline.
-                        break;
-                    }
-                    throw std::runtime_error("unexpected newline on line " + std::to_string(overall_line_count + 1));
-                default:
-                    throw std::runtime_error("unexpected character when parsing " + what() + " on line " + std::to_string(overall_line_count + 1));
-            }
-        } else {
-            if constexpr(!last_) {
-                throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-            }
-        }
-
-        Type_ value;
-        if (check_inf) {
-            if constexpr(!std::numeric_limits<Type_>::has_infinity) {
-                throw std::runtime_error("requested type does not support " + what());
-            }
-            value = std::numeric_limits<Type_>::infinity();
-        } else {
-            if constexpr(!std::numeric_limits<Type_>::has_quiet_NaN) {
-                throw std::runtime_error("requested type does not support " + what());
-            }
-            value = std::numeric_limits<Type_>::quiet_NaN();
-        }
-        if (negative) {
-            value *= -1;
-        }
-
-        if constexpr(last_) {
-            ParseInfo<Type_> output;
-            output.value = value;
-            output.remaining = remaining;
-            return output;
-        } else {
-            return value;
-        }
-    }
-
-    template<bool last_, typename Type_, typename Input2_>
-    static typename std::conditional<last_, ParseInfo<Type_>, Type_>::type parse_real(Input2_& input, LineIndex overall_line_count) {
-        char firstchar = input.get();
-        bool negative = (firstchar == '-');
-        if (negative || firstchar == '+') {
-            if (!(input.advance())) {
-                throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-            }
-        }
-
-        // Check for specials.
-        switch (input.get()) {
-            case 'i': case 'I':
-                return parse_special<last_, Type_>(input, negative, true, overall_line_count);
-            case 'n': case 'N':
-                return parse_special<last_, Type_>(input, negative, false, overall_line_count);
-        };
-
-        // Processing the integer component.
-        Type_ value = 0;
-        bool found = false;
-        bool remaining = true;
+    static ParseInfo<Type_> parse_real(Input2_& input, std::string& temporary, Index overall_line_count) {
+        temporary.clear();
+        ParseInfo<Type_> output(0, true);
 
         while (1) {
-            char val = input.get();
-            switch(val) {
-                case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                    value *= 10;
-                    value += val - '0';
-                    found = true;
-                    break;
-                case ' ': case '\t': case '\r':
-                    if (!advance_and_chomp(input)) {
-                        if constexpr(last_) {
-                            remaining = false;
-                            goto final_processing;
-                        }
-                        throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-                    }
-                    if constexpr(last_) {
-                        if (input.get() != '\n') {
-                            throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
-                        }
-                        remaining = input.advance(); // advance past the newline
-                    }
-                    goto final_processing; 
+            char x = input.get();
+            switch(x) {
                 case '\n':
                     if constexpr(last_) {
-                        remaining = input.advance(); // advance past the newline
-                        goto final_processing;
-                    }
-                    throw std::runtime_error("unexpected newline on line " + std::to_string(overall_line_count + 1));
-               case '.':
-                    if (!input.advance()) {
-                        if constexpr(last_) {
-                            remaining = false;
-                            goto final_processing;
+                        // This is actually the only place we need to check for an empty temporary;
+                        // it can be assumed that this function is only called after chomping to the next non-blank,
+                        // so if it's not a newline, it'll be handled by the default case, and subsequently temporary will be non-empty.
+                        if (temporary.empty()) {
+                            throw std::runtime_error("empty number field on line " + std::to_string(overall_line_count + 1));
                         }
-                        throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
+                        output.remaining = input.advance(); // move past the newline.
+                    } else {
+                        throw std::runtime_error("unexpected newline on line " + std::to_string(overall_line_count + 1));
                     }
-                    goto decimal_processing;
-                case 'e': case 'E':
-                    if (!input.advance()) {
-                        throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
+                    goto final_processing;
+
+                case ' ': case '\t': case '\r':
+                    if constexpr(last_) {
+                        if (!advance_and_chomp(input)) { // skipping past the current position before chomping.
+                            output.remaining = false;
+                        } else {
+                            if (input.get() != '\n') {
+                                throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
+                            }
+                            output.remaining = input.advance(); // move past the newline.
+                        }
+                    } else {
+                        if (!advance_and_chomp(input)) { // skipping past the current position before chomping.
+                            throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
+                        }
+                        if (input.get() == '\n') {
+                            throw std::runtime_error("unexpected newline on line " + std::to_string(overall_line_count + 1));
+                        }
                     }
-                    goto exponent_processing;
-                default:
-                    throw std::runtime_error("unrecognized character in real number on line " + std::to_string(overall_line_count + 1));
+                    goto final_processing;
+
+                default: 
+                    temporary += x;
+                    break;
             }
 
             if (!(input.advance())) {
                 if constexpr(last_) {
-                    remaining = input.advance();
+                    output.remaining = false;
                     goto final_processing;
                 }
                 throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
             }
         }
 
-        // Processing the decimal component.
-decimal_processing:
-        {
-            Type_ multiplier = 1; 
-            while (1) {
-                char val = input.get();
-                switch(val) {
-                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                        multiplier *= 10;
-                        value += (val - '0') / multiplier;
-                        found = true;
-                        break;
-                    case ' ': case '\t': case '\r':
-                        if (!advance_and_chomp(input)) {
-                            if constexpr(last_) {
-                                remaining = false;
-                                goto final_processing;
-                            }
-                            throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-                        }
-                        if constexpr(last_) {
-                            if (input.get() != '\n') {
-                                throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
-                            }
-                            remaining = input.advance(); // advance past the newline
-                        }
-                        goto final_processing; 
-                    case '\n':
-                        if constexpr(last_) {
-                            remaining = input.advance(); // advance past the newline
-                            goto final_processing;
-                        }
-                        throw std::runtime_error("unexpected newline on line " + std::to_string(overall_line_count + 1));
-                    case 'e': case 'E':
-                        if (!input.advance()) {
-                            throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-                        }
-                        goto exponent_processing;
-                    default:
-                        throw std::runtime_error("unrecognized character in real number on line " + std::to_string(overall_line_count + 1));
-                }
-
-                if (!(input.advance())) {
-                    if constexpr(last_) {
-                        remaining = input.advance();
-                        goto final_processing;
-                    }
-                    throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-                }
-            }
-        }
-
-        // Processing the exponent.
-exponent_processing:
-        {
-            bool expnegative = (input.get() == '-');
-            if (expnegative || input.get() == '+') {
-                if (!(input.advance())) {
-                    throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-                }
-            }
-
-            Type_ exponent = 0;
-            bool expfound = false;
-            while (1) {
-                char val = input.get();
-                switch(val) {
-                    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9':
-                        exponent *= 10;
-                        exponent += (val - '0');
-                        expfound = true;
-                        break;
-                    case ' ': case '\t': case '\r':
-                        if (!advance_and_chomp(input)) {
-                            if constexpr(last_) {
-                                remaining = false;
-                                goto exponent_processing_finish;
-                            }
-                            throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-                        }
-                        if constexpr(last_) {
-                            if (input.get() != '\n') {
-                                throw std::runtime_error("more fields than expected on line " + std::to_string(overall_line_count + 1));
-                            }
-                            remaining = input.advance(); // advance past the newline
-                        }
-                        goto exponent_processing_finish; 
-                    case '\n':
-                        if constexpr(last_) {
-                            remaining = input.advance(); // advance past the newline
-                            goto exponent_processing_finish;
-                        }
-                        throw std::runtime_error("unexpected newline on line " + std::to_string(overall_line_count + 1));
-                    default:
-                        throw std::runtime_error("unrecognized character in real number on line " + std::to_string(overall_line_count + 1));
-                }
-
-                if (!(input.advance())) {
-                    if constexpr(last_) {
-                        remaining = input.advance();
-                        goto exponent_processing_finish;
-                    }
-                    throw std::runtime_error("unexpected end of file on line " + std::to_string(overall_line_count + 1));
-                }
-            }
-
-exponent_processing_finish:
-            if (!expfound) {
-                throw std::runtime_error("no digits in the decimal exponent on line " + std::to_string(overall_line_count + 1));
-            }
-            if (expnegative) {
-                exponent *= -1;
-            }
-            value *= std::pow(10.0, exponent);
-        }
-
 final_processing:
-        if (!found) {
-            throw std::runtime_error("no digits in real number on line " + std::to_string(overall_line_count + 1));
-        }
-        if (negative) {
-            value *= -1;
+        if (temporary.size() >= 2 && temporary[0] == '0' && (temporary[1] == 'x' || temporary[1] == 'X')) {
+            throw std::runtime_error("hexadecimal numbers are not allowed on line " + std::to_string(overall_line_count + 1));
         }
 
-        if constexpr(last_) {
-            ParseInfo<Type_> output;
-            output.value = value;
-            output.remaining = remaining;
-            return output;
-        } else {
-            return value;
+        std::size_t n = 0;
+        try {
+            if constexpr(std::is_same<Type_, float>::value) {
+                output.value = std::stof(temporary, &n);
+            } else if constexpr(std::is_same<Type_, long double>::value) {
+                output.value = std::stold(temporary, &n);
+            } else {
+                output.value = std::stod(temporary, &n);
+            }
+        } catch (std::invalid_argument& e) {
+            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(overall_line_count + 1));
         }
+
+        if (n != temporary.size()) {
+            throw std::runtime_error("failed to convert value to a real number on line " + std::to_string(overall_line_count + 1));
+        }
+        return output;
     }
 
     template<typename Type_>
@@ -1864,8 +1625,10 @@ final_processing:
     public:
         template<class Input2_>
         ParseInfo<Type_> operator()(Input2_& input, LineIndex overall_line_count) {
-            return parse_real<true, Type_>(input, overall_line_count);
+            return parse_real<true, Type_>(input, my_temporary, overall_line_count);
         }
+    private:
+        std::string my_temporary;
     };
 
 public:
@@ -1885,6 +1648,7 @@ public:
     template<typename Type_ = double, class Store_>
     bool scan_real(Store_&& store) {
         check_preamble();
+        static_assert(std::is_floating_point<Type_>::value);
 
         auto store_real = [&](Index_ r, Index_ c, Type_ val) -> bool {
             if constexpr(std::is_same<typename std::invoke_result<Store_, Index_, Index_, Type_>::type, bool>::value) {
@@ -1935,14 +1699,16 @@ private:
     public:
         template<typename Input2_>
         ParseInfo<std::complex<InnerType_> > operator()(Input2_& input, LineIndex overall_line_count) {
-            auto first = parse_real<false, InnerType_>(input, overall_line_count);
-            auto second = parse_real<true, InnerType_>(input, overall_line_count);
+            auto first = parse_real<false, InnerType_>(input, my_temporary, overall_line_count);
+            auto second = parse_real<true, InnerType_>(input, my_temporary, overall_line_count);
             ParseInfo<std::complex<InnerType_> > output;
-            output.value.real(first);
+            output.value.real(first.value);
             output.value.imag(second.value);
             output.remaining = second.remaining;
             return output;
         }
+    private:
+        std::string my_temporary;
     };
 
 public:
@@ -1962,6 +1728,7 @@ public:
     template<typename Type_ = double, class Store_>
     bool scan_complex(Store_ store) {
         check_preamble();
+        static_assert(std::is_floating_point<Type_>::value);
 
         typedef std::complex<Type_> FullType;
         auto store_comp = [&](Index_ r, Index_ c, FullType val) -> bool {
