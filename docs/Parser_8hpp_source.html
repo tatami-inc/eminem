@@ -1046,7 +1046,7 @@ $(function(){ initResizable(false); });
 <div class="line"><a id="l01044" name="l01044"></a><span class="lineno"> 1044</span>    }</div>
 <div class="line"><a id="l01045" name="l01045"></a><span class="lineno"> 1045</span> </div>
 <div class="line"><a id="l01046" name="l01046"></a><span class="lineno"> 1046</span>    <span class="keyword">template</span>&lt;<span class="keyword">typename</span> Type_, <span class="keyword">class</span> Input2_, <span class="keyword">class</span> FieldParser_, <span class="keyword">class</span> WrappedStore_&gt;</div>
-<div class="line"><a id="l01047" name="l01047"></a><span class="lineno"> 1047</span>    <span class="keywordtype">bool</span> scan_vector_coordinate_non_pattern_base(Input2_&amp; input, Index_&amp; overall_line_count, FieldParser_&amp; fparser, WrappedStore_ wstore)<span class="keyword"> const </span>{</div>
+<div class="line"><a id="l01047" name="l01047"></a><span class="lineno"> 1047</span>    <span class="keywordtype">bool</span> scan_vector_coordinate_non_pattern_base(Input2_&amp; input, <a class="code hl_typedef" href="namespaceeminem.html#ae83f2521db54580a7597b3b41a9e30e4">LineIndex</a>&amp; overall_line_count, FieldParser_&amp; fparser, WrappedStore_ wstore)<span class="keyword"> const </span>{</div>
 <div class="line"><a id="l01048" name="l01048"></a><span class="lineno"> 1048</span>        <span class="keywordtype">bool</span> valid = input.valid();</div>
 <div class="line"><a id="l01049" name="l01049"></a><span class="lineno"> 1049</span>        <span class="keywordflow">while</span> (valid) {</div>
 <div class="line"><a id="l01050" name="l01050"></a><span class="lineno"> 1050</span>            <span class="comment">// handling stray comments, empty lines, and leading spaces.</span></div>
