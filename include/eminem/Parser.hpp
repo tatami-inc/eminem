@@ -46,12 +46,15 @@ struct ParserOptions {
 /**
  * @cond
  */
+template<typename Input_>
+using I = std::remove_reference_t<std::remove_cv_t<Input_> >;
+
 template<typename Workspace_>
 class ThreadPool {
 public:
     template<typename RunJob_>
-    ThreadPool(RunJob_ run_job, int num_threads) :
-        my_helpers(sanisizer::cast<decltype(my_helpers.size())>(num_threads)) 
+    ThreadPool(RunJob_ run_job, const int num_threads) :
+        my_helpers(sanisizer::as_size_type<I<decltype(my_helpers)> >(num_threads)) 
     {
         std::mutex init_mut;
         std::condition_variable init_cv;
@@ -135,9 +138,9 @@ private:
 public:
     template<typename CreateJob_, typename MergeJob_>
     bool run(CreateJob_ create_job, MergeJob_ merge_job) {
-        auto num_threads = my_threads.size();
+        const auto num_threads = my_threads.size();
         bool finished = false;
-        decltype(num_threads) thread = 0, finished_count = 0;
+        I<decltype(num_threads)> thread = 0, finished_count = 0;
 
         // We submit jobs by cycling through all threads, then we merge their results in order of submission.
         // This is a less efficient worksharing scheme but it guarantees the same order of merges.
@@ -283,7 +286,7 @@ public:
         my_nthreads(options.num_threads),
         my_block_size(options.block_size)
     {
-        sanisizer::cast<typename std::vector<char>::size_type>(my_block_size); // checking that there won't be any overflow in fill_to_next_newline().
+        sanisizer::as_size_type<std::vector<char> >(my_block_size); // checking that there won't be any overflow in fill_to_next_newline().
     }
 
 private:
