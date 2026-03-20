@@ -41,7 +41,6 @@ TEST_P(FromGzipTest, File) {
         eminem::ParseGzipFileOptions opt;
         opt.num_threads = nthreads;
         opt.buffer_size = blocksize;
-        opt.block_size = blocksize;
         auto parser = eminem::parse_gzip_file(path.c_str(), opt);
 
         parser.scan_preamble();
@@ -66,7 +65,6 @@ TEST_P(FromGzipTest, File) {
         eminem::ParseSomeFileOptions opt;
         opt.num_threads = nthreads;
         opt.buffer_size = blocksize;
-        opt.block_size = blocksize;
         auto parser = eminem::parse_some_file(path.c_str(), opt);
 
         parser.scan_preamble();
@@ -118,7 +116,6 @@ TEST_P(FromGzipTest, Buffer) {
         eminem::ParseZlibBufferOptions opt;
         opt.num_threads = nthreads;
         opt.buffer_size = blocksize;
-        opt.block_size = blocksize;
         auto parser = eminem::parse_zlib_buffer(gzcontents.data(), gzcontents.size(), opt);
 
         parser.scan_preamble();
@@ -143,7 +140,6 @@ TEST_P(FromGzipTest, Buffer) {
         eminem::ParseSomeBufferOptions opt;
         opt.num_threads = nthreads;
         opt.buffer_size = blocksize;
-        opt.block_size = blocksize;
         auto parser = eminem::parse_some_buffer(gzcontents.data(), gzcontents.size(), opt);
 
         parser.scan_preamble();

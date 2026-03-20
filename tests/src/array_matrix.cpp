@@ -22,11 +22,11 @@ TEST_P(ParserArrayMatrixScenarioTest, Success) {
 
     eminem::ParserOptions parse_opt;
     parse_opt.num_threads = std::get<1>(param);
-    parse_opt.block_size = 1; // guarantee that each thread gets at least some work.
+    parse_opt.buffer_size = 1; // guarantee that each thread gets at least some work.
 
     std::string input = "%%MatrixMarket matrix array integer general\n" + std::to_string(nr) + " " + std::to_string(nc) + "\n" + content;
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -116,13 +116,13 @@ protected:
 
     void SetUp() {
         parse_opt.num_threads = GetParam();
-        parse_opt.block_size = 1; // guarantee that each thread gets at least some work.
+        parse_opt.buffer_size = 1; // guarantee that each thread gets at least some work.
     }
 };
 
 static void test_error(const std::string& input, std::string msg, const eminem::ParserOptions& opt) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), opt);
+    eminem::Parser parser(std::move(reader), opt);
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
@@ -144,7 +144,7 @@ TEST_P(ParserArrayMatrixMiscTest, Types) {
     { // Checking it works with real.
         std::string input = "%%MatrixMarket matrix array real general\n2 3\n1\n1.2e-4\n5.1\n-12.34\n2.2\ninf\n";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+        eminem::Parser parser(std::move(reader), parse_opt);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -180,7 +180,7 @@ TEST_P(ParserArrayMatrixMiscTest, Types) {
     { // Checking it works with complex.
         std::string input = "%%MatrixMarket matrix array complex general\n3 2\n1 5\n78 1.2e-4\n5 1\n12.34 -9.9\n2 2\ninf 10\n";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+        eminem::Parser parser(std::move(reader), parse_opt);
         parser.scan_preamble();
 
         const auto& deets = parser.get_banner();
@@ -220,7 +220,7 @@ TEST_P(ParserArrayMatrixMiscTest, QuitEarly) {
 
     { // quits immediately.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+        eminem::Parser parser(std::move(reader), parse_opt);
         parser.scan_preamble();
 
         std::vector<int> observed;
@@ -234,7 +234,7 @@ TEST_P(ParserArrayMatrixMiscTest, QuitEarly) {
 
     { // never quits but the function still returns a value.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+        eminem::Parser parser(std::move(reader), parse_opt);
         parser.scan_preamble();
 
         std::vector<int> observed;
@@ -250,7 +250,7 @@ TEST_P(ParserArrayMatrixMiscTest, QuitEarly) {
 TEST_P(ParserArrayMatrixMiscTest, Empty) {
     std::string input = "%%MatrixMarket matrix array integer general\n0 0";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();

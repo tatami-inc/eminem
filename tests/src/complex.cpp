@@ -21,8 +21,8 @@ TEST_P(ParserComplexTest, Success) {
     const auto& expected = std::get<3>(param);
 
     std::string input = "%%MatrixMarket matrix coordinate complex general\n" + std::to_string(nr) + " " + std::to_string(nc) + " " + std::to_string(expected.size()) + "\n" + content;
-    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size());
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -173,7 +173,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 static void test_error(const std::string& input, std::string msg) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
@@ -219,7 +219,7 @@ TEST(ParserComplex, Error) {
     {
         std::string input = "%%MatrixMarket matrix array complex general\n1 1\n1 1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         EXPECT_ANY_THROW({
             try {
                 parser.scan_integer([&](eminem::Index, eminem::Index, int){});
@@ -242,7 +242,7 @@ TEST(ParserComplex, Specials) {
         }
 
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         parser.scan_preamble();
 
         std::vector<std::complex<double> > observed;
@@ -264,7 +264,7 @@ TEST(ParserComplex, Specials) {
         }
 
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         parser.scan_preamble();
 
         std::vector<std::complex<double> > observed;
@@ -292,7 +292,7 @@ TEST(ParserComplex, OtherTypes) {
     // Single-precision.
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         parser.scan_preamble();
 
         std::vector<std::complex<float> > observed;
@@ -306,7 +306,7 @@ TEST(ParserComplex, OtherTypes) {
     // Super long-precision.
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         parser.scan_preamble();
 
         std::vector<std::complex<long double> > observed;
@@ -321,7 +321,7 @@ TEST(ParserComplex, OtherTypes) {
 TEST(ParserComplex, QuitEarly) {
     std::string input = "%%MatrixMarket matrix coordinate complex general\n10 10 3\n1 2 300 3E3\n4 5 666 -666\n7 8 0 0\n";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     std::vector<std::complex<double> > observed;
@@ -340,7 +340,7 @@ protected:
     void SetUp() {
         auto params = GetParam();
         parse_opt.num_threads = std::get<0>(params);
-        parse_opt.block_size = std::get<1>(params);
+        parse_opt.buffer_size = std::get<1>(params);
     }
 };
 
@@ -362,7 +362,7 @@ TEST_P(ParserComplexSimulatedTest, CoordinateMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -394,7 +394,7 @@ TEST_P(ParserComplexSimulatedTest, CoordinateVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -424,7 +424,7 @@ TEST_P(ParserComplexSimulatedTest, ArrayMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -463,7 +463,7 @@ TEST_P(ParserComplexSimulatedTest, ArrayVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -491,7 +491,7 @@ INSTANTIATE_TEST_SUITE_P(
     ParserComplex,
     ParserComplexSimulatedTest,
     ::testing::Values(
-        std::tuple<int, int>(1, 1),
+        std::tuple<int, int>(1, 100),
         std::tuple<int, int>(2, 100),
         std::tuple<int, int>(3, 100),
         std::tuple<int, int>(3, 1000)

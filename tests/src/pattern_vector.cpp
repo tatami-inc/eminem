@@ -22,11 +22,11 @@ TEST_P(ParserPatternVectorScenarioTest, Success) {
 
     eminem::ParserOptions parse_opt;
     parse_opt.num_threads = std::get<1>(param);
-    parse_opt.block_size = 1; // guarantee that each thread gets at least some work.
+    parse_opt.buffer_size = 1; // guarantee that each thread gets at least some work.
 
     std::string input = "%%MatrixMarket vector coordinate pattern general\n" + std::to_string(nr) + " " + std::to_string(expected_r.size()) + "\n" + content;
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -99,13 +99,13 @@ protected:
 
     void SetUp() {
         parse_opt.num_threads = GetParam();
-        parse_opt.block_size = 1; // guarantee that each thread gets at least some work.
+        parse_opt.buffer_size = 1; // guarantee that each thread gets at least some work.
     }
 };
 
 static void test_error(const std::string& input, std::string msg, const eminem::ParserOptions& opt) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), opt);
+    eminem::Parser parser(std::move(reader), opt);
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
@@ -130,7 +130,7 @@ TEST_P(ParserPatternVectorMiscTest, Errors) {
     {
         std::string input = "%%MatrixMarket vector coordinate pattern general\n1 1\n1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+        eminem::Parser parser(std::move(reader), parse_opt);
         EXPECT_ANY_THROW({
             try {
                 parser.scan_pattern([&](eminem::Index, eminem::Index, int) -> void {});
@@ -144,7 +144,7 @@ TEST_P(ParserPatternVectorMiscTest, Errors) {
     {
         std::string input = "%%MatrixMarket vector array pattern general\n1\n1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+        eminem::Parser parser(std::move(reader), parse_opt);
         parser.scan_preamble();
         EXPECT_ANY_THROW({
             try {
@@ -162,7 +162,7 @@ TEST_P(ParserPatternVectorMiscTest, QuitEarly) {
 
     { // quits immediately.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+        eminem::Parser parser(std::move(reader), parse_opt);
         parser.scan_preamble();
 
         std::vector<int> observed_r;
@@ -176,7 +176,7 @@ TEST_P(ParserPatternVectorMiscTest, QuitEarly) {
 
     { // never quits but function still returns a value.
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+        eminem::Parser parser(std::move(reader), parse_opt);
         parser.scan_preamble();
 
         std::vector<int> observed_r;
@@ -192,7 +192,7 @@ TEST_P(ParserPatternVectorMiscTest, QuitEarly) {
 TEST_P(ParserPatternVectorMiscTest, Empty) {
     std::string input = "%%MatrixMarket vector coordinate pattern general\n0 0";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -225,7 +225,7 @@ protected:
     void SetUp() {
         auto param = GetParam();
         parse_opt.num_threads = std::get<0>(param);
-        parse_opt.block_size = std::get<1>(param);
+        parse_opt.buffer_size = std::get<1>(param);
     }
 };
 
@@ -238,7 +238,7 @@ TEST_P(ParserPatternVectorSimulatedTest, CoordinateVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);

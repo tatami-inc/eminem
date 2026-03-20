@@ -22,7 +22,7 @@ TEST_P(ParserIntegerTest, Success) {
 
     std::string input = "%%MatrixMarket matrix coordinate integer general\n" + std::to_string(nr) + " " + std::to_string(nc) + " " + std::to_string(expected.size()) + "\n" + content;
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -58,7 +58,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 static void test_error(const std::string& input, std::string msg) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
     EXPECT_ANY_THROW({
         try {
@@ -82,7 +82,7 @@ TEST(ParserInteger, Error) {
     {
         std::string input = "%%MatrixMarket matrix coordinate integer general\n1 1 1\n1 1 1";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         EXPECT_ANY_THROW({
             try {
                 parser.scan_integer([&](eminem::Index, eminem::Index, int){});
@@ -97,7 +97,7 @@ TEST(ParserInteger, Error) {
 TEST(ParserInteger, OtherType) {
     std::string input = "%%MatrixMarket matrix coordinate integer general\n10 10 3\n1 2 33\n4 5 666\n7 8 9\n";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     std::vector<std::uint16_t> observed;
@@ -114,7 +114,7 @@ TEST(ParserInteger, Overflow) {
         // First we check that it works as a positive control.
         std::string input = "%%MatrixMarket matrix coordinate integer general\n2 2 3\n1 1 255\n2 2 0\n2 1 -0\n";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         parser.scan_preamble();
 
         std::vector<std::uint8_t> observed;
@@ -127,7 +127,7 @@ TEST(ParserInteger, Overflow) {
         // Now testing for the failures.
         auto test_overflow = [&](std::string input) -> void {
             auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-            eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+            eminem::Parser parser(std::move(reader), {});
             parser.scan_preamble();
             EXPECT_ANY_THROW({
                 try {
@@ -148,7 +148,7 @@ TEST(ParserInteger, Overflow) {
         // First we check that it works as a positive control.
         std::string input = "%%MatrixMarket matrix coordinate integer general\n2 2 3\n1 1 0\n2 2 127\n2 1 -128\n";
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         parser.scan_preamble();
         std::vector<std::int8_t> observed;
         parser.scan_integer<std::int8_t>([&](eminem::Index, eminem::Index, std::int8_t val){
@@ -160,7 +160,7 @@ TEST(ParserInteger, Overflow) {
         // Now testing for the failures.
         auto test_overflow = [&](std::string input) -> void {
             auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-            eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+            eminem::Parser parser(std::move(reader), {});
             parser.scan_preamble();
             EXPECT_ANY_THROW({
                 try {
@@ -181,7 +181,7 @@ TEST(ParserInteger, Overflow) {
 TEST(ParserInteger, QuitEarly) {
     std::string input = "%%MatrixMarket matrix coordinate integer general\n10 10 3\n1 2 33\n4 5 666\n7 8 9\n";
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     std::vector<int> observed;
@@ -200,7 +200,7 @@ protected:
     void SetUp() {
         auto params = GetParam();
         parse_opt.num_threads = std::get<0>(params);
-        parse_opt.block_size = std::get<1>(params);
+        parse_opt.buffer_size = std::get<1>(params);
     }
 };
 
@@ -214,7 +214,7 @@ TEST_P(ParserIntegerSimulatedTest, CoordinateMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -244,7 +244,7 @@ TEST_P(ParserIntegerSimulatedTest, CoordinateVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -272,7 +272,7 @@ TEST_P(ParserIntegerSimulatedTest, ArrayMatrix) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), NR);
@@ -309,7 +309,7 @@ TEST_P(ParserIntegerSimulatedTest, ArrayVector) {
     std::string input = stored.str();
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), parse_opt);
+    eminem::Parser parser(std::move(reader), parse_opt);
     parser.scan_preamble();
 
     EXPECT_EQ(parser.get_nrows(), N);
@@ -336,7 +336,7 @@ INSTANTIATE_TEST_SUITE_P(
     ParserInteger,
     ParserIntegerSimulatedTest,
     ::testing::Values(
-        std::tuple<int, int>(1, 1),
+        std::tuple<int, int>(1, 100),
         std::tuple<int, int>(2, 100),
         std::tuple<int, int>(3, 100),
         std::tuple<int, int>(3, 1000)

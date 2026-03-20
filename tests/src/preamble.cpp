@@ -20,7 +20,7 @@ TEST_P(ParserPreambleCoordinateMatrixTest, Success) {
     int nl = std::get<3>(param);
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -60,7 +60,7 @@ TEST_P(ParserPreambleCoordinateVectorTest, Success) {
     int nl = std::get<2>(param);
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -100,7 +100,7 @@ TEST_P(ParserPreambleArrayMatrixTest, Success) {
     int nc = std::get<2>(param);
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -139,7 +139,7 @@ TEST_P(ParserPreambleArrayVectorTest, Success) {
     int nr = std::get<1>(param);
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -172,7 +172,7 @@ INSTANTIATE_TEST_SUITE_P(
 
 static void test_error(const std::string& input, std::string msg) {
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     EXPECT_ANY_THROW({
         try {
             parser.scan_preamble();
@@ -249,7 +249,7 @@ TEST(ParserPreamble, SizeOverflowErrors) {
     {
         std::string payload = std::string("%%MatrixMarket matrix coordinate integer general\n2 ") + limitstring + std::string(" 0\n");
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(payload.data()), payload.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         parser.scan_preamble();
         EXPECT_EQ(parser.get_ncols(), limit);
     }
@@ -281,7 +281,7 @@ TEST_P(ParserPreambleFieldTest, Success) {
     auto field = std::get<1>(param);
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -326,7 +326,7 @@ TEST_P(ParserPreambleSymmetryTest, Success) {
     auto symmetry = std::get<1>(param);
 
     auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-    eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+    eminem::Parser parser(std::move(reader), {});
     parser.scan_preamble();
 
     const auto& deets = parser.get_banner();
@@ -363,7 +363,7 @@ TEST(ParserPreamble, ScanErrors) {
     std::string input = "%%MatrixMarket matrix coordinate integer general\n5 2 5\n";
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         EXPECT_ANY_THROW({
             try {
                 parser.get_banner();
@@ -376,7 +376,7 @@ TEST(ParserPreamble, ScanErrors) {
 
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         EXPECT_ANY_THROW({
             try {
                 parser.scan_preamble();
@@ -390,7 +390,7 @@ TEST(ParserPreamble, ScanErrors) {
 
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         EXPECT_ANY_THROW({
             try {
                 parser.get_nrows();
@@ -403,7 +403,7 @@ TEST(ParserPreamble, ScanErrors) {
 
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         EXPECT_ANY_THROW({
             try {
                 parser.get_ncols();
@@ -416,7 +416,7 @@ TEST(ParserPreamble, ScanErrors) {
 
     {
         auto reader = std::make_unique<byteme::RawBufferReader>(reinterpret_cast<const unsigned char*>(input.data()), input.size()); 
-        eminem::Parser parser(std::make_unique<byteme::PerByteSerial<char> >(std::move(reader)), {});
+        eminem::Parser parser(std::move(reader), {});
         EXPECT_ANY_THROW({
             try {
                 parser.get_nlines();

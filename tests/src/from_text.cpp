@@ -36,7 +36,6 @@ TEST_P(FromTextTest, File) {
         eminem::ParseTextFileOptions opt;
         opt.num_threads = nthreads;
         opt.buffer_size = blocksize;
-        opt.block_size = blocksize;
         auto parser = eminem::parse_text_file(path.c_str(), opt);
 
         parser.scan_preamble();
@@ -61,7 +60,6 @@ TEST_P(FromTextTest, File) {
         eminem::ParseSomeFileOptions opt;
         opt.num_threads = nthreads;
         opt.buffer_size = blocksize;
-        opt.block_size = blocksize;
         auto parser = eminem::parse_some_file(path.c_str(), opt);
 
         parser.scan_preamble();
@@ -100,7 +98,7 @@ TEST_P(FromTextTest, Buffer) {
     {
         eminem::ParseTextBufferOptions opt;
         opt.num_threads = nthreads;
-        opt.block_size = blocksize;
+        opt.buffer_size = blocksize;
         auto parser = eminem::parse_text_buffer(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), opt);
 
         parser.scan_preamble();
@@ -125,7 +123,6 @@ TEST_P(FromTextTest, Buffer) {
         eminem::ParseSomeBufferOptions opt;
         opt.num_threads = nthreads;
         opt.buffer_size = blocksize;
-        opt.block_size = blocksize;
         auto parser = eminem::parse_some_buffer(reinterpret_cast<const unsigned char*>(input.c_str()), input.size(), opt);
 
         parser.scan_preamble();
