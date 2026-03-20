@@ -1,5 +1,5 @@
 var searchData=
 [
-  ['from_5fgzip_2ehpp_0',['from_gzip.hpp',['../from__gzip_8hpp.html',1,'']]],
-  ['from_5ftext_2ehpp_1',['from_text.hpp',['../from__text_8hpp.html',1,'']]]
+  ['gzipfilereader_2ehpp_0',['GzipFileReader.hpp',['https://ltla.github.io/byteme/byteme.tag/GzipFileReader_8hpp.html',1,'']]],
+  ['gzipfilewriter_2ehpp_1',['GzipFileWriter.hpp',['https://ltla.github.io/byteme/byteme.tag/GzipFileWriter_8hpp.html',1,'']]]
 ];

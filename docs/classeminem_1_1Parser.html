@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=11"/>
 <meta name="generator" content="Doxygen 1.12.0"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>eminem: eminem::Parser&lt; Input_, Index_ &gt; Class Template Reference</title>
+<title>eminem: eminem::Parser&lt; ReaderPointer_, Index_ &gt; Class Template Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -93,7 +93,7 @@ $(function(){ initResizable(false); });
   <div class="summary">
 <a href="#pub-methods">Public Member Functions</a> &#124;
 <a href="classeminem_1_1Parser-members.html">List of all members</a>  </div>
-  <div class="headertitle"><div class="title">eminem::Parser&lt; Input_, Index_ &gt; Class Template Reference</div></div>
+  <div class="headertitle"><div class="title">eminem::Parser&lt; ReaderPointer_, Index_ &gt; Class Template Reference</div></div>
 </div><!--header-->
 <div class="contents">
 
@@ -104,51 +104,51 @@ $(function(){ initResizable(false); });
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a id="pub-methods" name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
-<tr class="memitem:a170d8a5e218e59d547ca607a746ebb47" id="r_a170d8a5e218e59d547ca607a746ebb47"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a170d8a5e218e59d547ca607a746ebb47">Parser</a> (Input_ input, const <a class="el" href="structeminem_1_1ParserOptions.html">ParserOptions</a> &amp;options)</td></tr>
-<tr class="separator:a170d8a5e218e59d547ca607a746ebb47"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4073ef8fc24d3403c1ac655b82f99179" id="r_a4073ef8fc24d3403c1ac655b82f99179"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structeminem_1_1MatrixDetails.html">MatrixDetails</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a4073ef8fc24d3403c1ac655b82f99179">get_banner</a> () const</td></tr>
-<tr class="separator:a4073ef8fc24d3403c1ac655b82f99179"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a82592efbbe5cfc528c8618c787f0af" id="r_a0a82592efbbe5cfc528c8618c787f0af"><td class="memItemLeft" align="right" valign="top">Index_&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0a82592efbbe5cfc528c8618c787f0af">get_nrows</a> () const</td></tr>
-<tr class="separator:a0a82592efbbe5cfc528c8618c787f0af"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad0245f01da0ffdac6511315c94da3e1e" id="r_ad0245f01da0ffdac6511315c94da3e1e"><td class="memItemLeft" align="right" valign="top">Index_&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#ad0245f01da0ffdac6511315c94da3e1e">get_ncols</a> () const</td></tr>
-<tr class="separator:ad0245f01da0ffdac6511315c94da3e1e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a36dbe8d651129ddce69b9db0e594f8a1" id="r_a36dbe8d651129ddce69b9db0e594f8a1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceeminem.html#ae83f2521db54580a7597b3b41a9e30e4">LineIndex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a36dbe8d651129ddce69b9db0e594f8a1">get_nlines</a> () const</td></tr>
-<tr class="separator:a36dbe8d651129ddce69b9db0e594f8a1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a04f29bcd5780761aff7ab09b7a8325ea" id="r_a04f29bcd5780761aff7ab09b7a8325ea"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a04f29bcd5780761aff7ab09b7a8325ea">scan_preamble</a> ()</td></tr>
-<tr class="separator:a04f29bcd5780761aff7ab09b7a8325ea"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af565251e8f3e499ada1867a904e9327c" id="r_af565251e8f3e499ada1867a904e9327c"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = int, class Store_ &gt; </td></tr>
-<tr class="memitem:af565251e8f3e499ada1867a904e9327c"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#af565251e8f3e499ada1867a904e9327c">scan_integer</a> (Store_ store)</td></tr>
-<tr class="separator:af565251e8f3e499ada1867a904e9327c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a886a3f96eefbfd7c40ea884f0e4e63a6" id="r_a886a3f96eefbfd7c40ea884f0e4e63a6"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = double, class Store_ &gt; </td></tr>
-<tr class="memitem:a886a3f96eefbfd7c40ea884f0e4e63a6"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a886a3f96eefbfd7c40ea884f0e4e63a6">scan_real</a> (Store_ &amp;&amp;store)</td></tr>
-<tr class="separator:a886a3f96eefbfd7c40ea884f0e4e63a6"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a820274a84266ec42a56946faa9a14997" id="r_a820274a84266ec42a56946faa9a14997"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = double, class Store_ &gt; </td></tr>
-<tr class="memitem:a820274a84266ec42a56946faa9a14997"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a820274a84266ec42a56946faa9a14997">scan_double</a> (Store_ store)</td></tr>
-<tr class="separator:a820274a84266ec42a56946faa9a14997"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a227f3f6dc4fa76da4a58c9cde71edd85" id="r_a227f3f6dc4fa76da4a58c9cde71edd85"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = double, class Store_ &gt; </td></tr>
-<tr class="memitem:a227f3f6dc4fa76da4a58c9cde71edd85"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a227f3f6dc4fa76da4a58c9cde71edd85">scan_complex</a> (Store_ store)</td></tr>
-<tr class="separator:a227f3f6dc4fa76da4a58c9cde71edd85"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a87b392fda6246cbfc0cc1a8789bd6550" id="r_a87b392fda6246cbfc0cc1a8789bd6550"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = bool, class Store_ &gt; </td></tr>
-<tr class="memitem:a87b392fda6246cbfc0cc1a8789bd6550"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a87b392fda6246cbfc0cc1a8789bd6550">scan_pattern</a> (Store_ store)</td></tr>
-<tr class="separator:a87b392fda6246cbfc0cc1a8789bd6550"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1af5d6d2c8999f3f176a43c3fb8a4813" id="r_a1af5d6d2c8999f3f176a43c3fb8a4813"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1af5d6d2c8999f3f176a43c3fb8a4813">Parser</a> (ReaderPointer_ input, const <a class="el" href="structeminem_1_1ParserOptions.html">ParserOptions</a> &amp;options)</td></tr>
+<tr class="separator:a1af5d6d2c8999f3f176a43c3fb8a4813"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:afc844f274eb4b187ab297f8cec0a570f" id="r_afc844f274eb4b187ab297f8cec0a570f"><td class="memItemLeft" align="right" valign="top">const <a class="el" href="structeminem_1_1MatrixDetails.html">MatrixDetails</a> &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#afc844f274eb4b187ab297f8cec0a570f">get_banner</a> () const</td></tr>
+<tr class="separator:afc844f274eb4b187ab297f8cec0a570f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0d92e077d1edaf79611f1f3a16128246" id="r_a0d92e077d1edaf79611f1f3a16128246"><td class="memItemLeft" align="right" valign="top">Index_&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a0d92e077d1edaf79611f1f3a16128246">get_nrows</a> () const</td></tr>
+<tr class="separator:a0d92e077d1edaf79611f1f3a16128246"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a26fa984587a17b355c4e3d6180dc2354" id="r_a26fa984587a17b355c4e3d6180dc2354"><td class="memItemLeft" align="right" valign="top">Index_&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a26fa984587a17b355c4e3d6180dc2354">get_ncols</a> () const</td></tr>
+<tr class="separator:a26fa984587a17b355c4e3d6180dc2354"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeaecdb970a67e353dd275dda4acc844c" id="r_aeaecdb970a67e353dd275dda4acc844c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="namespaceeminem.html#ae83f2521db54580a7597b3b41a9e30e4">LineIndex</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#aeaecdb970a67e353dd275dda4acc844c">get_nlines</a> () const</td></tr>
+<tr class="separator:aeaecdb970a67e353dd275dda4acc844c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1b7906efb9563c3e85fe5c02a97015c0" id="r_a1b7906efb9563c3e85fe5c02a97015c0"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="#a1b7906efb9563c3e85fe5c02a97015c0">scan_preamble</a> ()</td></tr>
+<tr class="separator:a1b7906efb9563c3e85fe5c02a97015c0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aed6ee2bbb58d8264104a0eae10aa38a0" id="r_aed6ee2bbb58d8264104a0eae10aa38a0"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = int, class Store_ &gt; </td></tr>
+<tr class="memitem:aed6ee2bbb58d8264104a0eae10aa38a0"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#aed6ee2bbb58d8264104a0eae10aa38a0">scan_integer</a> (Store_ store)</td></tr>
+<tr class="separator:aed6ee2bbb58d8264104a0eae10aa38a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ab67a092b496b8a4a1780133062dc9479" id="r_ab67a092b496b8a4a1780133062dc9479"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = double, class Store_ &gt; </td></tr>
+<tr class="memitem:ab67a092b496b8a4a1780133062dc9479"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#ab67a092b496b8a4a1780133062dc9479">scan_real</a> (Store_ &amp;&amp;store)</td></tr>
+<tr class="separator:ab67a092b496b8a4a1780133062dc9479"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6ef9728cda0b0cd0b1f0628a3afd121c" id="r_a6ef9728cda0b0cd0b1f0628a3afd121c"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = double, class Store_ &gt; </td></tr>
+<tr class="memitem:a6ef9728cda0b0cd0b1f0628a3afd121c"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a6ef9728cda0b0cd0b1f0628a3afd121c">scan_double</a> (Store_ store)</td></tr>
+<tr class="separator:a6ef9728cda0b0cd0b1f0628a3afd121c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a52ed0eef29cac0bb01584b277b086817" id="r_a52ed0eef29cac0bb01584b277b086817"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = double, class Store_ &gt; </td></tr>
+<tr class="memitem:a52ed0eef29cac0bb01584b277b086817"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#a52ed0eef29cac0bb01584b277b086817">scan_complex</a> (Store_ store)</td></tr>
+<tr class="separator:a52ed0eef29cac0bb01584b277b086817"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7f7e26cdad47ff654138b00717d0760" id="r_af7f7e26cdad47ff654138b00717d0760"><td class="memTemplParams" colspan="2">template&lt;typename Type_  = bool, class Store_ &gt; </td></tr>
+<tr class="memitem:af7f7e26cdad47ff654138b00717d0760"><td class="memTemplItemLeft" align="right" valign="top">bool&#160;</td><td class="memTemplItemRight" valign="bottom"><a class="el" href="#af7f7e26cdad47ff654138b00717d0760">scan_pattern</a> (Store_ store)</td></tr>
+<tr class="separator:af7f7e26cdad47ff654138b00717d0760"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><div class="compoundTemplParams">template&lt;class Input_, typename Index_ = unsigned long long&gt;<br />
-class eminem::Parser&lt; Input_, Index_ &gt;</div><p>Parse a matrix from a Matrix Market file. </p>
+<div class="textblock"><div class="compoundTemplParams">template&lt;class ReaderPointer_, typename Index_ = unsigned long long&gt;<br />
+class eminem::Parser&lt; ReaderPointer_, Index_ &gt;</div><p>Parse a matrix from a Matrix Market file. </p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
-    <tr><td class="paramname">Input_</td><td>Class of the source of input bytes. This should be a pointer to an object satisfying the <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html">byteme::PerByteInterface</a></code> instance. </td></tr>
+    <tr><td class="paramname">ReaderPointer_</td><td>Class of the source of input bytes. This should be a smart or raw pointer to an object satisfying the <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1Reader.html">byteme::Reader</a></code> instance. </td></tr>
     <tr><td class="paramname">Index_</td><td>Integer type of the row/column indices.</td></tr>
   </table>
   </dd>
 </dl>
-<p>This parses a Matrix Market file according to the specification described at <a href="https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz">https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz</a>. It is expected that users call <code><a class="el" href="#a04f29bcd5780761aff7ab09b7a8325ea">scan_preamble()</a></code> to determine the field type (see <code><a class="el" href="namespaceeminem.html#a68f327624182e772e6377016bd8914d2">eminem::Field</a></code> for supported values), after which they may call one of <code><a class="el" href="#af565251e8f3e499ada1867a904e9327c">scan_integer()</a></code>, <code><a class="el" href="#a886a3f96eefbfd7c40ea884f0e4e63a6">scan_real()</a></code>, etc. to parse the rest of the file. An error will be thrown upon detecting a non-compliant file.</p>
+<p>This parses a Matrix Market file according to the specification described at <a href="https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz">https://math.nist.gov/MatrixMarket/reports/MMformat.ps.gz</a>. It is expected that users call <code><a class="el" href="#a1b7906efb9563c3e85fe5c02a97015c0">scan_preamble()</a></code> to determine the field type (see <code><a class="el" href="namespaceeminem.html#a68f327624182e772e6377016bd8914d2">eminem::Field</a></code> for supported values), after which they may call one of <code><a class="el" href="#aed6ee2bbb58d8264104a0eae10aa38a0">scan_integer()</a></code>, <code><a class="el" href="#ab67a092b496b8a4a1780133062dc9479">scan_real()</a></code>, etc. to parse the rest of the file. An error will be thrown upon detecting a non-compliant file.</p>
 <p>As the Matrix Market specification is somewhat vague in parts, we apply the following refinements:</p>
 <ul>
 <li>We define a "blank" character as a horizontal tab, a space (ASCII 32) or a carriage return. A new line is only defined by the line feed character (ASCII 10). The carriage return is only considered as a blank for compatibility with systems that use CRLF to define new lines, and we do not check for whether the carriage return is followed by a line feed.</li>
 <li>The final line of the file may or may not be newline terminated.</li>
-<li>Integer values for the row/column indices, number of rows/columns and number of lines should be a sequence of one or more digits. Leading zeros are ignored and will not be interpreted as octal. An error is thrown if overflow of the <code>Index_</code> type occurs in <code><a class="el" href="#a04f29bcd5780761aff7ab09b7a8325ea">scan_preamble()</a></code>. An error is also thrown if the row/column indices in any data line exceed the number of rows/columns in the preamble, or if the observed number of data lines exceeds the expected number for coordinate matrices/vectors.</li>
-<li>Integer data values should be a sequence of one or more digits, optionally preceded by a <code>+</code> or <code>-</code> sign. Leading zeros are ignored and will not be interpreted as octal. An error is thrown if overflow of the <code>Type_</code> type occurs in <code><a class="el" href="#af565251e8f3e499ada1867a904e9327c">scan_integer()</a></code>.</li>
+<li>Integer values for the row/column indices, number of rows/columns and number of lines should be a sequence of one or more digits. Leading zeros are ignored and will not be interpreted as octal. An error is thrown if overflow of the <code>Index_</code> type occurs in <code><a class="el" href="#a1b7906efb9563c3e85fe5c02a97015c0">scan_preamble()</a></code>. An error is also thrown if the row/column indices in any data line exceed the number of rows/columns in the preamble, or if the observed number of data lines exceeds the expected number for coordinate matrices/vectors.</li>
+<li>Integer data values should be a sequence of one or more digits, optionally preceded by a <code>+</code> or <code>-</code> sign. Leading zeros are ignored and will not be interpreted as octal. An error is thrown if overflow of the <code>Type_</code> type occurs in <code><a class="el" href="#aed6ee2bbb58d8264104a0eae10aa38a0">scan_integer()</a></code>.</li>
 </ul>
 <p>Real data values should follow one of the following formats:</p>
 <ul>
@@ -157,24 +157,24 @@ class eminem::Parser&lt; Input_, Index_ &gt;</div><p>Parse a matrix from a Matri
 <li><code>(sign).[digit sequence](exponent)</code></li>
 <li><code>(sign)[digit sequence].[digit sequence](exponent)</code></li>
 </ul>
-<p>The digit sequence should contain one or mor digits, possibly containing leading zeros that will be ignored. The sign is optional and should be either <code>+</code> or <code>-</code>. The exponent is optional should have the form <code>e(sign)[digit sequence]</code> or <code>E(sign)[digit sequence]</code>, where the sign is again optional. We also support case-insensitive matches to <code>inf</code>, <code>infinity</code> or <code>nan</code>. This will be converted to their corresponding IEEE special values if they are available for the provided <code>Type_</code> in <code><a class="el" href="#a886a3f96eefbfd7c40ea884f0e4e63a6">scan_real()</a></code>, otherwise an error is thrown. For non-special values, no additional checks for overflow are applied. If IEEE arithmetic is available, overflow will manifest as infinities, otherwise they will be undefined behavior.</p>
+<p>The digit sequence should contain one or mor digits, possibly containing leading zeros that will be ignored. The sign is optional and should be either <code>+</code> or <code>-</code>. The exponent is optional should have the form <code>e(sign)[digit sequence]</code> or <code>E(sign)[digit sequence]</code>, where the sign is again optional. We also support case-insensitive matches to <code>inf</code>, <code>infinity</code> or <code>nan</code>. This will be converted to their corresponding IEEE special values if they are available for the provided <code>Type_</code> in <code><a class="el" href="#ab67a092b496b8a4a1780133062dc9479">scan_real()</a></code>, otherwise an error is thrown. For non-special values, no additional checks for overflow are applied. If IEEE arithmetic is available, overflow will manifest as infinities, otherwise they will be undefined behavior.</p>
 <p>No validation is performed to determine whether coordinates are consistent with non-general symmetries. Similarly, we do not check for the existence of multiple lines with the same row/column indices in coordinate matrices/vectors. </p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
-<a id="a170d8a5e218e59d547ca607a746ebb47" name="a170d8a5e218e59d547ca607a746ebb47"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a170d8a5e218e59d547ca607a746ebb47">&#9670;&#160;</a></span>Parser()</h2>
+<a id="a1af5d6d2c8999f3f176a43c3fb8a4813" name="a1af5d6d2c8999f3f176a43c3fb8a4813"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1af5d6d2c8999f3f176a43c3fb8a4813">&#9670;&#160;</a></span>Parser()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::Parser </td>
+          <td class="memname"><a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::Parser </td>
           <td>(</td>
-          <td class="paramtype">Input_</td>          <td class="paramname"><span class="paramname"><em>input</em></span>, </td>
+          <td class="paramtype">ReaderPointer_</td>          <td class="paramname"><span class="paramname"><em>input</em></span>, </td>
         </tr>
         <tr>
           <td class="paramkey"></td>
@@ -190,7 +190,7 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
 </div><div class="memdoc">
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">input</td><td>Source of input bytes, typically a pointer to a <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html">byteme::PerByteInterface</a></code> instance. </td></tr>
+    <tr><td class="paramname">input</td><td>Source of input bytes, typically a pointer to a <code><a class="elRef" href="https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1Reader.html">byteme::Reader</a></code> instance. </td></tr>
     <tr><td class="paramname">options</td><td>Further options. </td></tr>
   </table>
   </dd>
@@ -199,19 +199,19 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
-<a id="a4073ef8fc24d3403c1ac655b82f99179" name="a4073ef8fc24d3403c1ac655b82f99179"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a4073ef8fc24d3403c1ac655b82f99179">&#9670;&#160;</a></span>get_banner()</h2>
+<a id="afc844f274eb4b187ab297f8cec0a570f" name="afc844f274eb4b187ab297f8cec0a570f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#afc844f274eb4b187ab297f8cec0a570f">&#9670;&#160;</a></span>get_banner()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">const <a class="el" href="structeminem_1_1MatrixDetails.html">MatrixDetails</a> &amp; <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::get_banner </td>
+          <td class="memname">const <a class="el" href="structeminem_1_1MatrixDetails.html">MatrixDetails</a> &amp; <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::get_banner </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
@@ -223,24 +223,24 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Retrieve the Matrix Market banner, containing information about the data format and type. This should only be called after <code><a class="el" href="#a04f29bcd5780761aff7ab09b7a8325ea">scan_preamble()</a></code>.</p>
+<p>Retrieve the Matrix Market banner, containing information about the data format and type. This should only be called after <code><a class="el" href="#a1b7906efb9563c3e85fe5c02a97015c0">scan_preamble()</a></code>.</p>
 <dl class="section return"><dt>Returns</dt><dd>Details about the matrix in this file. </dd></dl>
 
 </div>
 </div>
-<a id="a0a82592efbbe5cfc528c8618c787f0af" name="a0a82592efbbe5cfc528c8618c787f0af"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0a82592efbbe5cfc528c8618c787f0af">&#9670;&#160;</a></span>get_nrows()</h2>
+<a id="a0d92e077d1edaf79611f1f3a16128246" name="a0d92e077d1edaf79611f1f3a16128246"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0d92e077d1edaf79611f1f3a16128246">&#9670;&#160;</a></span>get_nrows()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Index_ <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::get_nrows </td>
+          <td class="memname">Index_ <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::get_nrows </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
@@ -252,24 +252,24 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Get the number of rows in the matrix. This should only be called after <code><a class="el" href="#a04f29bcd5780761aff7ab09b7a8325ea">scan_preamble()</a></code>. If the object type is <code>Object::VECTOR</code>, the number of rows is equal to the length of the vector.</p>
+<p>Get the number of rows in the matrix. This should only be called after <code><a class="el" href="#a1b7906efb9563c3e85fe5c02a97015c0">scan_preamble()</a></code>. If the object type is <code>Object::VECTOR</code>, the number of rows is equal to the length of the vector.</p>
 <dl class="section return"><dt>Returns</dt><dd>Number of rows. </dd></dl>
 
 </div>
 </div>
-<a id="ad0245f01da0ffdac6511315c94da3e1e" name="ad0245f01da0ffdac6511315c94da3e1e"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#ad0245f01da0ffdac6511315c94da3e1e">&#9670;&#160;</a></span>get_ncols()</h2>
+<a id="a26fa984587a17b355c4e3d6180dc2354" name="a26fa984587a17b355c4e3d6180dc2354"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a26fa984587a17b355c4e3d6180dc2354">&#9670;&#160;</a></span>get_ncols()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">Index_ <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::get_ncols </td>
+          <td class="memname">Index_ <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::get_ncols </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
@@ -281,24 +281,24 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Get the number of columns in the matrix. This should only be called after <code><a class="el" href="#a04f29bcd5780761aff7ab09b7a8325ea">scan_preamble()</a></code>. If the object type is <code>Object::VECTOR</code>, the number of columns is set to 1.</p>
+<p>Get the number of columns in the matrix. This should only be called after <code><a class="el" href="#a1b7906efb9563c3e85fe5c02a97015c0">scan_preamble()</a></code>. If the object type is <code>Object::VECTOR</code>, the number of columns is set to 1.</p>
 <dl class="section return"><dt>Returns</dt><dd>Number of columns. </dd></dl>
 
 </div>
 </div>
-<a id="a36dbe8d651129ddce69b9db0e594f8a1" name="a36dbe8d651129ddce69b9db0e594f8a1"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a36dbe8d651129ddce69b9db0e594f8a1">&#9670;&#160;</a></span>get_nlines()</h2>
+<a id="aeaecdb970a67e353dd275dda4acc844c" name="aeaecdb970a67e353dd275dda4acc844c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aeaecdb970a67e353dd275dda4acc844c">&#9670;&#160;</a></span>get_nlines()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="namespaceeminem.html#ae83f2521db54580a7597b3b41a9e30e4">LineIndex</a> <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::get_nlines </td>
+          <td class="memname"><a class="el" href="namespaceeminem.html#ae83f2521db54580a7597b3b41a9e30e4">LineIndex</a> <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::get_nlines </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td> const</td>
@@ -310,24 +310,24 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Get the number of non-zero lines in the coordinate format. This should only be called after <code><a class="el" href="#a04f29bcd5780761aff7ab09b7a8325ea">scan_preamble()</a></code>. If the object type is <code>Object::ARRAY</code>, the number of lines is defined as the product of the number of rows and columns.</p>
+<p>Get the number of non-zero lines in the coordinate format. This should only be called after <code><a class="el" href="#a1b7906efb9563c3e85fe5c02a97015c0">scan_preamble()</a></code>. If the object type is <code>Object::ARRAY</code>, the number of lines is defined as the product of the number of rows and columns.</p>
 <dl class="section return"><dt>Returns</dt><dd>Number of non-zero lines. </dd></dl>
 
 </div>
 </div>
-<a id="a04f29bcd5780761aff7ab09b7a8325ea" name="a04f29bcd5780761aff7ab09b7a8325ea"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a04f29bcd5780761aff7ab09b7a8325ea">&#9670;&#160;</a></span>scan_preamble()</h2>
+<a id="a1b7906efb9563c3e85fe5c02a97015c0" name="a1b7906efb9563c3e85fe5c02a97015c0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1b7906efb9563c3e85fe5c02a97015c0">&#9670;&#160;</a></span>scan_preamble()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <table class="mlabels">
   <tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">void <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::scan_preamble </td>
+          <td class="memname">void <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::scan_preamble </td>
           <td>(</td>
           <td class="paramname"><span class="paramname"><em></em></span></td><td>)</td>
           <td></td>
@@ -343,13 +343,13 @@ template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
 
 </div>
 </div>
-<a id="af565251e8f3e499ada1867a904e9327c" name="af565251e8f3e499ada1867a904e9327c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af565251e8f3e499ada1867a904e9327c">&#9670;&#160;</a></span>scan_integer()</h2>
+<a id="aed6ee2bbb58d8264104a0eae10aa38a0" name="aed6ee2bbb58d8264104a0eae10aa38a0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aed6ee2bbb58d8264104a0eae10aa38a0">&#9670;&#160;</a></span>scan_integer()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <div class="memtemplate">
 template&lt;typename Type_  = int, class Store_ &gt; </div>
 <table class="mlabels">
@@ -357,7 +357,7 @@ template&lt;typename Type_  = int, class Store_ &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::scan_integer </td>
+          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::scan_integer </td>
           <td>(</td>
           <td class="paramtype">Store_</td>          <td class="paramname"><span class="paramname"><em>store</em></span></td><td>)</td>
           <td></td>
@@ -387,13 +387,13 @@ template&lt;typename Type_  = int, class Store_ &gt; </div>
 
 </div>
 </div>
-<a id="a886a3f96eefbfd7c40ea884f0e4e63a6" name="a886a3f96eefbfd7c40ea884f0e4e63a6"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a886a3f96eefbfd7c40ea884f0e4e63a6">&#9670;&#160;</a></span>scan_real()</h2>
+<a id="ab67a092b496b8a4a1780133062dc9479" name="ab67a092b496b8a4a1780133062dc9479"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ab67a092b496b8a4a1780133062dc9479">&#9670;&#160;</a></span>scan_real()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <div class="memtemplate">
 template&lt;typename Type_  = double, class Store_ &gt; </div>
 <table class="mlabels">
@@ -401,7 +401,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::scan_real </td>
+          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::scan_real </td>
           <td>(</td>
           <td class="paramtype">Store_ &amp;&amp;</td>          <td class="paramname"><span class="paramname"><em>store</em></span></td><td>)</td>
           <td></td>
@@ -431,13 +431,13 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 
 </div>
 </div>
-<a id="a820274a84266ec42a56946faa9a14997" name="a820274a84266ec42a56946faa9a14997"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a820274a84266ec42a56946faa9a14997">&#9670;&#160;</a></span>scan_double()</h2>
+<a id="a6ef9728cda0b0cd0b1f0628a3afd121c" name="a6ef9728cda0b0cd0b1f0628a3afd121c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6ef9728cda0b0cd0b1f0628a3afd121c">&#9670;&#160;</a></span>scan_double()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <div class="memtemplate">
 template&lt;typename Type_  = double, class Store_ &gt; </div>
 <table class="mlabels">
@@ -445,7 +445,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::scan_double </td>
+          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::scan_double </td>
           <td>(</td>
           <td class="paramtype">Store_</td>          <td class="paramname"><span class="paramname"><em>store</em></span></td><td>)</td>
           <td></td>
@@ -457,7 +457,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
   </tr>
 </table>
 </div><div class="memdoc">
-<p>Scan the file for double-precision lines, assuming that the field in the banner is <code>Field::DOUBLE</code>. This is just an alias for <code><a class="el" href="#a886a3f96eefbfd7c40ea884f0e4e63a6">scan_real()</a></code>.</p>
+<p>Scan the file for double-precision lines, assuming that the field in the banner is <code>Field::DOUBLE</code>. This is just an alias for <code><a class="el" href="#ab67a092b496b8a4a1780133062dc9479">scan_real()</a></code>.</p>
 <dl class="tparams"><dt>Template Parameters</dt><dd>
   <table class="tparams">
     <tr><td class="paramname">Type_</td><td>Type to represent the double-precision value. </td></tr>
@@ -475,13 +475,13 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 
 </div>
 </div>
-<a id="a227f3f6dc4fa76da4a58c9cde71edd85" name="a227f3f6dc4fa76da4a58c9cde71edd85"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a227f3f6dc4fa76da4a58c9cde71edd85">&#9670;&#160;</a></span>scan_complex()</h2>
+<a id="a52ed0eef29cac0bb01584b277b086817" name="a52ed0eef29cac0bb01584b277b086817"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a52ed0eef29cac0bb01584b277b086817">&#9670;&#160;</a></span>scan_complex()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <div class="memtemplate">
 template&lt;typename Type_  = double, class Store_ &gt; </div>
 <table class="mlabels">
@@ -489,7 +489,7 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::scan_complex </td>
+          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::scan_complex </td>
           <td>(</td>
           <td class="paramtype">Store_</td>          <td class="paramname"><span class="paramname"><em>store</em></span></td><td>)</td>
           <td></td>
@@ -519,13 +519,13 @@ template&lt;typename Type_  = double, class Store_ &gt; </div>
 
 </div>
 </div>
-<a id="a87b392fda6246cbfc0cc1a8789bd6550" name="a87b392fda6246cbfc0cc1a8789bd6550"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a87b392fda6246cbfc0cc1a8789bd6550">&#9670;&#160;</a></span>scan_pattern()</h2>
+<a id="af7f7e26cdad47ff654138b00717d0760" name="af7f7e26cdad47ff654138b00717d0760"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af7f7e26cdad47ff654138b00717d0760">&#9670;&#160;</a></span>scan_pattern()</h2>
 
 <div class="memitem">
 <div class="memproto">
 <div class="memtemplate">
-template&lt;class Input_ , typename Index_  = unsigned long long&gt; </div>
+template&lt;class ReaderPointer_ , typename Index_  = unsigned long long&gt; </div>
 <div class="memtemplate">
 template&lt;typename Type_  = bool, class Store_ &gt; </div>
 <table class="mlabels">
@@ -533,7 +533,7 @@ template&lt;typename Type_  = bool, class Store_ &gt; </div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; Input_, Index_ &gt;::scan_pattern </td>
+          <td class="memname">bool <a class="el" href="classeminem_1_1Parser.html">eminem::Parser</a>&lt; ReaderPointer_, Index_ &gt;::scan_pattern </td>
           <td>(</td>
           <td class="paramtype">Store_</td>          <td class="paramname"><span class="paramname"><em>store</em></span></td><td>)</td>
           <td></td>

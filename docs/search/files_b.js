@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['writer_2ehpp_0',['Writer.hpp',['https://ltla.github.io/byteme/byteme.tag/Writer_8hpp.html',1,'']]]
+  ['zlibbufferreader_2ehpp_0',['ZlibBufferReader.hpp',['https://ltla.github.io/byteme/byteme.tag/ZlibBufferReader_8hpp.html',1,'']]],
+  ['zlibbufferwriter_2ehpp_1',['ZlibBufferWriter.hpp',['https://ltla.github.io/byteme/byteme.tag/ZlibBufferWriter_8hpp.html',1,'']]]
 ];

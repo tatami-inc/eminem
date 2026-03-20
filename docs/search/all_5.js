@@ -1,12 +1,12 @@
 var searchData=
 [
-  ['get_0',['get',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1PerByteInterface.html#a647e6ee2e9c7683f162b22d0a51dc3e5',1,'byteme::PerByteInterface']]],
-  ['get_5fbanner_1',['get_banner',['../classeminem_1_1Parser.html#a4073ef8fc24d3403c1ac655b82f99179',1,'eminem::Parser']]],
-  ['get_5fncols_2',['get_ncols',['../classeminem_1_1Parser.html#ad0245f01da0ffdac6511315c94da3e1e',1,'eminem::Parser']]],
-  ['get_5fnlines_3',['get_nlines',['../classeminem_1_1Parser.html#a36dbe8d651129ddce69b9db0e594f8a1',1,'eminem::Parser']]],
-  ['get_5fnrows_4',['get_nrows',['../classeminem_1_1Parser.html#a0a82592efbbe5cfc528c8618c787f0af',1,'eminem::Parser']]],
+  ['get_0',['get',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1BufferedReader.html#aa28ff2d69e79103078a842cc0d295b45',1,'byteme::BufferedReader']]],
+  ['get_5fbanner_1',['get_banner',['../classeminem_1_1Parser.html#afc844f274eb4b187ab297f8cec0a570f',1,'eminem::Parser']]],
+  ['get_5fncols_2',['get_ncols',['../classeminem_1_1Parser.html#a26fa984587a17b355c4e3d6180dc2354',1,'eminem::Parser']]],
+  ['get_5fnlines_3',['get_nlines',['../classeminem_1_1Parser.html#aeaecdb970a67e353dd275dda4acc844c',1,'eminem::Parser']]],
+  ['get_5fnrows_4',['get_nrows',['../classeminem_1_1Parser.html#a0d92e077d1edaf79611f1f3a16128246',1,'eminem::Parser']]],
   ['get_5foutput_5',['get_output',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1RawBufferWriter.html#a77085bb097a701c3b132f1278df923b8',1,'byteme::RawBufferWriter::get_output()'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1ZlibBufferWriter.html#ac0c286b480ef272974c3ee3d4209ec0e',1,'byteme::ZlibBufferWriter::get_output()']]],
-  ['gzbuffer_5fsize_6',['gzbuffer_size',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileReaderOptions.html#a2b0db9ad5b08145bb99cab97d94bc716',1,'byteme::GzipFileReaderOptions::gzbuffer_size'],['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileWriterOptions.html#ad3ae50598f977a1063e4cd9b438d2dcc',1,'byteme::GzipFileWriterOptions::gzbuffer_size']]],
+  ['gzbuffer_5fsize_6',['gzbuffer_size',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileWriterOptions.html#ad3ae50598f977a1063e4cd9b438d2dcc',1,'byteme::GzipFileWriterOptions']]],
   ['gzipfilereader_7',['GzipFileReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1GzipFileReader.html',1,'byteme::GzipFileReader'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1GzipFileReader.html#aecf4eebc3a244525b2c71a269d112800',1,'byteme::GzipFileReader::GzipFileReader()']]],
   ['gzipfilereader_2ehpp_8',['GzipFileReader.hpp',['https://ltla.github.io/byteme/byteme.tag/GzipFileReader_8hpp.html',1,'']]],
   ['gzipfilereaderoptions_9',['GzipFileReaderOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileReaderOptions.html',1,'byteme']]],

@@ -1,17 +1,14 @@
 var searchData=
 [
-  ['scan_5fcomplex_0',['scan_complex',['../classeminem_1_1Parser.html#a227f3f6dc4fa76da4a58c9cde71edd85',1,'eminem::Parser']]],
-  ['scan_5fdouble_1',['scan_double',['../classeminem_1_1Parser.html#a820274a84266ec42a56946faa9a14997',1,'eminem::Parser']]],
-  ['scan_5finteger_2',['scan_integer',['../classeminem_1_1Parser.html#af565251e8f3e499ada1867a904e9327c',1,'eminem::Parser']]],
-  ['scan_5fpattern_3',['scan_pattern',['../classeminem_1_1Parser.html#a87b392fda6246cbfc0cc1a8789bd6550',1,'eminem::Parser']]],
-  ['scan_5fpreamble_4',['scan_preamble',['../classeminem_1_1Parser.html#a04f29bcd5780761aff7ab09b7a8325ea',1,'eminem::Parser']]],
-  ['scan_5freal_5',['scan_real',['../classeminem_1_1Parser.html#a886a3f96eefbfd7c40ea884f0e4e63a6',1,'eminem::Parser']]],
-  ['somebufferreader_6',['SomeBufferReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SomeBufferReader.html',1,'byteme::SomeBufferReader'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SomeBufferReader.html#a42b6d367e5f83e2b59eba87f29f4000f',1,'byteme::SomeBufferReader::SomeBufferReader()']]],
-  ['somebufferreader_2ehpp_7',['SomeBufferReader.hpp',['https://ltla.github.io/byteme/byteme.tag/SomeBufferReader_8hpp.html',1,'']]],
-  ['somebufferreaderoptions_8',['SomeBufferReaderOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1SomeBufferReaderOptions.html',1,'byteme']]],
-  ['somefilereader_9',['SomeFileReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SomeFileReader.html',1,'byteme::SomeFileReader'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SomeFileReader.html#a68b58b4cdeb04b1747db643b69880787',1,'byteme::SomeFileReader::SomeFileReader()']]],
-  ['somefilereader_2ehpp_10',['SomeFileReader.hpp',['https://ltla.github.io/byteme/byteme.tag/SomeFileReader_8hpp.html',1,'']]],
-  ['somefilereaderoptions_11',['SomeFileReaderOptions',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1SomeFileReaderOptions.html',1,'byteme']]],
-  ['symmetry_12',['Symmetry',['../namespaceeminem.html#a3222df29bae0a3f6387230b58f36e920',1,'eminem']]],
-  ['symmetry_13',['symmetry',['../structeminem_1_1MatrixDetails.html#a55f737773c4168999e7f9ae118db7cce',1,'eminem::MatrixDetails']]]
+  ['scan_5fcomplex_0',['scan_complex',['../classeminem_1_1Parser.html#a52ed0eef29cac0bb01584b277b086817',1,'eminem::Parser']]],
+  ['scan_5fdouble_1',['scan_double',['../classeminem_1_1Parser.html#a6ef9728cda0b0cd0b1f0628a3afd121c',1,'eminem::Parser']]],
+  ['scan_5finteger_2',['scan_integer',['../classeminem_1_1Parser.html#aed6ee2bbb58d8264104a0eae10aa38a0',1,'eminem::Parser']]],
+  ['scan_5fpattern_3',['scan_pattern',['../classeminem_1_1Parser.html#af7f7e26cdad47ff654138b00717d0760',1,'eminem::Parser']]],
+  ['scan_5fpreamble_4',['scan_preamble',['../classeminem_1_1Parser.html#a1b7906efb9563c3e85fe5c02a97015c0',1,'eminem::Parser']]],
+  ['scan_5freal_5',['scan_real',['../classeminem_1_1Parser.html#ab67a092b496b8a4a1780133062dc9479',1,'eminem::Parser']]],
+  ['serialbufferedreader_6',['SerialBufferedReader',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SerialBufferedReader.html',1,'byteme::SerialBufferedReader&lt; typename Type_, class Pointer_ &gt;'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SerialBufferedReader.html#a0171352dd5853d7fdbbcff353de3a379',1,'byteme::SerialBufferedReader::SerialBufferedReader()']]],
+  ['serialbufferedreader_3c_20char_2c_20readerpointer_5f_20_3e_7',['SerialBufferedReader&lt; char, ReaderPointer_ &gt;',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SerialBufferedReader.html',1,'byteme']]],
+  ['serialbufferedwriter_8',['SerialBufferedWriter',['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SerialBufferedWriter.html',1,'byteme::SerialBufferedWriter&lt; typename Type_, class Pointer_ &gt;'],['https://ltla.github.io/byteme/byteme.tag/classbyteme_1_1SerialBufferedWriter.html#a8a01232e87e3ab7512225fc4ebf747f2',1,'byteme::SerialBufferedWriter::SerialBufferedWriter()']]],
+  ['symmetry_9',['Symmetry',['../namespaceeminem.html#a3222df29bae0a3f6387230b58f36e920',1,'eminem']]],
+  ['symmetry_10',['symmetry',['../structeminem_1_1MatrixDetails.html#a55f737773c4168999e7f9ae118db7cce',1,'eminem::MatrixDetails']]]
 ];

@@ -1,5 +1,4 @@
 var searchData=
 [
-  ['field_0',['field',['../structeminem_1_1MatrixDetails.html#ae18841f01812b0fdfdaf874ae066d719',1,'eminem::MatrixDetails']]],
-  ['format_1',['format',['../structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553',1,'eminem::MatrixDetails']]]
+  ['gzbuffer_5fsize_0',['gzbuffer_size',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileWriterOptions.html#ad3ae50598f977a1063e4cd9b438d2dcc',1,'byteme::GzipFileWriterOptions']]]
 ];

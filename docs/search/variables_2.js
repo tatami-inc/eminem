@@ -1,4 +1,5 @@
 var searchData=
 [
-  ['compression_5flevel_0',['compression_level',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1GzipFileWriterOptions.html#a9072c378aefb629c314f80ff8b77a964',1,'byteme::GzipFileWriterOptions::compression_level'],['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1ZlibBufferWriterOptions.html#a31ad029c8bd29c6edfe6e1228ee2aab7',1,'byteme::ZlibBufferWriterOptions::compression_level']]]
+  ['field_0',['field',['../structeminem_1_1MatrixDetails.html#ae18841f01812b0fdfdaf874ae066d719',1,'eminem::MatrixDetails']]],
+  ['format_1',['format',['../structeminem_1_1MatrixDetails.html#ab9c95df46dcf80cc827e1ac83bc2e553',1,'eminem::MatrixDetails']]]
 ];

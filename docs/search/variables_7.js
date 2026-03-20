@@ -1,4 +1,4 @@
 var searchData=
 [
-  ['object_0',['object',['../structeminem_1_1MatrixDetails.html#adbae3a51eba68d76b79306c070e0445d',1,'eminem::MatrixDetails']]]
+  ['reserve_0',['reserve',['https://ltla.github.io/byteme/byteme.tag/structbyteme_1_1RawBufferWriterOptions.html#ace854857d6b1b607ff4fedca07d05e1b',1,'byteme::RawBufferWriterOptions']]]
 ];
