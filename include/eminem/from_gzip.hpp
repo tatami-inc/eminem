@@ -99,7 +99,7 @@ auto parse_some_file(const char* path, const ParserOptions& options) {
 template<typename Index_ = unsigned long long>
 auto parse_some_buffer(const unsigned char* buffer, std::size_t len, const ParserOptions& options) {
     std::unique_ptr<byteme::Reader> ptr;
-    if (byteme::is_zlib(buffer, len) || byteme::is_gzip(buffer, len)) {
+    if (byteme::is_zlib_or_gzip(buffer, len)) {
         ptr.reset(new byteme::ZlibBufferReader(buffer, len, {}));
     } else {
         ptr.reset(new byteme::RawBufferReader(buffer, len));
