@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(eminem
-    VERSION 1.2.1
-    DESCRIPTION "Matrix Market parser"
-    LANGUAGES CXX)
+    VERSION 1.2.2
+    DESCRIPTION "Parse Matrix Market files in C++"
+    LANGUAGES CXX
+)
 
 set(CMAKE_CXX_STANDARD 17)
 
@@ -14,8 +15,8 @@ option(EMINEM_FETCH_EXTERN "Automatically fetch eminem's external dependencies."
 if(EMINEM_FETCH_EXTERN)
     add_subdirectory(extern)
 else()
-    find_package(ltla_byteme 2.0.0 CONFIG REQUIRED)
-    find_package(ltla_sanisizer 0.1.0 CONFIG REQUIRED)
+    find_package(ltla_byteme 2.1.0 CONFIG REQUIRED)
+    find_package(ltla_sanisizer 0.2.0 CONFIG REQUIRED)
 endif()
 
 target_link_libraries(eminem INTERFACE ltla::byteme ltla::sanisizer)
