@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.14)
 
-project(eminem
-    VERSION 1.2.2
+project(
+    eminem
+    VERSION 1.2.3
     DESCRIPTION "Parse Matrix Market files in C++"
     LANGUAGES CXX
 )

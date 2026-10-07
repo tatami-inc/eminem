@@ -6,12 +6,12 @@
 #include <complex>
 #include <type_traits>
 #include <stdexcept>
+#include <exception>
 #include <memory>
 #include <thread>
 #include <mutex>
 #include <condition_variable>
 #include <limits>
-#include <iostream>
 
 #include "byteme/byteme.hpp"
 #include "sanisizer/sanisizer.hpp"
